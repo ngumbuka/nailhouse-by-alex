@@ -51,10 +51,20 @@ function ServiceCategoryPage() {
   return (
     <SiteLayout>
       <section className="relative">
-        <div className="aspect-[5/2] w-full overflow-hidden md:aspect-[5/1.4]">
+        <div className="relative aspect-[5/2] w-full overflow-hidden md:aspect-[5/1.4]">
           <img src={info.image} alt={info.title} className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         </div>
-        <div className="mx-auto max-w-6xl px-5 py-12">
+        <div className="mx-auto max-w-6xl px-5 pt-6">
+          <nav aria-label="Fil d'Ariane" className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+            <Link to="/" className="hover:text-primary">Accueil</Link>
+            <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+            <Link to="/services" className="hover:text-primary">Prestations</Link>
+            <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+            <span className="text-primary">{info.title}</span>
+          </nav>
+        </div>
+        <div className="mx-auto max-w-6xl px-5 pb-12 pt-6">
           <p className="text-[11px] uppercase tracking-[0.25em] text-accent">{info.tagline}</p>
           <h1 className="mt-3 font-serif text-4xl text-primary md:text-6xl">{info.title}</h1>
           <p className="mt-5 max-w-2xl text-muted-foreground">{info.intro}</p>
@@ -64,11 +74,13 @@ function ServiceCategoryPage() {
               <Link to="/booking" search={{ service: items[0]?.id }}>Réserver cette prestation</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-full px-7">
-              <Link to="/services">Toutes les prestations</Link>
+              <Link to="/services">← Toutes les prestations</Link>
             </Button>
           </div>
         </div>
       </section>
+
+
 
       <section className="mx-auto grid max-w-6xl gap-10 px-5 pb-16 md:grid-cols-[1.3fr_1fr]">
         <div className="rounded-3xl border border-border bg-card p-6 md:p-10">
