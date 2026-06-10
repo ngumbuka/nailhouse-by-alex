@@ -5,6 +5,7 @@ import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
 import { ASSETS } from "@/lib/assets";
 import { listGalleryImages, listServices } from "@/lib/booking.functions";
+import { CATEGORIES } from "@/lib/service-categories";
 
 const servicesOpts = queryOptions({ queryKey: ["services"], queryFn: () => listServices() });
 const galleryOpts = queryOptions({ queryKey: ["gallery"], queryFn: () => listGalleryImages() });
