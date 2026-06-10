@@ -30,6 +30,8 @@ const TIME_SLOTS: string[] = (() => {
 })();
 
 export const Route = createFileRoute("/booking")({
+  validateSearch: (s: Record<string, unknown>) =>
+    z.object({ service: z.string().uuid().optional() }).parse(s),
   head: () => ({
     meta: [
       { title: "Réserver — NailHouse" },
@@ -48,8 +50,9 @@ export const Route = createFileRoute("/booking")({
 function BookingPage() {
   const { data: services } = useSuspenseQuery(opts);
   const submit = useServerFn(createBooking);
+  const { service: preselectId } = Route.useSearch();
 
-  const [serviceId, setServiceId] = useState<string>("");
+  const [serviceId, setServiceId] = useState<string>(preselectId ?? "");
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState<string>("");
   const [name, setName] = useState("");
