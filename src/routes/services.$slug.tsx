@@ -144,6 +144,29 @@ function ServiceCategoryPage() {
           ))}
         </div>
       </section>
+
+      {/* Sticky booking CTA — stays visible while scrolling the detail page */}
+      <div className="pointer-events-none sticky bottom-4 z-40 mx-auto mt-4 w-full max-w-6xl px-4 pb-4">
+        <div className="pointer-events-auto flex flex-wrap items-center justify-between gap-3 rounded-full border border-primary/15 bg-background/85 px-4 py-3 shadow-2xl shadow-primary/10 backdrop-blur-md md:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary sm:flex">
+              <CalendarCheck2 className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate font-serif text-base text-primary md:text-lg">{info.title}</p>
+              <p className="truncate text-xs text-muted-foreground">{info.duration} · à partir de {Math.min(...items.map((s) => s.price_fcfa)).toLocaleString("fr-FR")} FCFA</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button asChild variant="ghost" size="sm" className="hidden rounded-full text-xs uppercase tracking-[0.15em] sm:inline-flex">
+              <Link to="/services">← Prestations</Link>
+            </Button>
+            <Button asChild size="lg" className="rounded-full px-6">
+              <Link to="/booking" search={{ service: items[0]?.id }}>Réserver</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
     </SiteLayout>
   );
 }
