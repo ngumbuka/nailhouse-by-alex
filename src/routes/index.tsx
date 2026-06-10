@@ -34,7 +34,18 @@ function HomePage() {
   const { data: services } = useSuspenseQuery(servicesOpts);
   const { data: gallery } = useSuspenseQuery(galleryOpts);
 
-  const signature = services.slice(0, 3);
+  const signature = CATEGORIES.slice(0, 3);
+  const minPriceBySlug = (slug: string) => {
+    const cat = CATEGORIES.find((c) => c.slug === slug);
+    if (!cat) return undefined;
+    const items = services.filter((s) => s.category === cat.category);
+    if (!items.length) return undefined;
+    return Math.min(...items.map((s) => s.price_fcfa));
+  };
+  const firstServiceIdBySlug = (slug: string) => {
+    const cat = CATEGORIES.find((c) => c.slug === slug);
+    return cat ? services.find((s) => s.category === cat.category)?.id : undefined;
+  };
   const strip = gallery.slice(0, 6);
 
   return (
