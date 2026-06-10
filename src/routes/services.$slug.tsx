@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { ChevronRight, CalendarCheck2 } from "lucide-react";
 import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
 import { ASSETS } from "@/lib/assets";
@@ -50,10 +51,20 @@ function ServiceCategoryPage() {
   return (
     <SiteLayout>
       <section className="relative">
-        <div className="aspect-[5/2] w-full overflow-hidden md:aspect-[5/1.4]">
+        <div className="relative aspect-[5/2] w-full overflow-hidden md:aspect-[5/1.4]">
           <img src={info.image} alt={info.title} className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         </div>
-        <div className="mx-auto max-w-6xl px-5 py-12">
+        <div className="mx-auto max-w-6xl px-5 pt-6">
+          <nav aria-label="Fil d'Ariane" className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+            <Link to="/" className="hover:text-primary">Accueil</Link>
+            <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+            <Link to="/services" className="hover:text-primary">Prestations</Link>
+            <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+            <span className="text-primary">{info.title}</span>
+          </nav>
+        </div>
+        <div className="mx-auto max-w-6xl px-5 pb-12 pt-6">
           <p className="text-[11px] uppercase tracking-[0.25em] text-accent">{info.tagline}</p>
           <h1 className="mt-3 font-serif text-4xl text-primary md:text-6xl">{info.title}</h1>
           <p className="mt-5 max-w-2xl text-muted-foreground">{info.intro}</p>
@@ -63,11 +74,13 @@ function ServiceCategoryPage() {
               <Link to="/booking" search={{ service: items[0]?.id }}>Réserver cette prestation</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-full px-7">
-              <Link to="/services">Toutes les prestations</Link>
+              <Link to="/services">← Toutes les prestations</Link>
             </Button>
           </div>
         </div>
       </section>
+
+
 
       <section className="mx-auto grid max-w-6xl gap-10 px-5 pb-16 md:grid-cols-[1.3fr_1fr]">
         <div className="rounded-3xl border border-border bg-card p-6 md:p-10">
@@ -131,6 +144,29 @@ function ServiceCategoryPage() {
           ))}
         </div>
       </section>
+
+      {/* Sticky booking CTA — stays visible while scrolling the detail page */}
+      <div className="pointer-events-none sticky bottom-4 z-40 mx-auto mt-4 w-full max-w-6xl px-4 pb-4">
+        <div className="pointer-events-auto flex flex-wrap items-center justify-between gap-3 rounded-full border border-primary/15 bg-background/85 px-4 py-3 shadow-2xl shadow-primary/10 backdrop-blur-md md:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary sm:flex">
+              <CalendarCheck2 className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate font-serif text-base text-primary md:text-lg">{info.title}</p>
+              <p className="truncate text-xs text-muted-foreground">{info.duration} · à partir de {Math.min(...items.map((s) => s.price_fcfa)).toLocaleString("fr-FR")} FCFA</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button asChild variant="ghost" size="sm" className="hidden rounded-full text-xs uppercase tracking-[0.15em] sm:inline-flex">
+              <Link to="/services">← Prestations</Link>
+            </Button>
+            <Button asChild size="lg" className="rounded-full px-6">
+              <Link to="/booking" search={{ service: items[0]?.id }}>Réserver</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
     </SiteLayout>
   );
 }

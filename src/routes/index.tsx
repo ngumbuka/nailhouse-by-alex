@@ -5,6 +5,7 @@ import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
 import { ASSETS } from "@/lib/assets";
 import { listGalleryImages, listServices } from "@/lib/booking.functions";
+import { CATEGORIES } from "@/lib/service-categories";
 
 const servicesOpts = queryOptions({ queryKey: ["services"], queryFn: () => listServices() });
 const galleryOpts = queryOptions({ queryKey: ["gallery"], queryFn: () => listGalleryImages() });
@@ -33,7 +34,18 @@ function HomePage() {
   const { data: services } = useSuspenseQuery(servicesOpts);
   const { data: gallery } = useSuspenseQuery(galleryOpts);
 
-  const signature = services.slice(0, 3);
+  const signature = CATEGORIES.slice(0, 3);
+  const minPriceBySlug = (slug: string) => {
+    const cat = CATEGORIES.find((c) => c.slug === slug);
+    if (!cat) return undefined;
+    const items = services.filter((s) => s.category === cat.category);
+    if (!items.length) return undefined;
+    return Math.min(...items.map((s) => s.price_fcfa));
+  };
+  const firstServiceIdBySlug = (slug: string) => {
+    const cat = CATEGORIES.find((c) => c.slug === slug);
+    return cat ? services.find((s) => s.category === cat.category)?.id : undefined;
+  };
   const strip = gallery.slice(0, 6);
 
   return (
@@ -101,22 +113,52 @@ function HomePage() {
             </p>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {signature.map((s, i) => (
-              <article key={s.id} className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card">
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img
-                    src={[ASSETS.polkaDotNails, ASSETS.workstation, ASSETS.polishShelves][i] ?? ASSETS.burgundyManicure}
-                    alt=""
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <div className="flex flex-1 flex-col p-6">
-                  <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{s.category}</p>
-                  <h3 className="mt-2 font-serif text-2xl text-primary">{s.name}</h3>
-                  <p className="mt-4 text-sm text-accent">{s.price_fcfa.toLocaleString("fr-FR")} FCFA</p>
-                </div>
-              </article>
-            ))}
+            {signature.map((c) => {
+              const min = minPriceBySlug(c.slug);
+              const first = firstServiceIdBySlug(c.slug);
+              return (
+                <article key={c.slug} className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition hover:shadow-xl">
+                  <Link to="/services/$slug" params={{ slug: c.slug }} className="block aspect-[4/3] overflow-hidden">
+                    <img src={c.image} alt={c.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  </Link>
+                  <div className="flex flex-1 flex-col p-6">
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{c.tagline}</p>
+                    <h3 className="mt-2 font-serif text-2xl text-primary">
+                      <Link to="/services/$slug" params={{ slug: c.slug }} className="hover:underline">{c.title}</Link>
+                    </h3>
+                    <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">{c.intro}</p>
+                    {min !== undefined && (
+                      <p className="mt-4 text-sm text-accent">À partir de {min.toLocaleString("fr-FR")} FCFA</p>
+                    )}
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      <Button asChild size="sm" className="rounded-full">
+                        <Link to="/booking" search={{ service: first }}>Réserver</Link>
+                      </Button>
+                      <Button asChild size="sm" variant="outline" className="rounded-full">
+                        <Link to="/services/$slug" params={{ slug: c.slug }}>Voir le détail</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="mt-14">
+            <p className="text-[11px] uppercase tracking-[0.25em] text-accent">Toutes les prestations</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {CATEGORIES.map((c) => (
+                <Link
+                  key={c.slug}
+                  to="/services/$slug"
+                  params={{ slug: c.slug }}
+                  className="group flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4 text-sm transition hover:border-accent hover:shadow-md"
+                >
+                  <span className="font-serif text-base text-primary">{c.title}</span>
+                  <ArrowRight className="h-4 w-4 text-accent transition group-hover:translate-x-0.5" />
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
