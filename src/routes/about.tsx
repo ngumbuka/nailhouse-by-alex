@@ -41,14 +41,14 @@ function AboutPage() {
             <p className="text-[11px] uppercase tracking-[0.25em] text-accent">Notre mission</p>
             <h2 className="mt-3 font-serif text-3xl text-primary">Sublimer, protéger, prendre soin.</h2>
             <p className="mt-4 text-muted-foreground">
-              Offrir à chaque cliente une expérience boutique : soins précis, produits choisis avec exigence et écoute personnalisée. Nous prenons le temps qu'il faut pour des ongles sains et une finition impeccable.
+              Nous offrons des prestations de qualité en onglerie, en alliant technique, hygiène et sens du détail, afin de garantir des poses élégantes, durables et adaptées à chaque cliente.
             </p>
           </article>
           <article className="rounded-3xl bg-card p-8 shadow-sm">
             <p className="text-[11px] uppercase tracking-[0.25em] text-accent">Notre vision</p>
             <h2 className="mt-3 font-serif text-3xl text-primary">L'onglerie comme art du détail.</h2>
             <p className="mt-4 text-muted-foreground">
-              Devenir la référence de l'onglerie boutique à Yaoundé : un lieu où la technique, l'hygiène et l'élégance se rencontrent — pour la beauté des ongles, et celles qui les portent.
+              Devenir une référence en onglerie moderne en offrant des prestations de qualité, alliant élégance, hygiène et durabilité. Nous voulons sublimer chaque femme à travers des poses soignées qui reflètent sa personnalité.
             </p>
           </article>
         </div>
