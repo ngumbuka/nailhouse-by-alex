@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { CATEGORIES } from "@/lib/service-categories";
 import {
   isCurrentUserAdmin,
   adminListBookings,
@@ -20,6 +21,13 @@ import {
   adminAddGalleryByUrl,
   adminDeleteGalleryImage,
 } from "@/lib/admin.functions";
+import {
+  adminListServiceGallery,
+  adminRegisterServiceGalleryImage,
+  adminUpdateServiceGalleryImage,
+  adminDeleteServiceGalleryImage,
+} from "@/lib/service-gallery.functions";
+import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -59,6 +67,66 @@ function AdminPage() {
 
   const [imgUrl, setImgUrl] = useState("");
   const [imgCaption, setImgCaption] = useState("");
+
+  // ── Per-service gallery state & mutations ───────────────
+  const listSvcGallery = useServerFn(adminListServiceGallery);
+  const registerSvcImg = useServerFn(adminRegisterServiceGalleryImage);
+  const updateSvcImg = useServerFn(adminUpdateServiceGalleryImage);
+  const deleteSvcImg = useServerFn(adminDeleteServiceGalleryImage);
+
+  const svcGallery = useQuery({
+    queryKey: ["admin", "service-gallery"],
+    queryFn: () => listSvcGallery(),
+    enabled: !!admin.data?.isAdmin,
+  });
+
+  const invalidateSvcGallery = (slug?: string) => {
+    qc.invalidateQueries({ queryKey: ["admin", "service-gallery"] });
+    if (slug) qc.invalidateQueries({ queryKey: ["service-gallery", slug] });
+    else qc.invalidateQueries({ queryKey: ["service-gallery"] });
+  };
+
+  const registerMut = useMutation({
+    mutationFn: (v: { slug: string; storagePath: string; caption?: string }) =>
+      registerSvcImg({ data: v }),
+    onSuccess: (_d, v) => { toast.success("Image ajoutée"); invalidateSvcGallery(v.slug); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const updateSvcMut = useMutation({
+    mutationFn: (v: { id: string; sort?: number; caption?: string | null; slug?: string }) =>
+      updateSvcImg({ data: { id: v.id, sort: v.sort, caption: v.caption } }),
+    onSuccess: (_d, v) => { invalidateSvcGallery(v.slug); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const deleteSvcMut = useMutation({
+    mutationFn: (v: { id: string; slug: string }) => deleteSvcImg({ data: { id: v.id } }),
+    onSuccess: (_d, v) => { toast.success("Image supprimée"); invalidateSvcGallery(v.slug); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const [svcSlug, setSvcSlug] = useState<string>(CATEGORIES[0]?.slug ?? "");
+  const [uploading, setUploading] = useState(false);
+
+  async function handleSvcUpload(files: FileList | null) {
+    if (!files || files.length === 0 || !svcSlug) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const path = `${svcSlug}/${crypto.randomUUID()}.${ext}`;
+        const { error } = await supabase.storage
+          .from("service-gallery")
+          .upload(path, file, { contentType: file.type, upsert: false });
+        if (error) throw error;
+        await registerMut.mutateAsync({ slug: svcSlug, storagePath: path });
+      }
+      toast.success("Téléversement terminé");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -103,6 +171,7 @@ function AdminPage() {
           <TabsList>
             <TabsTrigger value="bookings">Réservations</TabsTrigger>
             <TabsTrigger value="gallery">Galerie</TabsTrigger>
+            <TabsTrigger value="service-gallery">Galeries prestations</TabsTrigger>
             <TabsTrigger value="newsletter">Newsletter</TabsTrigger>
           </TabsList>
 
@@ -166,6 +235,104 @@ function AdminPage() {
                 </div>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="service-gallery" className="mt-6 space-y-6">
+            <div className="grid gap-4 rounded-2xl border border-border bg-card p-5 md:grid-cols-[1fr_2fr_auto] md:items-end">
+              <div className="space-y-2">
+                <Label>Prestation</Label>
+                <Select value={svcSlug} onValueChange={setSvcSlug}>
+                  <SelectTrigger><SelectValue placeholder="Choisir…" /></SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c.slug} value={c.slug}>{c.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Téléverser des images (multiples)</Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  disabled={uploading || !svcSlug}
+                  onChange={(e) => { void handleSvcUpload(e.target.files); e.target.value = ""; }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground md:pb-2">
+                {uploading ? "Téléversement en cours…" : "JPG/PNG/WebP — ordre modifiable ci-dessous"}
+              </p>
+            </div>
+
+            {CATEGORIES.map((cat) => {
+              const imgs = (svcGallery.data ?? []).filter((g) => g.slug === cat.slug);
+              if (imgs.length === 0) return null;
+              return (
+                <div key={cat.slug} className="space-y-3 rounded-2xl border border-border bg-card p-5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-serif text-xl text-primary">{cat.title}</h3>
+                    <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                      {imgs.length} image{imgs.length > 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    {imgs.map((img, idx) => (
+                      <li key={img.id} className="group relative overflow-hidden rounded-xl border border-border">
+                        <img src={img.url} alt={img.caption ?? cat.title} className="aspect-square w-full object-cover" />
+                        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-ink/80 px-2 py-1.5 text-primary-foreground">
+                          <span className="text-[10px] uppercase tracking-[0.2em] opacity-70">#{idx + 1}</span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              aria-label="Monter"
+                              disabled={idx === 0}
+                              className="grid h-7 w-7 place-items-center rounded-full border border-primary-foreground/30 disabled:opacity-30"
+                              onClick={() => {
+                                const prev = imgs[idx - 1];
+                                if (!prev) return;
+                                updateSvcMut.mutate({ id: img.id, sort: prev.sort, slug: cat.slug });
+                                updateSvcMut.mutate({ id: prev.id, sort: img.sort, slug: cat.slug });
+                              }}
+                            >
+                              <ArrowUp className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Descendre"
+                              disabled={idx === imgs.length - 1}
+                              className="grid h-7 w-7 place-items-center rounded-full border border-primary-foreground/30 disabled:opacity-30"
+                              onClick={() => {
+                                const next = imgs[idx + 1];
+                                if (!next) return;
+                                updateSvcMut.mutate({ id: img.id, sort: next.sort, slug: cat.slug });
+                                updateSvcMut.mutate({ id: next.id, sort: img.sort, slug: cat.slug });
+                              }}
+                            >
+                              <ArrowDown className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Supprimer"
+                              className="grid h-7 w-7 place-items-center rounded-full bg-destructive text-destructive-foreground"
+                              onClick={() => deleteSvcMut.mutate({ id: img.id, slug: cat.slug })}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+
+            {(svcGallery.data ?? []).length === 0 && (
+              <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
+                Aucune image téléversée pour le moment. Sélectionnez une prestation puis ajoutez vos images.
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="newsletter" className="mt-6">
