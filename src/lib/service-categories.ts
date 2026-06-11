@@ -1,4 +1,18 @@
-import { ASSETS } from "@/lib/assets";
+// Per-service imagery (premium AI-generated, burgundy couture style).
+import mainsHero from "@/assets/services/mains-hero.jpg";
+import mainsFlat from "@/assets/services/mains-flat.jpg";
+import piedsHero from "@/assets/services/pieds-hero.jpg";
+import piedsFlat from "@/assets/services/pieds-flat.jpg";
+import naturelsHero from "@/assets/services/naturels-renforces-hero.jpg";
+import naturelsFlat from "@/assets/services/naturels-renforces-flat.jpg";
+import biabHero from "@/assets/services/biab-hero.jpg";
+import biabFlat from "@/assets/services/biab-flat.jpg";
+import capsulesHero from "@/assets/services/capsules-hero.jpg";
+import capsulesFlat from "@/assets/services/capsules-flat.jpg";
+import supplementsHero from "@/assets/services/supplements-hero.jpg";
+import supplementsFlat from "@/assets/services/supplements-flat.jpg";
+import deposeHero from "@/assets/services/depose-hero.jpg";
+import deposeFlat from "@/assets/services/depose-flat.jpg";
 
 export type CategoryInfo = {
   slug: string;
@@ -8,6 +22,7 @@ export type CategoryInfo = {
   intro: string;
   duration: string;
   image: string;
+  flat: string;
   highlights: string[];
   care: string[];
   ritual: { title: string; description: string }[];
@@ -22,11 +37,12 @@ export const CATEGORIES: CategoryInfo[] = [
     slug: "mains",
     category: "Soins des mains",
     title: "Soins des mains",
-    tagline: "Manucure boutique",
+    tagline: "Manucure couture",
     intro:
       "Un rituel complet pour des mains soignées : limage sur-mesure, soin des cuticules, gommage et massage hydratant. La pose est précise, élégante et adaptée à la forme naturelle de vos ongles.",
     duration: "45 min – 1 h 15",
-    image: ASSETS.burgundyManicure,
+    image: mainsHero,
+    flat: mainsFlat,
     bestFor: "Pour les femmes qui veulent des mains soignées au quotidien, prêtes à briller en réunion comme en sortie.",
     highlights: [
       "Limage et mise en forme personnalisée",
@@ -50,7 +66,7 @@ export const CATEGORIES: CategoryInfo[] = [
       "Produits professionnels haut de gamme.",
       "Conseil sur-mesure selon la forme de vos ongles.",
     ],
-    gallery: [ASSETS.burgundyManicure, ASSETS.polkaDotNails, ASSETS.workstation],
+    gallery: [mainsHero, mainsFlat],
     faq: [
       { q: "Combien de temps tient la pose ?", a: "Vernis classique : 5 à 7 jours. Semi-permanent : jusqu'à 3 semaines." },
       { q: "Puis-je venir avec une ancienne pose ?", a: "Oui, prévoyez une dépose en supplément pour préserver l'ongle naturel." },
@@ -64,7 +80,8 @@ export const CATEGORIES: CategoryInfo[] = [
     intro:
       "Bain tiède, gommage, soin des callosités et massage relaxant : une parenthèse bien-être pour des pieds doux et reposés. La finition est nette, durable et confortable.",
     duration: "45 min – 1 h 15",
-    image: ASSETS.salonPedicure,
+    image: piedsHero,
+    flat: piedsFlat,
     bestFor: "Pour celles qui veulent des pieds impeccables — saison des sandales ou bien-être tout au long de l'année.",
     highlights: [
       "Bain de pieds aromatique et gommage",
@@ -88,7 +105,7 @@ export const CATEGORIES: CategoryInfo[] = [
       "Instruments stérilisés pour chaque rendez-vous.",
       "Conseils personnalisés pour l'entretien à domicile.",
     ],
-    gallery: [ASSETS.salonPedicure, ASSETS.mindfulCandle, ASSETS.basketsCorner],
+    gallery: [piedsHero, piedsFlat],
     faq: [
       { q: "C'est douloureux ?", a: "Non, le soin est entièrement non invasif et relaxant." },
       { q: "Quelle finition choisir l'été ?", a: "Le semi-permanent est idéal — tenue 3 semaines, brillance intacte." },
@@ -102,7 +119,8 @@ export const CATEGORIES: CategoryInfo[] = [
     intro:
       "Une couche de gel travaillée sur l'ongle naturel pour le renforcer, le protéger et l'embellir — sans capsules. Idéal pour les ongles fins ou cassants, avec un rendu fin et lumineux.",
     duration: "1 h 15 – 2 h",
-    image: ASSETS.workstation,
+    image: naturelsHero,
+    flat: naturelsFlat,
     bestFor: "Pour les ongles fins, cassants ou qui peinent à pousser — sans alourdir, sans agresser.",
     highlights: [
       "Renforcement de l'ongle naturel sans capsule",
@@ -126,7 +144,7 @@ export const CATEGORIES: CategoryInfo[] = [
       "Pose fine, naturelle, jamais trop épaisse.",
       "Suivi entre deux rendez-vous offert par WhatsApp.",
     ],
-    gallery: [ASSETS.workstation, ASSETS.ledLamp, ASSETS.polishShelves],
+    gallery: [naturelsHero, naturelsFlat],
     faq: [
       { q: "Cela abîme-t-il l'ongle ?", a: "Non, à condition de respecter la dépose en institut." },
       { q: "Puis-je ajouter du nail art ?", a: "Oui, tous nos décors sont compatibles." },
@@ -140,7 +158,8 @@ export const CATEGORIES: CategoryInfo[] = [
     intro:
       "Le BIAB est un gel de construction souple et autolissant, parfait pour renforcer l'ongle naturel sans agresser. Très léger en porter, il offre une excellente tenue et un rendu naturel.",
     duration: "1 h 15 – 1 h 45",
-    image: ASSETS.ledLamp,
+    image: biabHero,
+    flat: biabFlat,
     bestFor: "Pour les femmes qui veulent une pose durable, naturelle et confortable au quotidien.",
     highlights: [
       "Renforcement naturel, sans capsule",
@@ -164,7 +183,7 @@ export const CATEGORIES: CategoryInfo[] = [
       "Pose réalisée par une experte certifiée BIAB.",
       "Remplissage à tarif préférentiel sous 4 semaines.",
     ],
-    gallery: [ASSETS.ledLamp, ASSETS.burgundyManicure, ASSETS.workstation],
+    gallery: [biabHero, biabFlat],
     faq: [
       { q: "Quelle différence avec un gel classique ?", a: "Le BIAB est plus souple, plus léger et respecte mieux l'ongle naturel." },
       { q: "Puis-je rallonger avec du BIAB ?", a: "Légèrement, oui. Pour de vraies extensions, optez pour les capsules." },
@@ -178,7 +197,8 @@ export const CATEGORIES: CategoryInfo[] = [
     intro:
       "Pour rallonger vos ongles ou créer une forme dessinée — amande, ballerine, carré long. Pose précise sur capsules, finition gel, polygel ou pose américaine selon le rendu souhaité.",
     duration: "1 h 45 – 2 h 30",
-    image: ASSETS.polkaDotNails,
+    image: capsulesHero,
+    flat: capsulesFlat,
     bestFor: "Pour un événement, un mariage, ou simplement pour oser une forme et une longueur signature.",
     highlights: [
       "Pose de capsules sur-mesure",
@@ -202,7 +222,7 @@ export const CATEGORIES: CategoryInfo[] = [
       "Large bibliothèque de formes et de décors.",
       "Conseils pour adapter la longueur à votre quotidien.",
     ],
-    gallery: [ASSETS.polkaDotNails, ASSETS.coffeeEasel, ASSETS.burgundyManicure],
+    gallery: [capsulesHero, capsulesFlat],
     faq: [
       { q: "C'est lourd à porter ?", a: "Non, nos poses sont travaillées pour être fines et confortables." },
       { q: "Combien de temps ça tient ?", a: "3 à 4 semaines, avec un remplissage conseillé ensuite." },
@@ -216,7 +236,8 @@ export const CATEGORIES: CategoryInfo[] = [
     intro:
       "Personnalisez votre pose avec des finitions couture : strass posés un à un, chrome miroir, french élégante, dessins fins ou effets matières. Compatible avec toutes nos prestations.",
     duration: "+ 15 à 30 min",
-    image: ASSETS.coffeeEasel,
+    image: supplementsHero,
+    flat: supplementsFlat,
     bestFor: "Pour celles qui veulent une touche unique — un détail qui transforme une pose en bijou.",
     highlights: [
       "Strass premium posés à la main",
@@ -240,7 +261,7 @@ export const CATEGORIES: CategoryInfo[] = [
       "Designs sur-mesure, jamais deux poses identiques.",
       "Retouche d'un strass offerte sous 7 jours.",
     ],
-    gallery: [ASSETS.coffeeEasel, ASSETS.polkaDotNails, ASSETS.burgundyManicure],
+    gallery: [supplementsHero, supplementsFlat],
     faq: [
       { q: "Puis-je n'orner qu'un seul ongle ?", a: "Bien sûr — beaucoup de clientes choisissent un accent nail." },
       { q: "Les strass tiennent-ils ?", a: "Oui, scellés au top coat, ils tiennent toute la durée de la pose." },
@@ -254,7 +275,8 @@ export const CATEGORIES: CategoryInfo[] = [
     intro:
       "Une dépose réalisée dans les règles pour préserver l'ongle naturel — limage doux, soin réparateur et conseils personnalisés. Indispensable entre deux poses.",
     duration: "30 – 45 min",
-    image: ASSETS.basketsCorner,
+    image: deposeHero,
+    flat: deposeFlat,
     bestFor: "Pour préserver vos ongles entre deux poses, ou avant une cure de récupération.",
     highlights: [
       "Dépose douce de toutes vos poses",
@@ -278,7 +300,7 @@ export const CATEGORIES: CategoryInfo[] = [
       "Soin réparateur inclus systématiquement.",
       "Tarif dégressif si vous enchaînez avec une nouvelle pose.",
     ],
-    gallery: [ASSETS.basketsCorner, ASSETS.workstation, ASSETS.mindfulCandle],
+    gallery: [deposeHero, deposeFlat],
     faq: [
       { q: "Combien de temps prévoir ?", a: "Environ 30 à 45 minutes selon le type de pose." },
       { q: "Puis-je reposer juste après ?", a: "Oui, c'est souvent l'idéal pour préserver vos ongles." },
