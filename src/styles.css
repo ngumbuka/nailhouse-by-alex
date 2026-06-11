@@ -39,6 +39,9 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-ink: var(--ink);
 
   --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
@@ -76,6 +79,11 @@
   --border: oklch(0.88 0.025 22);
   --input: oklch(0.9 0.02 22);
   --ring: oklch(0.32 0.11 10);
+
+  /* couture accents */
+  --gold: oklch(0.78 0.10 80);
+  --gold-soft: oklch(0.92 0.05 85);
+  --ink: oklch(0.14 0.04 18);
 
   --chart-1: oklch(0.32 0.11 10);
   --chart-2: oklch(0.62 0.22 0);
@@ -136,4 +144,16 @@
     font-weight: 500;
     letter-spacing: -0.01em;
   }
+}
+
+@utility gold-rule {
+  background-image: linear-gradient(90deg, transparent, var(--color-gold) 50%, transparent);
+  height: 1px;
+  width: 100%;
+}
+
+@utility tracking-luxe {
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
 }
