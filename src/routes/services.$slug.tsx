@@ -457,37 +457,88 @@ function ServiceCategoryPage() {
         className="border-t border-gold/15 bg-background py-10"
       >
         <div className="mx-auto max-w-7xl px-6 md:px-10">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">
-              Autres prestations de la maison
-            </p>
-            <Link
-              to="/services"
-              className="text-[10px] uppercase tracking-[0.28em] text-gold hover:underline"
-            >
-              Toute la carte →
-            </Link>
+      {/* ───────── Autres prestations — premium carousel ───────── */}
+      <section
+        aria-label="Autres prestations de la maison"
+        className="border-t border-gold/15 bg-background py-20 md:py-28"
+      >
+        <div className="mx-auto max-w-7xl px-6 md:px-10">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <Eyebrow>Autres prestations</Eyebrow>
+              <h2 className="mt-6 font-serif text-3xl text-primary md:text-4xl">
+                Poursuivez votre rituel
+              </h2>
+              <p className="mt-3 max-w-md text-sm text-muted-foreground">
+                Découvrez les autres prestations signature de la maison NailHouse.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => scrollBy(-1)}
+                aria-label="Précédent"
+                className="grid h-11 w-11 place-items-center rounded-full border border-gold/40 text-gold transition hover:bg-gold hover:text-ink"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollBy(1)}
+                aria-label="Suivant"
+                className="grid h-11 w-11 place-items-center rounded-full border border-gold/40 text-gold transition hover:bg-gold hover:text-ink"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <Link
+                to="/services"
+                className="ml-2 hidden text-[10px] uppercase tracking-[0.28em] text-gold hover:underline md:inline"
+              >
+                Toute la carte →
+              </Link>
+            </div>
           </div>
-          <ul className="mt-6 -mx-2 flex gap-3 overflow-x-auto pb-2">
+          <GoldRule className="mt-8" />
+
+          <ul
+            ref={carouselRef}
+            className="mt-10 flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
             {others.map((c) => (
-              <li key={c.slug} className="shrink-0 px-2">
+              <li
+                key={c.slug}
+                className="w-[78%] shrink-0 snap-start sm:w-[46%] lg:w-[31%]"
+              >
                 <Link
                   to="/services/$slug"
                   params={{ slug: c.slug }}
-                  className="group flex items-center gap-3 rounded-full border border-border bg-card/60 py-2 pl-2 pr-4 transition hover:border-gold/50 hover:bg-card"
+                  className="group block"
                 >
-                  <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-muted">
                     <img
                       src={c.image}
-                      alt=""
-                      aria-hidden
-                      className="h-full w-full object-cover"
+                      alt={c.title}
                       loading="lazy"
+                      className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]"
                     />
-                  </span>
-                  <span className="font-serif text-sm text-primary group-hover:text-gold">
-                    {c.title}
-                  </span>
+                    <div className="pointer-events-none absolute inset-3 border border-gold/30 transition group-hover:border-gold" />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/85 via-ink/30 to-transparent p-5">
+                      <p className="text-[10px] uppercase tracking-[0.28em] text-gold">
+                        {c.tagline}
+                      </p>
+                      <h3 className="mt-2 font-serif text-2xl text-primary-foreground">
+                        {c.title}
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                      {c.duration}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.25em] text-gold group-hover:underline">
+                      Voir détails <ChevronRight className="h-3 w-3" />
+                    </span>
+                  </div>
                 </Link>
               </li>
             ))}
