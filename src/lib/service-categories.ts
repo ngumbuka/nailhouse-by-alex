@@ -10,6 +10,11 @@ export type CategoryInfo = {
   image: string;
   highlights: string[];
   care: string[];
+  ritual: { title: string; description: string }[];
+  whyUs: string[];
+  gallery: string[];
+  faq: { q: string; a: string }[];
+  bestFor: string;
 };
 
 export const CATEGORIES: CategoryInfo[] = [
