@@ -80,10 +80,24 @@ function ServiceCategoryPage() {
   const { slug } = Route.useParams();
   const info = CATEGORY_BY_SLUG[slug]!;
   const { data } = useSuspenseQuery(opts);
+  const { data: uploaded } = useSuspenseQuery(galleryOpts(slug));
   const items = data.filter((s) => s.category === info.category);
   const others = CATEGORIES.filter((c) => c.slug !== slug);
   const minPrice = items.length ? Math.min(...items.map((s) => s.price_fcfa)) : null;
   const firstId = items[0]?.id;
+  const galleryImages: { url: string; caption: string | null }[] =
+    uploaded.length > 0
+      ? uploaded.map((g) => ({ url: g.url, caption: g.caption ?? null }))
+      : [
+          { url: info.image, caption: info.title },
+          { url: info.flat, caption: `${info.title} — atelier` },
+        ];
+  const carouselRef = useRef<HTMLUListElement>(null);
+  const scrollBy = (dir: 1 | -1) => {
+    const el = carouselRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.round(el.clientWidth * 0.8), behavior: "smooth" });
+  };
 
   return (
     <SiteLayout>
