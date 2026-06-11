@@ -11,7 +11,7 @@ export const Route = createFileRoute("/services")({
       { name: "description", content: "Découvrez les prestations NailHouse : manucure, pédicure, semi-permanent, gel, BIAB, capsules." },
       { property: "og:title", content: "Prestations — NailHouse" },
       { property: "og:description", content: "Manucure, pédicure, semi-permanent, gel, BIAB — découvrez nos prestations." },
-      { property: "og:image", content: ASSETS.polishShelves },
+      { property: "og:image", content: ASSETS.heroServices },
     ],
   }),
   component: ServicesPage,
@@ -24,7 +24,7 @@ function ServicesPage() {
     <SiteLayout>
       <section className="relative">
         <div className="aspect-[5/2] w-full overflow-hidden md:aspect-[5/1.5]">
-          <img src={ASSETS.polishShelves} alt="" className="h-full w-full object-cover" />
+          <img src={ASSETS.heroServices} alt="" className="h-full w-full object-cover" />
         </div>
         <div className="mx-auto max-w-6xl px-5 py-12">
           <p className="text-[11px] uppercase tracking-[0.25em] text-accent">La carte</p>
