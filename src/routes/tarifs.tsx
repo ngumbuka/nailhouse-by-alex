@@ -4,7 +4,7 @@ import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
 import { ASSETS } from "@/lib/assets";
 import { listServices } from "@/lib/booking.functions";
-import { SLUG_BY_CATEGORY } from "@/lib/service-categories";
+import { SLUG_BY_CATEGORY, slugifyService } from "@/lib/service-categories";
 
 const opts = queryOptions({ queryKey: ["services"], queryFn: () => listServices() });
 
@@ -67,14 +67,29 @@ function TarifsPage() {
                 )}
               </div>
               <div className="mt-6 divide-y divide-border">
-                {items.map((s) => (
-                  <div key={s.id} className="flex items-baseline justify-between gap-4 py-3">
-                    <p className="text-sm md:text-base">{s.name}</p>
-                    <p className="whitespace-nowrap font-serif text-lg text-accent">
-                      {s.price_fcfa.toLocaleString("fr-FR")} <span className="text-xs text-muted-foreground">FCFA</span>
-                    </p>
-                  </div>
-                ))}
+                {items.map((s) => {
+                  const catSlug = SLUG_BY_CATEGORY[category];
+                  const row = (
+                    <div className="flex items-baseline justify-between gap-4 py-3">
+                      <p className="text-sm md:text-base group-hover:text-primary">{s.name}</p>
+                      <p className="whitespace-nowrap font-serif text-lg text-accent">
+                        {s.price_fcfa.toLocaleString("fr-FR")} <span className="text-xs text-muted-foreground">FCFA</span>
+                      </p>
+                    </div>
+                  );
+                  return catSlug ? (
+                    <Link
+                      key={s.id}
+                      to="/services/$slug/$service"
+                      params={{ slug: catSlug, service: slugifyService(s.name) }}
+                      className="group block transition hover:bg-muted/50"
+                    >
+                      {row}
+                    </Link>
+                  ) : (
+                    <div key={s.id}>{row}</div>
+                  );
+                })}
               </div>
             </div>
           ))}

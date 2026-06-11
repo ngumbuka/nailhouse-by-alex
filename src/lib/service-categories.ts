@@ -315,3 +315,15 @@ export const CATEGORY_BY_SLUG: Record<string, CategoryInfo> = Object.fromEntries
 export const SLUG_BY_CATEGORY: Record<string, string> = Object.fromEntries(
   CATEGORIES.map((c) => [c.category, c.slug]),
 );
+
+// Deterministic per-service slug derived from the service name.
+// Strips diacritics, lowercases, replaces non-alphanumerics with dashes.
+export function slugifyService(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
