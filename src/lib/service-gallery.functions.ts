@@ -117,7 +117,7 @@ export const adminUpdateServiceGalleryImage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const patch: Record<string, unknown> = {};
+    const patch: { sort?: number; caption?: string | null } = {};
     if (data.sort !== undefined) patch.sort = data.sort;
     if (data.caption !== undefined) patch.caption = data.caption;
     const { error } = await supabaseAdmin
