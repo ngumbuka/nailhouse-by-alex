@@ -171,6 +171,7 @@ function AdminPage() {
           <TabsList>
             <TabsTrigger value="bookings">Réservations</TabsTrigger>
             <TabsTrigger value="gallery">Galerie</TabsTrigger>
+            <TabsTrigger value="service-gallery">Galeries prestations</TabsTrigger>
             <TabsTrigger value="newsletter">Newsletter</TabsTrigger>
           </TabsList>
 
