@@ -41,7 +41,10 @@ export const Route = createFileRoute("/services/$slug")({
   },
   loader: async ({ context, params }) => {
     if (!CATEGORY_BY_SLUG[params.slug]) throw notFound();
-    await context.queryClient.ensureQueryData(opts);
+    await Promise.all([
+      context.queryClient.ensureQueryData(opts),
+      context.queryClient.ensureQueryData(galleryOpts(params.slug)),
+    ]);
   },
   component: ServiceCategoryPage,
   errorComponent: ({ error }) => (
