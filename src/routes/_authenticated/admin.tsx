@@ -68,6 +68,66 @@ function AdminPage() {
   const [imgUrl, setImgUrl] = useState("");
   const [imgCaption, setImgCaption] = useState("");
 
+  // ── Per-service gallery state & mutations ───────────────
+  const listSvcGallery = useServerFn(adminListServiceGallery);
+  const registerSvcImg = useServerFn(adminRegisterServiceGalleryImage);
+  const updateSvcImg = useServerFn(adminUpdateServiceGalleryImage);
+  const deleteSvcImg = useServerFn(adminDeleteServiceGalleryImage);
+
+  const svcGallery = useQuery({
+    queryKey: ["admin", "service-gallery"],
+    queryFn: () => listSvcGallery(),
+    enabled: !!admin.data?.isAdmin,
+  });
+
+  const invalidateSvcGallery = (slug?: string) => {
+    qc.invalidateQueries({ queryKey: ["admin", "service-gallery"] });
+    if (slug) qc.invalidateQueries({ queryKey: ["service-gallery", slug] });
+    else qc.invalidateQueries({ queryKey: ["service-gallery"] });
+  };
+
+  const registerMut = useMutation({
+    mutationFn: (v: { slug: string; storagePath: string; caption?: string }) =>
+      registerSvcImg({ data: v }),
+    onSuccess: (_d, v) => { toast.success("Image ajoutée"); invalidateSvcGallery(v.slug); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const updateSvcMut = useMutation({
+    mutationFn: (v: { id: string; sort?: number; caption?: string | null; slug?: string }) =>
+      updateSvcImg({ data: { id: v.id, sort: v.sort, caption: v.caption } }),
+    onSuccess: (_d, v) => { invalidateSvcGallery(v.slug); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const deleteSvcMut = useMutation({
+    mutationFn: (v: { id: string; slug: string }) => deleteSvcImg({ data: { id: v.id } }),
+    onSuccess: (_d, v) => { toast.success("Image supprimée"); invalidateSvcGallery(v.slug); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const [svcSlug, setSvcSlug] = useState<string>(CATEGORIES[0]?.slug ?? "");
+  const [uploading, setUploading] = useState(false);
+
+  async function handleSvcUpload(files: FileList | null) {
+    if (!files || files.length === 0 || !svcSlug) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const path = `${svcSlug}/${crypto.randomUUID()}.${ext}`;
+        const { error } = await supabase.storage
+          .from("service-gallery")
+          .upload(path, file, { contentType: file.type, upsert: false });
+        if (error) throw error;
+        await registerMut.mutateAsync({ slug: svcSlug, storagePath: path });
+      }
+      toast.success("Téléversement terminé");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/auth" });
