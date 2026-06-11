@@ -11,7 +11,7 @@ export const Route = createFileRoute("/contact")({
       { name: "description", content: "Contactez NailHouse à Ekoumdoum, à côté du Bilbao Lounge. Téléphones : 677 216 185 / 698 905 829." },
       { property: "og:title", content: "Contact — NailHouse" },
       { property: "og:description", content: "Adresse, téléphones et horaires de NailHouse." },
-      { property: "og:image", content: ASSETS.salonPedicure },
+      { property: "og:image", content: ASSETS.heroContact },
     ],
   }),
   component: ContactPage,
@@ -61,7 +61,7 @@ function ContactPage() {
         </div>
 
         <div className="overflow-hidden rounded-[2rem] shadow-xl">
-          <img src={ASSETS.salonPedicure} alt="Salon NailHouse" className="h-full w-full object-cover" />
+          <img src={ASSETS.heroContact} alt="Salon NailHouse" className="h-full w-full object-cover" />
         </div>
       </section>
 

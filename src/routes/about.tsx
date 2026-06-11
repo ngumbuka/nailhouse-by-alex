@@ -10,7 +10,7 @@ export const Route = createFileRoute("/about")({
       { name: "description", content: "Découvrez l'atelier NailHouse : notre mission, notre vision et notre approche du soin des ongles à Yaoundé." },
       { property: "og:title", content: "L'atelier — NailHouse" },
       { property: "og:description", content: "Mission, vision et approche du soin chez NailHouse." },
-      { property: "og:image", content: ASSETS.mindfulCandle },
+      { property: "og:image", content: ASSETS.heroAbout },
     ],
   }),
   component: AboutPage,
@@ -31,7 +31,7 @@ function AboutPage() {
           </div>
         </div>
         <div className="aspect-[4/5] overflow-hidden rounded-[2rem] shadow-xl">
-          <img src={ASSETS.mindfulCandle} alt="" className="h-full w-full object-cover" />
+          <img src={ASSETS.heroAbout} alt="" className="h-full w-full object-cover" />
         </div>
       </section>
 
