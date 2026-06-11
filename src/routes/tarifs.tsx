@@ -4,7 +4,7 @@ import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
 import { ASSETS } from "@/lib/assets";
 import { listServices } from "@/lib/booking.functions";
-import { SLUG_BY_CATEGORY } from "@/lib/service-categories";
+import { SLUG_BY_CATEGORY, slugifyService } from "@/lib/service-categories";
 
 const opts = queryOptions({ queryKey: ["services"], queryFn: () => listServices() });
 
