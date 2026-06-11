@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { ChevronRight, CalendarCheck2 } from "lucide-react";
+import { ChevronRight, CalendarCheck2, Check, Sparkles, Clock, ShieldCheck, HeartHandshake } from "lucide-react";
 import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
 import { ASSETS } from "@/lib/assets";
