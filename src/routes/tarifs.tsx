@@ -15,7 +15,7 @@ export const Route = createFileRoute("/tarifs")({
       { name: "description", content: "Grille tarifaire complète NailHouse : manucure, pédicure, semi-permanent, gel, BIAB, capsules. Tarifs en FCFA." },
       { property: "og:title", content: "Grille tarifaire — NailHouse" },
       { property: "og:description", content: "Tarifs détaillés de toutes les prestations NailHouse en FCFA." },
-      { property: "og:image", content: ASSETS.polishShelves },
+      { property: "og:image", content: ASSETS.heroTarifs },
     ],
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(opts),
@@ -35,7 +35,7 @@ function TarifsPage() {
     <SiteLayout>
       <section className="relative">
         <div className="aspect-[5/2] w-full overflow-hidden md:aspect-[5/1.5]">
-          <img src={ASSETS.polishShelves} alt="" className="h-full w-full object-cover" />
+          <img src={ASSETS.heroTarifs} alt="" className="h-full w-full object-cover" />
         </div>
         <div className="mx-auto max-w-6xl px-5 py-12">
           <p className="text-[11px] uppercase tracking-[0.25em] text-accent">Tous nos tarifs</p>
