@@ -15,7 +15,7 @@ import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
 import { listServices } from "@/lib/booking.functions";
 import { listServiceGallery } from "@/lib/service-gallery.functions";
-import { CATEGORIES, CATEGORY_BY_SLUG } from "@/lib/service-categories";
+import { CATEGORIES, CATEGORY_BY_SLUG, slugifyService } from "@/lib/service-categories";
 
 const opts = queryOptions({ queryKey: ["services"], queryFn: () => listServices() });
 const galleryOpts = (slug: string) =>
@@ -256,93 +256,63 @@ function ServiceCategoryPage() {
         </div>
       </section>
 
-      {/* ───────── TARIFS — atelier card ───────── */}
+      {/* ───────── TARIFS — service cards ───────── */}
       <section className="mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32">
-        <div className="grid gap-16 md:grid-cols-[1.4fr_1fr] md:items-start">
-          <div>
-            <Eyebrow>Carte des tarifs</Eyebrow>
-            <h2 className="mt-6 font-serif text-4xl text-primary md:text-5xl">{info.title}</h2>
-            <p className="mt-4 max-w-md text-sm text-muted-foreground">
-              Tous les prix sont indiqués en FCFA et incluent la préparation, la pose et la
-              finition.
-            </p>
-            <GoldRule className="mt-8" />
+        <div className="mx-auto max-w-3xl text-center">
+          <Eyebrow>Carte des prestations</Eyebrow>
+          <h2 className="mt-6 font-serif text-4xl text-primary md:text-5xl">{info.title}</h2>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Choisissez la prestation qui vous correspond — chaque soin a sa page dédiée
+            avec description, étapes et réservation.
+          </p>
+          <GoldRule className="mx-auto mt-8" />
+        </div>
 
-            <ul className="mt-10 divide-y divide-gold/20 border-y border-gold/20">
-              {items.map((s) => (
-                <li
-                  key={s.id}
-                  className="group flex items-center justify-between gap-6 py-6"
-                >
-                  <div className="min-w-0">
-                    <p className="font-serif text-xl text-primary md:text-2xl">{s.name}</p>
-                    <p className="mt-1 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-                      {info.tagline}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <p className="font-serif text-2xl text-gold md:text-3xl">
+        {items.length === 0 ? (
+          <p className="mt-12 text-center text-sm text-muted-foreground">
+            La carte des tarifs sera dévoilée très prochainement.
+          </p>
+        ) : (
+          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((s) => (
+              <Link
+                key={s.id}
+                to="/services/$slug/$service"
+                params={{ slug, service: slugifyService(s.name) }}
+                className="group flex h-full flex-col justify-between border border-gold/20 bg-card p-7 transition hover:border-gold hover:shadow-lg"
+              >
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-gold">{info.tagline}</p>
+                  <h3 className="mt-3 font-serif text-2xl text-primary">{s.name}</h3>
+                </div>
+                <div className="mt-8 flex items-end justify-between gap-3">
+                  <div>
+                    <p className="font-serif text-3xl text-gold">
                       {s.price_fcfa.toLocaleString("fr-FR")}
-                      <span className="ml-1 text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                      <span className="ml-1 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
                         F
                       </span>
                     </p>
-                    <Button
-                      asChild
-                      size="sm"
-                      variant="outline"
-                      className="rounded-full border-primary/30 text-[11px] uppercase tracking-[0.2em]"
-                    >
-                      <Link to="/booking" search={{ service: s.id }}>
-                        Réserver
-                      </Link>
-                    </Button>
+                    <p className="mt-1 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                      {info.duration}
+                    </p>
                   </div>
-                </li>
-              ))}
-              {items.length === 0 && (
-                <li className="py-6 text-sm text-muted-foreground">
-                  La carte des tarifs sera dévoilée très prochainement.
-                </li>
-              )}
-            </ul>
+                  <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.28em] text-gold group-hover:underline">
+                    Voir le détail <ChevronRight className="h-3 w-3" />
+                  </span>
+                </div>
+              </Link>
+            ))}
           </div>
+        )}
 
-          <aside className="space-y-6 md:sticky md:top-28">
-            <div className="border border-gold/30 bg-card p-8">
-              <Sparkles className="h-5 w-5 text-gold" />
-              <h3 className="mt-5 font-serif text-2xl text-primary">L'expérience NailHouse</h3>
-              <ul className="mt-6 space-y-4">
-                {info.whyUs.map((w) => (
-                  <li key={w} className="flex gap-3 text-sm text-muted-foreground">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
-                    <span>{w}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button
-                asChild
-                className="mt-8 w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <Link to="/booking" search={{ service: firstId }}>
-                  Réserver ce soin
-                </Link>
-              </Button>
-            </div>
-            <div className="border border-border bg-card p-8">
-              <h4 className="font-serif text-xl text-primary">Entre deux rendez-vous</h4>
-              <ul className="mt-5 space-y-3 text-sm text-muted-foreground">
-                {info.care.map((c) => (
-                  <li key={c} className="flex gap-2">
-                    <span className="text-gold">·</span>
-                    <span>{c}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </aside>
+        <div className="mt-12 text-center">
+          <Button asChild variant="outline" className="rounded-full border-gold/40 text-gold hover:bg-gold hover:text-ink">
+            <Link to="/tarifs">Voir la grille tarifaire complète →</Link>
+          </Button>
         </div>
       </section>
+
 
       {/* ───────── GALERIE — service-specific ───────── */}
       <section className="bg-muted/40 py-24 md:py-32">
