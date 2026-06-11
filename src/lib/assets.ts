@@ -1,7 +1,7 @@
 // CDN URLs for salon imagery (uploaded via lovable-assets).
 export const ASSETS = {
   logo: "/__l5e/assets-v1/2100b203-120f-4d13-af2f-41fd020e085e/nailhouse-logo.jpg",
-  burgundyManicure: "/__l5e/assets-v1/f3af7bff-bff9-4fdb-947c-2233131ec88d/burgundy-manicure.jpg",
+  burgundyManicure: "/__l5e/assets-v1/7ad8a9f2-afc9-4b97-b483-e0f7aed6edea/hero-manicure.jpg",
   polkaDotNails: "/__l5e/assets-v1/c4fe05e1-2230-4da1-af6c-8467c842ad62/polka-dot-nails.jpg",
   salonPedicure: "/__l5e/assets-v1/c7122506-d906-40a3-9e65-1bb354594c12/salon-pedicure.jpg",
   mindfulCandle: "/__l5e/assets-v1/87dfd0fc-2b06-4f03-8edf-841b223af27d/mindful-candle.jpg",
