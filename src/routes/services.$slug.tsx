@@ -5,8 +5,6 @@ import {
   ChevronRight,
   ChevronLeft,
   CalendarCheck2,
-  Check,
-  Sparkles,
   Clock,
   ShieldCheck,
   HeartHandshake,
