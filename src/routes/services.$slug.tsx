@@ -361,29 +361,36 @@ function ServiceCategoryPage() {
           </div>
           <GoldRule className="mt-10" />
 
-          <div className="mt-12 grid gap-6 md:grid-cols-12">
-            <div className="md:col-span-8">
-              <div className="relative aspect-[16/10] overflow-hidden rounded-sm">
-                <img
-                  src={info.image}
-                  alt={info.title}
-                  className="h-full w-full object-cover transition duration-700 hover:scale-[1.03]"
-                  loading="lazy"
-                />
-                <div className="pointer-events-none absolute inset-3 border border-gold/30" />
-              </div>
-            </div>
-            <div className="md:col-span-4">
-              <div className="relative aspect-[3/4] overflow-hidden rounded-sm md:aspect-auto md:h-full">
-                <img
-                  src={info.flat}
-                  alt={`${info.title} — atelier`}
-                  className="h-full w-full object-cover transition duration-700 hover:scale-[1.03]"
-                  loading="lazy"
-                />
-                <div className="pointer-events-none absolute inset-3 border border-gold/30" />
-              </div>
-            </div>
+          <div className="mt-12 grid auto-rows-[180px] grid-cols-2 gap-4 md:auto-rows-[260px] md:grid-cols-4">
+            {galleryImages.map((g, i) => {
+              const span =
+                galleryImages.length === 1
+                  ? "col-span-2 row-span-2 md:col-span-4 md:row-span-2"
+                  : i === 0
+                  ? "col-span-2 row-span-2 md:col-span-2 md:row-span-2"
+                  : i % 5 === 3
+                  ? "col-span-2 md:col-span-2"
+                  : "";
+              return (
+                <figure
+                  key={`${g.url}-${i}`}
+                  className={`group relative overflow-hidden rounded-sm ${span}`}
+                >
+                  <img
+                    src={g.url}
+                    alt={g.caption ?? info.title}
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+                    loading="lazy"
+                  />
+                  <div className="pointer-events-none absolute inset-3 border border-gold/30" />
+                  {g.caption && (
+                    <figcaption className="absolute inset-x-3 bottom-3 bg-ink/70 px-3 py-1.5 text-[10px] uppercase tracking-[0.25em] text-primary-foreground/80 backdrop-blur-sm">
+                      {g.caption}
+                    </figcaption>
+                  )}
+                </figure>
+              );
+            })}
           </div>
         </div>
       </section>
