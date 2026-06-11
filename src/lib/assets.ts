@@ -11,4 +11,8 @@ export const ASSETS = {
   basketsCorner: "/__l5e/assets-v1/d5178014-7cf5-420a-9d7c-a8dcb6051e21/baskets-corner.jpg",
   barShelf: "/__l5e/assets-v1/e9891a8d-554c-4e9d-84ec-68229a781242/bar-shelf.jpg",
   coffeeEasel: "/__l5e/assets-v1/dba26d7e-4ee4-4eda-866d-5c34e475c6c2/coffee-easel.jpg",
+  heroServices: "/__l5e/assets-v1/da0eab87-5e12-448d-9b4b-da31a29a273e/hero-services.jpg",
+  heroTarifs: "/__l5e/assets-v1/fec912ad-06b3-404a-9159-fcd786992662/hero-tarifs.jpg",
+  heroAbout: "/__l5e/assets-v1/73b1ff93-2185-452b-b181-051ff22204af/hero-about.jpg",
+  heroContact: "/__l5e/assets-v1/8d0554a7-e12a-4457-8aeb-3bbe3f77b5cc/hero-contact.jpg",
 } as const;
