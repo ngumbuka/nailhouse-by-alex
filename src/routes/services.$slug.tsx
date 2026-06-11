@@ -451,12 +451,6 @@ function ServiceCategoryPage() {
         </div>
       </section>
 
-      {/* ───────── Autres prestations — discreet footer strip ───────── */}
-      <section
-        aria-label="Autres prestations"
-        className="border-t border-gold/15 bg-background py-10"
-      >
-        <div className="mx-auto max-w-7xl px-6 md:px-10">
       {/* ───────── Autres prestations — premium carousel ───────── */}
       <section
         aria-label="Autres prestations de la maison"
