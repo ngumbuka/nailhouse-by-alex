@@ -1,9 +1,16 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { ChevronRight, CalendarCheck2, Check, Sparkles, Clock, ShieldCheck, HeartHandshake } from "lucide-react";
+import {
+  ChevronRight,
+  CalendarCheck2,
+  Check,
+  Sparkles,
+  Clock,
+  ShieldCheck,
+  HeartHandshake,
+} from "lucide-react";
 import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
-import { ASSETS } from "@/lib/assets";
 import { listServices } from "@/lib/booking.functions";
 import { CATEGORIES, CATEGORY_BY_SLUG } from "@/lib/service-categories";
 
@@ -20,7 +27,7 @@ export const Route = createFileRoute("/services/$slug")({
         { name: "description", content: desc },
         { property: "og:title", content: title },
         { property: "og:description", content: desc },
-        { property: "og:image", content: info?.image ?? ASSETS.polishShelves },
+        { property: "og:image", content: info?.image ?? "" },
       ],
     };
   },
@@ -29,17 +36,34 @@ export const Route = createFileRoute("/services/$slug")({
     await context.queryClient.ensureQueryData(opts);
   },
   component: ServiceCategoryPage,
-  errorComponent: ({ error }) => <div className="p-10 text-sm text-destructive">{error.message}</div>,
+  errorComponent: ({ error }) => (
+    <div className="p-10 text-sm text-destructive">{error.message}</div>
+  ),
   notFoundComponent: () => (
     <SiteLayout>
       <div className="mx-auto max-w-3xl px-5 py-20 text-center">
         <h1 className="font-serif text-4xl text-primary">Prestation introuvable</h1>
         <p className="mt-4 text-muted-foreground">Cette prestation n'existe pas ou plus.</p>
-        <Button asChild className="mt-6 rounded-full"><Link to="/services">Voir toutes les prestations</Link></Button>
+        <Button asChild className="mt-6 rounded-full">
+          <Link to="/services">Voir toutes les prestations</Link>
+        </Button>
       </div>
     </SiteLayout>
   ),
 });
+
+function GoldRule({ className = "" }: { className?: string }) {
+  return <span className={`block h-px w-16 bg-gold ${className}`} aria-hidden />;
+}
+
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-gold">
+      <span className="h-px w-8 bg-gold" />
+      {children}
+    </span>
+  );
+}
 
 function ServiceCategoryPage() {
   const { slug } = Route.useParams();
@@ -47,247 +71,422 @@ function ServiceCategoryPage() {
   const { data } = useSuspenseQuery(opts);
   const items = data.filter((s) => s.category === info.category);
   const others = CATEGORIES.filter((c) => c.slug !== slug);
+  const minPrice = items.length ? Math.min(...items.map((s) => s.price_fcfa)) : null;
+  const firstId = items[0]?.id;
 
   return (
     <SiteLayout>
-      <section className="relative">
-        <div className="relative aspect-[5/2] w-full overflow-hidden md:aspect-[5/1.4]">
-          <img src={info.image} alt={info.title} className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+      {/* ───────── HERO — cinematic editorial ───────── */}
+      <section className="relative isolate overflow-hidden bg-ink text-primary-foreground">
+        <div className="absolute inset-0">
+          <img
+            src={info.image}
+            alt={info.title}
+            className="h-full w-full object-cover opacity-70"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/70 to-ink/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/95 via-transparent to-ink/40" />
         </div>
-        <div className="mx-auto max-w-6xl px-5 pt-6">
-          <nav aria-label="Fil d'Ariane" className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-            <Link to="/" className="hover:text-primary">Accueil</Link>
-            <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-            <Link to="/services" className="hover:text-primary">Prestations</Link>
-            <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-            <span className="text-primary">{info.title}</span>
+
+        <div className="relative mx-auto flex min-h-[78vh] max-w-7xl flex-col justify-between px-6 pb-16 pt-10 md:px-10 md:pb-24 md:pt-14">
+          <nav
+            aria-label="Fil d'Ariane"
+            className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-primary-foreground/70"
+          >
+            <Link to="/" className="hover:text-gold">
+              Maison
+            </Link>
+            <ChevronRight className="h-3 w-3 opacity-50" />
+            <Link to="/services" className="hover:text-gold">
+              Prestations
+            </Link>
+            <ChevronRight className="h-3 w-3 opacity-50" />
+            <span className="text-gold">{info.title}</span>
           </nav>
-        </div>
-        <div className="mx-auto max-w-6xl px-5 pb-12 pt-6">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-accent">{info.tagline}</p>
-          <h1 className="mt-3 font-serif text-4xl text-primary md:text-6xl">{info.title}</h1>
-          <p className="mt-5 max-w-2xl text-muted-foreground">{info.intro}</p>
-          <p className="mt-3 text-sm text-accent">Durée indicative : {info.duration}</p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Button asChild size="lg" className="rounded-full px-7">
-              <Link to="/booking" search={{ service: items[0]?.id }}>Réserver cette prestation</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="rounded-full px-7">
-              <Link to="/services">← Toutes les prestations</Link>
-            </Button>
+
+          <div className="max-w-3xl">
+            <Eyebrow>{info.tagline}</Eyebrow>
+            <h1 className="mt-6 font-serif text-5xl leading-[1.02] md:text-7xl lg:text-[5.5rem]">
+              {info.title}
+            </h1>
+            <GoldRule className="mt-8" />
+            <p className="mt-8 max-w-xl text-base leading-relaxed text-primary-foreground/85 md:text-lg">
+              {info.intro}
+            </p>
+
+            <dl className="mt-10 grid grid-cols-3 gap-6 border-y border-primary-foreground/10 py-6">
+              <div>
+                <dt className="text-[10px] uppercase tracking-[0.28em] text-primary-foreground/60">
+                  Durée
+                </dt>
+                <dd className="mt-2 font-serif text-lg text-gold">{info.duration}</dd>
+              </div>
+              <div>
+                <dt className="text-[10px] uppercase tracking-[0.28em] text-primary-foreground/60">
+                  À partir de
+                </dt>
+                <dd className="mt-2 font-serif text-lg text-gold">
+                  {minPrice ? `${minPrice.toLocaleString("fr-FR")} F` : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[10px] uppercase tracking-[0.28em] text-primary-foreground/60">
+                  Hygiène
+                </dt>
+                <dd className="mt-2 font-serif text-lg text-gold">Stérilisé</dd>
+              </div>
+            </dl>
+
+            <div className="mt-10 flex flex-wrap items-center gap-4">
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full bg-gold px-9 text-ink hover:bg-gold/90"
+              >
+                <Link to="/booking" search={{ service: firstId }}>
+                  Réserver ce rituel
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="ghost"
+                className="rounded-full border border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10"
+              >
+                <Link to="/services">← Toutes les prestations</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
 
-
-
-      <section className="mx-auto grid max-w-6xl gap-10 px-5 pb-16 md:grid-cols-[1.3fr_1fr]">
-        <div className="rounded-3xl border border-border bg-card p-6 md:p-10">
-          <h2 className="font-serif text-2xl text-primary md:text-3xl">Tarifs</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Tous les prix sont en FCFA.</p>
-          <div className="mt-6 divide-y divide-border">
-            {items.map((s) => (
-              <div key={s.id} className="flex items-center justify-between gap-4 py-4">
-                <div>
-                  <p className="text-sm md:text-base">{s.name}</p>
-                  <p className="mt-1 font-serif text-base text-accent">
-                    {s.price_fcfa.toLocaleString("fr-FR")} <span className="text-xs text-muted-foreground">FCFA</span>
+      {/* ───────── INTRO — "Pour qui" editorial ───────── */}
+      <section className="relative mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32">
+        <div className="grid gap-14 md:grid-cols-[1fr_1.2fr] md:items-center">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-sm">
+            <img
+              src={info.flat}
+              alt={`${info.title} — détails`}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+            <div className="pointer-events-none absolute inset-3 border border-gold/30" />
+          </div>
+          <div>
+            <Eyebrow>Pour qui</Eyebrow>
+            <h2 className="mt-6 font-serif text-4xl leading-tight text-primary md:text-5xl">
+              {info.bestFor}
+            </h2>
+            <GoldRule className="mt-8" />
+            <div className="mt-10 grid gap-6 sm:grid-cols-3">
+              {[
+                { icon: Clock, label: "Durée", value: info.duration },
+                { icon: ShieldCheck, label: "Hygiène", value: "Outils stérilisés" },
+                { icon: HeartHandshake, label: "Sur-mesure", value: "Conseil dédié" },
+              ].map((f) => (
+                <div
+                  key={f.label}
+                  className="border-t border-gold/40 pt-4"
+                >
+                  <f.icon className="h-4 w-4 text-gold" />
+                  <p className="mt-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                    {f.label}
                   </p>
+                  <p className="mt-1 font-serif text-base text-primary">{f.value}</p>
                 </div>
-                <Button asChild size="sm" variant="outline" className="rounded-full">
-                  <Link to="/booking" search={{ service: s.id }}>Réserver</Link>
-                </Button>
-              </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────── RITUEL — couture timeline ───────── */}
+      <section className="bg-ink py-24 text-primary-foreground md:py-32">
+        <div className="mx-auto max-w-7xl px-6 md:px-10">
+          <div className="mx-auto max-w-2xl text-center">
+            <Eyebrow>Le rituel</Eyebrow>
+            <h2 className="mt-6 font-serif text-4xl md:text-5xl">Une expérience en quatre temps</h2>
+            <p className="mx-auto mt-6 max-w-md text-sm leading-relaxed text-primary-foreground/70">
+              Chaque geste est pensé pour vous sublimer, du diagnostic à la signature finale.
+            </p>
+            <GoldRule className="mx-auto mt-8" />
+          </div>
+
+          <ol className="mt-16 grid gap-px bg-gold/20 md:grid-cols-4">
+            {info.ritual.map((step, i) => (
+              <li
+                key={step.title}
+                className="group relative bg-ink p-8 transition hover:bg-ink/60 md:p-10"
+              >
+                <span className="font-serif text-5xl text-gold/40 transition group-hover:text-gold">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <h3 className="mt-6 font-serif text-2xl">{step.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-primary-foreground/70">
+                  {step.description}
+                </p>
+              </li>
             ))}
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="rounded-3xl border border-border bg-card p-6 md:p-8">
-            <h3 className="font-serif text-xl text-primary">Ce que comprend la prestation</h3>
-            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-              {info.highlights.map((h) => (
-                <li key={h} className="flex gap-2"><span className="text-accent">·</span><span>{h}</span></li>
-              ))}
-            </ul>
-          </div>
-          <div className="rounded-3xl border border-border bg-card p-6 md:p-8">
-            <h3 className="font-serif text-xl text-primary">Conseils d'entretien</h3>
-            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-              {info.care.map((h) => (
-                <li key={h} className="flex gap-2"><span className="text-accent">·</span><span>{h}</span></li>
-              ))}
-            </ul>
-          </div>
+          </ol>
         </div>
       </section>
 
-      {/* "Pour qui ?" + trio assurance */}
-      <section className="mx-auto max-w-6xl px-5 pb-16">
-        <div className="overflow-hidden rounded-[2rem] border border-primary/15 bg-gradient-to-br from-primary/[0.04] via-card to-accent/[0.04] p-6 md:p-12">
-          <div className="grid gap-10 md:grid-cols-[1.1fr_1fr] md:items-center">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.25em] text-accent">Pour qui ?</p>
-              <h2 className="mt-3 font-serif text-3xl text-primary md:text-4xl">{info.bestFor}</h2>
-              <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl bg-background/60 p-4 backdrop-blur">
-                  <Clock className="h-5 w-5 text-accent" />
-                  <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Durée</p>
-                  <p className="mt-1 font-serif text-base text-primary">{info.duration}</p>
-                </div>
-                <div className="rounded-2xl bg-background/60 p-4 backdrop-blur">
-                  <ShieldCheck className="h-5 w-5 text-accent" />
-                  <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Hygiène</p>
-                  <p className="mt-1 font-serif text-base text-primary">Outils stérilisés</p>
-                </div>
-                <div className="rounded-2xl bg-background/60 p-4 backdrop-blur">
-                  <HeartHandshake className="h-5 w-5 text-accent" />
-                  <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Sur-mesure</p>
-                  <p className="mt-1 font-serif text-base text-primary">Conseil dédié</p>
-                </div>
-              </div>
-            </div>
-            <div className="relative aspect-square overflow-hidden rounded-3xl shadow-2xl ring-1 ring-primary/10">
-              <img src={info.gallery[0] ?? info.image} alt={info.title} className="h-full w-full object-cover" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Rituel — étapes */}
-      <section className="mx-auto max-w-6xl px-5 pb-16">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+      {/* ───────── TARIFS — atelier card ───────── */}
+      <section className="mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32">
+        <div className="grid gap-16 md:grid-cols-[1.4fr_1fr] md:items-start">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.25em] text-accent">Le rituel</p>
-            <h2 className="mt-2 font-serif text-3xl text-primary md:text-4xl">Étape par étape</h2>
-          </div>
-          <p className="max-w-sm text-sm text-muted-foreground">Une expérience pensée pour vous sublimer, du diagnostic à la finition.</p>
-        </div>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {info.ritual.map((step, i) => (
-            <div key={step.title} className="group relative rounded-3xl border border-border bg-card p-6 transition hover:-translate-y-1 hover:border-accent/40 hover:shadow-xl">
-              <span className="absolute -top-3 left-6 inline-flex h-7 items-center rounded-full bg-accent px-3 font-serif text-xs text-accent-foreground">
-                Étape {i + 1}
-              </span>
-              <h3 className="mt-2 font-serif text-lg text-primary">{step.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{step.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+            <Eyebrow>Carte des tarifs</Eyebrow>
+            <h2 className="mt-6 font-serif text-4xl text-primary md:text-5xl">{info.title}</h2>
+            <p className="mt-4 max-w-md text-sm text-muted-foreground">
+              Tous les prix sont indiqués en FCFA et incluent la préparation, la pose et la
+              finition.
+            </p>
+            <GoldRule className="mt-8" />
 
-      {/* Galerie + Pourquoi nous */}
-      <section className="mx-auto max-w-6xl px-5 pb-16">
-        <div className="grid gap-8 md:grid-cols-[1.4fr_1fr]">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.25em] text-accent">En images</p>
-            <h2 className="mt-2 font-serif text-3xl text-primary md:text-4xl">Réalisations & ambiance</h2>
-            <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
-              {info.gallery.map((src, i) => (
-                <div key={src + i} className={`overflow-hidden rounded-2xl ${i === 0 ? "col-span-2 row-span-2 aspect-square md:col-span-2 md:row-span-2" : "aspect-square"}`}>
-                  <img src={src} alt="" className="h-full w-full object-cover transition duration-500 hover:scale-105" />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-3xl border border-primary/15 bg-card p-6 md:p-8">
-            <Sparkles className="h-6 w-6 text-accent" />
-            <h3 className="mt-4 font-serif text-2xl text-primary">Pourquoi NailHouse</h3>
-            <ul className="mt-5 space-y-4">
-              {info.whyUs.map((w) => (
-                <li key={w} className="flex gap-3">
-                  <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
-                    <Check className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="text-sm text-muted-foreground">{w}</span>
+            <ul className="mt-10 divide-y divide-gold/20 border-y border-gold/20">
+              {items.map((s) => (
+                <li
+                  key={s.id}
+                  className="group flex items-center justify-between gap-6 py-6"
+                >
+                  <div className="min-w-0">
+                    <p className="font-serif text-xl text-primary md:text-2xl">{s.name}</p>
+                    <p className="mt-1 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                      {info.tagline}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <p className="font-serif text-2xl text-gold md:text-3xl">
+                      {s.price_fcfa.toLocaleString("fr-FR")}
+                      <span className="ml-1 text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                        F
+                      </span>
+                    </p>
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full border-primary/30 text-[11px] uppercase tracking-[0.2em]"
+                    >
+                      <Link to="/booking" search={{ service: s.id }}>
+                        Réserver
+                      </Link>
+                    </Button>
+                  </div>
                 </li>
               ))}
+              {items.length === 0 && (
+                <li className="py-6 text-sm text-muted-foreground">
+                  La carte des tarifs sera dévoilée très prochainement.
+                </li>
+              )}
             </ul>
-            <Button asChild className="mt-6 w-full rounded-full">
-              <Link to="/booking" search={{ service: items[0]?.id }}>Je réserve ce soin</Link>
-            </Button>
+          </div>
+
+          <aside className="space-y-6 md:sticky md:top-28">
+            <div className="border border-gold/30 bg-card p-8">
+              <Sparkles className="h-5 w-5 text-gold" />
+              <h3 className="mt-5 font-serif text-2xl text-primary">L'expérience NailHouse</h3>
+              <ul className="mt-6 space-y-4">
+                {info.whyUs.map((w) => (
+                  <li key={w} className="flex gap-3 text-sm text-muted-foreground">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+                    <span>{w}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button
+                asChild
+                className="mt-8 w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <Link to="/booking" search={{ service: firstId }}>
+                  Réserver ce soin
+                </Link>
+              </Button>
+            </div>
+            <div className="border border-border bg-card p-8">
+              <h4 className="font-serif text-xl text-primary">Entre deux rendez-vous</h4>
+              <ul className="mt-5 space-y-3 text-sm text-muted-foreground">
+                {info.care.map((c) => (
+                  <li key={c} className="flex gap-2">
+                    <span className="text-gold">·</span>
+                    <span>{c}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      {/* ───────── GALERIE — service-specific ───────── */}
+      <section className="bg-muted/40 py-24 md:py-32">
+        <div className="mx-auto max-w-7xl px-6 md:px-10">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <Eyebrow>En images</Eyebrow>
+              <h2 className="mt-6 font-serif text-4xl text-primary md:text-5xl">
+                Le regard sur {info.title.toLowerCase()}
+              </h2>
+            </div>
+            <p className="max-w-sm text-sm text-muted-foreground">
+              Une sélection éditoriale dédiée à ce rituel — chaque image a été pensée pour vous
+              transporter.
+            </p>
+          </div>
+          <GoldRule className="mt-10" />
+
+          <div className="mt-12 grid gap-6 md:grid-cols-12">
+            <div className="md:col-span-8">
+              <div className="relative aspect-[16/10] overflow-hidden rounded-sm">
+                <img
+                  src={info.image}
+                  alt={info.title}
+                  className="h-full w-full object-cover transition duration-700 hover:scale-[1.03]"
+                  loading="lazy"
+                />
+                <div className="pointer-events-none absolute inset-3 border border-gold/30" />
+              </div>
+            </div>
+            <div className="md:col-span-4">
+              <div className="relative aspect-[3/4] overflow-hidden rounded-sm md:aspect-auto md:h-full">
+                <img
+                  src={info.flat}
+                  alt={`${info.title} — atelier`}
+                  className="h-full w-full object-cover transition duration-700 hover:scale-[1.03]"
+                  loading="lazy"
+                />
+                <div className="pointer-events-none absolute inset-3 border border-gold/30" />
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="mx-auto max-w-4xl px-5 pb-16">
-        <p className="text-center text-[11px] uppercase tracking-[0.25em] text-accent">Questions fréquentes</p>
-        <h2 className="mt-2 text-center font-serif text-3xl text-primary md:text-4xl">On répond à vos doutes</h2>
-        <div className="mt-8 space-y-4">
+      {/* ───────── FAQ — couture accordion ───────── */}
+      <section className="mx-auto max-w-4xl px-6 py-24 md:py-32">
+        <div className="text-center">
+          <Eyebrow>Questions fréquentes</Eyebrow>
+          <h2 className="mt-6 font-serif text-4xl text-primary md:text-5xl">
+            On répond à vos doutes
+          </h2>
+          <GoldRule className="mx-auto mt-8" />
+        </div>
+        <div className="mt-12 space-y-3">
           {info.faq.map((f) => (
-            <details key={f.q} className="group rounded-2xl border border-border bg-card p-5 transition open:border-accent/40 open:shadow-md">
-              <summary className="flex cursor-pointer items-center justify-between gap-4 font-serif text-base text-primary md:text-lg">
-                {f.q}
-                <ChevronRight className="h-4 w-4 text-accent transition group-open:rotate-90" />
+            <details
+              key={f.q}
+              className="group border-b border-gold/20 py-5 transition open:border-gold"
+            >
+              <summary className="flex cursor-pointer items-center justify-between gap-4 font-serif text-lg text-primary md:text-xl">
+                <span>{f.q}</span>
+                <span className="grid h-9 w-9 place-items-center rounded-full border border-gold/40 text-gold transition group-open:rotate-90 group-open:bg-gold group-open:text-ink">
+                  <ChevronRight className="h-4 w-4" />
+                </span>
               </summary>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{f.a}</p>
+              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                {f.a}
+              </p>
             </details>
           ))}
         </div>
       </section>
 
-      {/* CTA bandeau */}
-      <section className="mx-auto max-w-6xl px-5 pb-20">
-        <div className="relative overflow-hidden rounded-[2rem] bg-primary px-6 py-12 text-primary-foreground md:px-12 md:py-16">
-          <div className="relative z-10 flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.25em] text-primary-foreground/70">Prête à passer en cabine ?</p>
-              <h2 className="mt-2 font-serif text-3xl md:text-4xl">Offrez-vous un moment {info.title.toLowerCase()}.</h2>
-              <p className="mt-3 max-w-xl text-sm text-primary-foreground/80">À partir de {Math.min(...items.map((s) => s.price_fcfa)).toLocaleString("fr-FR")} FCFA · Réservation en ligne en quelques secondes.</p>
-            </div>
-            <Button asChild size="lg" variant="secondary" className="rounded-full px-7">
-              <Link to="/booking" search={{ service: items[0]?.id }}>Réserver maintenant</Link>
-            </Button>
-          </div>
-          <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-accent/30 blur-3xl" />
+      {/* ───────── CTA — couture bandeau ───────── */}
+      <section className="bg-ink py-20 text-primary-foreground md:py-28">
+        <div className="mx-auto flex max-w-5xl flex-col items-center px-6 text-center md:px-10">
+          <Eyebrow>Prête à passer en cabine</Eyebrow>
+          <h2 className="mt-6 font-serif text-4xl md:text-6xl">
+            Offrez-vous un moment {info.title.toLowerCase()}.
+          </h2>
+          <GoldRule className="mx-auto mt-8" />
+          {minPrice && (
+            <p className="mt-6 max-w-md text-sm text-primary-foreground/70">
+              À partir de{" "}
+              <span className="text-gold">{minPrice.toLocaleString("fr-FR")} FCFA</span> ·
+              réservation en ligne en quelques secondes.
+            </p>
+          )}
+          <Button
+            asChild
+            size="lg"
+            className="mt-10 rounded-full bg-gold px-10 text-ink hover:bg-gold/90"
+          >
+            <Link to="/booking" search={{ service: firstId }}>
+              Réserver maintenant
+            </Link>
+          </Button>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 pb-20">
-
-        <h2 className="font-serif text-2xl text-primary md:text-3xl">Découvrir aussi</h2>
-        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {others.map((c) => (
+      {/* ───────── Autres rituels ───────── */}
+      <section className="mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <Eyebrow>Découvrir aussi</Eyebrow>
+            <h2 className="mt-6 font-serif text-4xl text-primary md:text-5xl">
+              Autres rituels NailHouse
+            </h2>
+          </div>
+          <Link
+            to="/services"
+            className="text-[11px] uppercase tracking-[0.28em] text-gold hover:underline"
+          >
+            Toute la carte →
+          </Link>
+        </div>
+        <GoldRule className="mt-10" />
+        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {others.slice(0, 3).map((c) => (
             <Link
               key={c.slug}
               to="/services/$slug"
               params={{ slug: c.slug }}
-              className="group overflow-hidden rounded-3xl border border-border bg-card transition hover:shadow-lg"
+              className="group block"
             >
-              <div className="aspect-[4/3] overflow-hidden">
-                <img src={c.image} alt={c.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+              <div className="relative aspect-[4/5] overflow-hidden rounded-sm">
+                <img
+                  src={c.image}
+                  alt={c.title}
+                  className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="pointer-events-none absolute inset-3 border border-gold/30 opacity-0 transition group-hover:opacity-100" />
               </div>
-              <div className="p-5">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-accent">{c.tagline}</p>
-                <h3 className="mt-2 font-serif text-xl text-primary">{c.title}</h3>
-              </div>
+              <p className="mt-5 text-[10px] uppercase tracking-[0.28em] text-gold">{c.tagline}</p>
+              <h3 className="mt-2 font-serif text-2xl text-primary">{c.title}</h3>
+              <span className="mt-3 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-muted-foreground transition group-hover:text-primary">
+                Voir le rituel <ChevronRight className="h-3 w-3" />
+              </span>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Sticky booking CTA — stays visible while scrolling the detail page */}
-      <div className="pointer-events-none sticky bottom-4 z-40 mx-auto mt-4 w-full max-w-6xl px-4 pb-4">
-        <div className="pointer-events-auto flex flex-wrap items-center justify-between gap-3 rounded-full border border-primary/15 bg-background/85 px-4 py-3 shadow-2xl shadow-primary/10 backdrop-blur-md md:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary sm:flex">
+      {/* ───────── Sticky elegant CTA ───────── */}
+      <div className="pointer-events-none sticky bottom-4 z-40 mx-auto w-full max-w-5xl px-4 pb-4">
+        <div className="pointer-events-auto flex flex-wrap items-center justify-between gap-3 border border-gold/40 bg-ink/95 px-5 py-3 text-primary-foreground shadow-2xl backdrop-blur-md md:px-7">
+          <div className="flex min-w-0 items-center gap-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold/15 text-gold">
               <CalendarCheck2 className="h-5 w-5" />
             </span>
             <div className="min-w-0">
-              <p className="truncate font-serif text-base text-primary md:text-lg">{info.title}</p>
-              <p className="truncate text-xs text-muted-foreground">{info.duration} · à partir de {Math.min(...items.map((s) => s.price_fcfa)).toLocaleString("fr-FR")} FCFA</p>
+              <p className="truncate font-serif text-lg">{info.title}</p>
+              <p className="truncate text-[10px] uppercase tracking-[0.25em] text-primary-foreground/60">
+                {info.duration}
+                {minPrice ? ` · dès ${minPrice.toLocaleString("fr-FR")} F` : ""}
+              </p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button asChild variant="ghost" size="sm" className="hidden rounded-full text-xs uppercase tracking-[0.15em] sm:inline-flex">
-              <Link to="/services">← Prestations</Link>
-            </Button>
-            <Button asChild size="lg" className="rounded-full px-6">
-              <Link to="/booking" search={{ service: items[0]?.id }}>Réserver</Link>
-            </Button>
-          </div>
+          <Button
+            asChild
+            size="lg"
+            className="rounded-full bg-gold px-7 text-ink hover:bg-gold/90"
+          >
+            <Link to="/booking" search={{ service: firstId }}>
+              Réserver
+            </Link>
+          </Button>
         </div>
       </div>
     </SiteLayout>
