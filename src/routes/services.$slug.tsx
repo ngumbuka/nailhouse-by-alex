@@ -419,47 +419,47 @@ function ServiceCategoryPage() {
         </div>
       </section>
 
-      {/* ───────── Autres rituels ───────── */}
-      <section className="mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <Eyebrow>Découvrir aussi</Eyebrow>
-            <h2 className="mt-6 font-serif text-4xl text-primary md:text-5xl">
-              Autres rituels NailHouse
-            </h2>
-          </div>
-          <Link
-            to="/services"
-            className="text-[11px] uppercase tracking-[0.28em] text-gold hover:underline"
-          >
-            Toute la carte →
-          </Link>
-        </div>
-        <GoldRule className="mt-10" />
-        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {others.slice(0, 3).map((c) => (
+      {/* ───────── Autres prestations — discreet footer strip ───────── */}
+      <section
+        aria-label="Autres prestations"
+        className="border-t border-gold/15 bg-background py-10"
+      >
+        <div className="mx-auto max-w-7xl px-6 md:px-10">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">
+              Autres prestations de la maison
+            </p>
             <Link
-              key={c.slug}
-              to="/services/$slug"
-              params={{ slug: c.slug }}
-              className="group block"
+              to="/services"
+              className="text-[10px] uppercase tracking-[0.28em] text-gold hover:underline"
             >
-              <div className="relative aspect-[4/5] overflow-hidden rounded-sm">
-                <img
-                  src={c.image}
-                  alt={c.title}
-                  className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="pointer-events-none absolute inset-3 border border-gold/30 opacity-0 transition group-hover:opacity-100" />
-              </div>
-              <p className="mt-5 text-[10px] uppercase tracking-[0.28em] text-gold">{c.tagline}</p>
-              <h3 className="mt-2 font-serif text-2xl text-primary">{c.title}</h3>
-              <span className="mt-3 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-muted-foreground transition group-hover:text-primary">
-                Voir le rituel <ChevronRight className="h-3 w-3" />
-              </span>
+              Toute la carte →
             </Link>
-          ))}
+          </div>
+          <ul className="mt-6 -mx-2 flex gap-3 overflow-x-auto pb-2">
+            {others.map((c) => (
+              <li key={c.slug} className="shrink-0 px-2">
+                <Link
+                  to="/services/$slug"
+                  params={{ slug: c.slug }}
+                  className="group flex items-center gap-3 rounded-full border border-border bg-card/60 py-2 pl-2 pr-4 transition hover:border-gold/50 hover:bg-card"
+                >
+                  <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
+                    <img
+                      src={c.image}
+                      alt=""
+                      aria-hidden
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </span>
+                  <span className="font-serif text-sm text-primary group-hover:text-gold">
+                    {c.title}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
