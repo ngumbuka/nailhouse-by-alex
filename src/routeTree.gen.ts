@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -20,6 +21,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
+const TarifsRoute = TarifsRouteImport.update({
+  id: '/tarifs',
+  path: '/tarifs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
   path: '/services',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/services': typeof ServicesRouteWithChildren
+  '/tarifs': typeof TarifsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/services/$slug': typeof ServicesSlugRoute
 }
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/services': typeof ServicesRouteWithChildren
+  '/tarifs': typeof TarifsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/services/$slug': typeof ServicesSlugRoute
 }
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/services': typeof ServicesRouteWithChildren
+  '/tarifs': typeof TarifsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/services/$slug': typeof ServicesSlugRoute
 }
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/gallery'
     | '/services'
+    | '/tarifs'
     | '/admin'
     | '/services/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/gallery'
     | '/services'
+    | '/tarifs'
     | '/admin'
     | '/services/$slug'
   id:
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/gallery'
     | '/services'
+    | '/tarifs'
     | '/_authenticated/admin'
     | '/services/$slug'
   fileRoutesById: FileRoutesById
@@ -151,10 +163,18 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   GalleryRoute: typeof GalleryRoute
   ServicesRoute: typeof ServicesRouteWithChildren
+  TarifsRoute: typeof TarifsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tarifs': {
+      id: '/tarifs'
+      path: '/tarifs'
+      fullPath: '/tarifs'
+      preLoaderRoute: typeof TarifsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/services': {
       id: '/services'
       path: '/services'
@@ -260,6 +280,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   GalleryRoute: GalleryRoute,
   ServicesRoute: ServicesRouteWithChildren,
+  TarifsRoute: TarifsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
