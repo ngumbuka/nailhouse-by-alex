@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { CATEGORIES } from "@/lib/service-categories";
 import {
   isCurrentUserAdmin,
   adminListBookings,
@@ -20,6 +21,13 @@ import {
   adminAddGalleryByUrl,
   adminDeleteGalleryImage,
 } from "@/lib/admin.functions";
+import {
+  adminListServiceGallery,
+  adminRegisterServiceGalleryImage,
+  adminUpdateServiceGalleryImage,
+  adminDeleteServiceGalleryImage,
+} from "@/lib/service-gallery.functions";
+import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
