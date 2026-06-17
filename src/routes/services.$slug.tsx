@@ -13,7 +13,7 @@ import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
 import { listServices } from "@/lib/booking.functions";
 import { listServiceGallery } from "@/lib/service-gallery.functions";
-import { CATEGORIES, CATEGORY_BY_SLUG, slugifyService } from "@/lib/service-categories";
+import { CATEGORIES, CATEGORY_BY_SLUG } from "@/lib/service-categories";
 
 const opts = queryOptions({ queryKey: ["services"], queryFn: () => listServices() });
 const galleryOpts = (slug: string) =>
