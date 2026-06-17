@@ -43,7 +43,10 @@ export function CatalogFilters({ active, sort, count }: Props) {
             value={sort}
             onValueChange={(v) =>
               navigate({
-                search: (prev) => ({ ...prev, sort: v === "popular" ? undefined : (v as SortKey) }),
+                search: (prev: { cat?: string; sort?: SortKey }) => ({
+                  ...prev,
+                  sort: v === "popular" ? undefined : (v as SortKey),
+                }),
               })
             }
           >
