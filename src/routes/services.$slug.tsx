@@ -13,7 +13,7 @@ import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
 import { listServices } from "@/lib/booking.functions";
 import { listServiceGallery } from "@/lib/service-gallery.functions";
-import { CATEGORIES, CATEGORY_BY_SLUG, slugifyService } from "@/lib/service-categories";
+import { CATEGORIES, CATEGORY_BY_SLUG } from "@/lib/service-categories";
 
 const opts = queryOptions({ queryKey: ["services"], queryFn: () => listServices() });
 const galleryOpts = (slug: string) =>
@@ -254,62 +254,45 @@ function ServiceCategoryPage() {
         </div>
       </section>
 
-      {/* ───────── TARIFS — service cards ───────── */}
-      <section className="mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32">
-        <div className="mx-auto max-w-3xl text-center">
+      {/* ───────── CATALOG DEEP LINK ───────── */}
+      <section className="mx-auto max-w-5xl px-6 py-24 md:px-10 md:py-28">
+        <div className="border border-gold/30 bg-card p-10 text-center md:p-14">
           <Eyebrow>Carte des prestations</Eyebrow>
-          <h2 className="mt-6 font-serif text-4xl text-primary md:text-5xl">{info.title}</h2>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Choisissez la prestation qui vous correspond — chaque soin a sa page dédiée
-            avec description, étapes et réservation.
+          <h2 className="mt-6 font-serif text-3xl text-primary md:text-4xl">{info.title}</h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground">
+            {items.length > 0 ? (
+              <>
+                {items.length} prestation{items.length > 1 ? "s" : ""} disponible{items.length > 1 ? "s" : ""} dans cette
+                famille — chaque soin a sa fiche dédiée avec description, étapes et réservation.
+              </>
+            ) : (
+              <>La carte sera dévoilée très prochainement.</>
+            )}
           </p>
-          <GoldRule className="mx-auto mt-8" />
-        </div>
-
-        {items.length === 0 ? (
-          <p className="mt-12 text-center text-sm text-muted-foreground">
-            La carte des tarifs sera dévoilée très prochainement.
-          </p>
-        ) : (
-          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((s) => (
-              <Link
-                key={s.id}
-                to="/services/$slug/$service"
-                params={{ slug, service: slugifyService(s.name) }}
-                className="group flex h-full flex-col justify-between border border-gold/20 bg-card p-7 transition hover:border-gold hover:shadow-lg"
-              >
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-gold">{info.tagline}</p>
-                  <h3 className="mt-3 font-serif text-2xl text-primary">{s.name}</h3>
-                </div>
-                <div className="mt-8 flex items-end justify-between gap-3">
-                  <div>
-                    <p className="font-serif text-3xl text-gold">
-                      {s.price_fcfa.toLocaleString("fr-FR")}
-                      <span className="ml-1 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                        F
-                      </span>
-                    </p>
-                    <p className="mt-1 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                      {info.duration}
-                    </p>
-                  </div>
-                  <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.28em] text-gold group-hover:underline">
-                    Voir le détail <ChevronRight className="h-3 w-3" />
-                  </span>
-                </div>
+          {minPrice && (
+            <p className="mt-4 font-serif text-2xl text-gold">
+              À partir de {minPrice.toLocaleString("fr-FR")} F
+            </p>
+          )}
+          {items.length > 0 && (
+            <Button
+              asChild
+              size="lg"
+              className="mt-8 rounded-full bg-gold px-9 text-ink hover:bg-gold/90"
+            >
+              <Link to="/services" search={{ cat: slug }}>
+                Voir les {items.length} prestation{items.length > 1 ? "s" : ""} →
               </Link>
-            ))}
+            </Button>
+          )}
+          <div className="mt-4">
+            <Button asChild variant="link" className="text-gold">
+              <Link to="/tarifs">Voir aussi la grille tarifaire complète</Link>
+            </Button>
           </div>
-        )}
-
-        <div className="mt-12 text-center">
-          <Button asChild variant="outline" className="rounded-full border-gold/40 text-gold hover:bg-gold hover:text-ink">
-            <Link to="/tarifs">Voir la grille tarifaire complète →</Link>
-          </Button>
         </div>
       </section>
+
 
 
       {/* ───────── GALERIE — service-specific ───────── */}
