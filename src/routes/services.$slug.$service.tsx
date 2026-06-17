@@ -391,113 +391,141 @@ function ServiceDetailPage() {
         </div>
       </section>
 
-      {/* ───────── RELATED STRIP ───────── */}
-      <section
-        aria-label="Prestations associées"
-        className="border-t border-gold/15 bg-background py-20 md:py-24"
-      >
+      {/* ───────── CROSS-SELL — souvent réservé avec ───────── */}
+      {crossSell.length > 0 && (
+        <section
+          aria-label="Souvent réservé avec"
+          className="border-t border-gold/15 bg-muted/30 py-20 md:py-24"
+        >
+          <div className="mx-auto max-w-7xl px-6 md:px-10">
+            <div className="max-w-2xl">
+              <Eyebrow>Souvent réservé avec</Eyebrow>
+              <h2 className="mt-6 font-serif text-3xl text-primary md:text-4xl">
+                Complétez votre rituel
+              </h2>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Des soins qui se marient parfaitement avec {service.name.toLowerCase()}.
+              </p>
+              <GoldRule className="mt-6" />
+            </div>
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {crossSell.map((s, i) => (
+                <ServiceCard key={s.id} service={s} variant={i % 2 === 0 ? "hero" : "flat"} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ───────── RELATED — autres prestations de la même famille ───────── */}
+      {siblings.length > 0 && (
+        <section
+          aria-label={`Autres prestations ${info.title.toLowerCase()}`}
+          className="border-t border-gold/15 bg-background py-20 md:py-24"
+        >
+          <div className="mx-auto max-w-7xl px-6 md:px-10">
+            <div className="flex flex-wrap items-end justify-between gap-6">
+              <div>
+                <Eyebrow>Dans la même famille</Eyebrow>
+                <h2 className="mt-6 font-serif text-3xl text-primary md:text-4xl">
+                  Autres prestations {info.title.toLowerCase()}
+                </h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => scrollBy(-1)}
+                  aria-label="Précédent"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-gold/40 text-gold transition hover:bg-gold hover:text-ink"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollBy(1)}
+                  aria-label="Suivant"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-gold/40 text-gold transition hover:bg-gold hover:text-ink"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+                <Link
+                  to="/services"
+                  search={{ cat: slug }}
+                  className="ml-2 hidden text-[10px] uppercase tracking-[0.28em] text-gold hover:underline md:inline"
+                >
+                  Voir la famille →
+                </Link>
+              </div>
+            </div>
+            <GoldRule className="mt-8" />
+
+            <ul
+              ref={carouselRef}
+              className="mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {siblings.map((s, i) => (
+                <li key={s.id} className="w-[72%] shrink-0 snap-start sm:w-[44%] lg:w-[28%]">
+                  <ServiceCard service={s} variant={i % 2 === 0 ? "flat" : "hero"} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {/* ───────── EXPLORE OTHER FAMILIES ───────── */}
+      <section className="border-t border-gold/15 bg-ink py-16 text-primary-foreground md:py-20">
         <div className="mx-auto max-w-7xl px-6 md:px-10">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <Eyebrow>À découvrir aussi</Eyebrow>
-              <h2 className="mt-6 font-serif text-3xl text-primary md:text-4xl">
-                Prestations associées
-              </h2>
-              <p className="mt-3 max-w-md text-sm text-muted-foreground">
-                D'abord les autres soins de la carte {info.title.toLowerCase()}, puis les autres rituels de la maison.
-              </p>
+              <Eyebrow>Explorer la maison</Eyebrow>
+              <h2 className="mt-6 font-serif text-3xl md:text-4xl">Autres familles de soin</h2>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => scrollBy(-1)}
-                aria-label="Précédent"
-                className="grid h-11 w-11 place-items-center rounded-full border border-gold/40 text-gold transition hover:bg-gold hover:text-ink"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => scrollBy(1)}
-                aria-label="Suivant"
-                className="grid h-11 w-11 place-items-center rounded-full border border-gold/40 text-gold transition hover:bg-gold hover:text-ink"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+            <Link
+              to="/services"
+              search={{}}
+              className="text-[10px] uppercase tracking-[0.28em] text-gold hover:underline"
+            >
+              Voir tout le catalogue →
+            </Link>
           </div>
-          <GoldRule className="mt-8" />
-
-          <ul
-            ref={carouselRef}
-            className="mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {siblings.map((s) => (
-              <li key={s.id} className="w-[78%] shrink-0 snap-start sm:w-[46%] lg:w-[28%]">
-                <Link
-                  to="/services/$slug/$service"
-                  params={{ slug, service: slugifyService(s.name) }}
-                  className="group block h-full border border-gold/20 bg-card p-5 transition hover:border-gold"
-                >
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-gold">{info.title}</p>
-                  <h3 className="mt-3 font-serif text-xl text-primary md:text-2xl">{s.name}</h3>
-                  <p className="mt-4 font-serif text-2xl text-gold">
-                    {s.price_fcfa.toLocaleString("fr-FR")}
-                    <span className="ml-1 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">F</span>
-                  </p>
-                  <p className="mt-6 inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.25em] text-gold group-hover:underline">
-                    Voir le détail <ChevronRight className="h-3 w-3" />
-                  </p>
-                </Link>
-              </li>
-            ))}
-
-            {siblings.length > 0 && (
-              <li
-                aria-hidden
-                className="flex shrink-0 snap-start items-center px-1 text-[10px] uppercase tracking-[0.3em] text-muted-foreground"
-              >
-                <span className="mr-3 h-px w-10 bg-gold/30" />
-                Autres rituels
-                <span className="ml-3 h-px w-10 bg-gold/30" />
-              </li>
-            )}
-
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {otherCategories.map((c) => (
-              <li key={c.slug} className="w-[78%] shrink-0 snap-start sm:w-[46%] lg:w-[28%]">
-                <Link
-                  to="/services/$slug"
-                  params={{ slug: c.slug }}
-                  className="group block"
-                >
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-muted">
-                    <img
-                      src={c.image}
-                      alt={c.title}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]"
-                    />
-                    <div className="pointer-events-none absolute inset-3 border border-gold/30 transition group-hover:border-gold" />
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/85 via-ink/30 to-transparent p-5">
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-gold">{c.tagline}</p>
-                      <h3 className="mt-2 font-serif text-xl text-primary-foreground">{c.title}</h3>
-                    </div>
+              <Link
+                key={c.slug}
+                to="/services/$slug"
+                params={{ slug: c.slug }}
+                className="group block"
+              >
+                <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-muted">
+                  <img
+                    src={c.image}
+                    alt={c.title}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]"
+                  />
+                  <div className="pointer-events-none absolute inset-3 border border-gold/30 transition group-hover:border-gold" />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/90 via-ink/30 to-transparent p-5">
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-gold">{c.tagline}</p>
+                    <h3 className="mt-2 font-serif text-lg text-primary-foreground">{c.title}</h3>
                   </div>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                      <Clock className="mr-1 inline h-3 w-3" />
-                      {c.duration}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.25em] text-gold group-hover:underline">
-                      Découvrir <ChevronRight className="h-3 w-3" />
-                    </span>
-                  </div>
-                </Link>
-              </li>
+                </div>
+                <p className="mt-3 inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.25em] text-primary-foreground/60">
+                  <Clock className="h-3 w-3" /> {c.duration}
+                </p>
+              </Link>
             ))}
-          </ul>
+          </div>
         </div>
       </section>
+
+      {/* ───────── STICKY PURCHASE BAR ───────── */}
+      <StickyPurchaseBar
+        serviceId={service.id}
+        serviceName={service.name}
+        priceFcfa={service.price_fcfa}
+        duration={info.duration}
+      />
     </SiteLayout>
   );
 }
