@@ -231,6 +231,32 @@ function ServiceDetailPage() {
         </div>
       </section>
 
+      {/* ───────── TRUST ROW ───────── */}
+      <section aria-label="Engagements de la maison" className="border-b border-gold/15 bg-card">
+        <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-px bg-gold/10 md:grid-cols-4">
+          {[
+            { icon: ShieldCheck, label: "Outils stérilisés", note: "Hygiène cabine" },
+            { icon: Sparkles, label: "Produits pro", note: "Marques sélectionnées" },
+            { icon: CalendarCheck2, label: "Réservation en ligne", note: "En quelques secondes" },
+            { icon: HeartHandshake, label: "Conseil sur-mesure", note: "Suivi personnalisé" },
+          ].map((t) => (
+            <li key={t.label} className="flex items-center gap-4 bg-card px-5 py-5 md:px-7">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-gold/40 text-gold">
+                <t.icon className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="font-serif text-sm text-primary md:text-base">{t.label}</p>
+                <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                  {t.note}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+
+
       {/* ───────── DESCRIPTION ───────── */}
       <section className="mx-auto max-w-3xl px-6 py-24 md:py-32">
         <Eyebrow>En quoi consiste cette prestation</Eyebrow>
