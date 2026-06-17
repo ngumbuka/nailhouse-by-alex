@@ -1,6 +1,15 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { ChevronRight, ChevronLeft, Check, Clock, Sparkles } from "lucide-react";
+import {
+  ChevronRight,
+  ChevronLeft,
+  Check,
+  Clock,
+  Sparkles,
+  ShieldCheck,
+  HeartHandshake,
+  CalendarCheck2,
+} from "lucide-react";
 import { useRef } from "react";
 import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
@@ -12,6 +21,8 @@ import {
   slugifyService,
 } from "@/lib/service-categories";
 import { buildServiceCopy } from "@/lib/service-copy";
+import { ServiceCard } from "@/components/catalog/service-card";
+import { StickyPurchaseBar } from "@/components/services/sticky-purchase-bar";
 
 const servicesOpts = queryOptions({
   queryKey: ["services"],
