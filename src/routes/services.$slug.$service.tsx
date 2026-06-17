@@ -120,6 +120,22 @@ function ServiceDetailPage() {
   const siblings = categoryServices.filter((s) => s.id !== service.id);
   const otherCategories = CATEGORIES.filter((c) => c.slug !== slug);
 
+  // Cross-sell: 3 services from *other* categories, prefer canonical pairs
+  // (Mains ↔ Pieds ↔ Dépose ↔ Suppléments) when available.
+  const crossSell = (() => {
+    const otherCats = otherCategories.map((c) => c.category);
+    const pool = services.filter((s) => otherCats.includes(s.category) && s.id !== service.id);
+    const picks: typeof services = [];
+    const seenCats = new Set<string>();
+    for (const s of pool) {
+      if (seenCats.has(s.category)) continue;
+      picks.push(s);
+      seenCats.add(s.category);
+      if (picks.length === 3) break;
+    }
+    return picks;
+  })();
+
   const galleryImages: { url: string; caption: string | null }[] =
     uploaded.length > 0
       ? uploaded.slice(0, 4).map((g) => ({ url: g.url, caption: g.caption ?? null }))
