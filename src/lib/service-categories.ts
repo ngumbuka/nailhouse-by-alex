@@ -25,7 +25,7 @@ export type CategoryInfo = {
   flat: string;
   highlights: string[];
   care: string[];
-  ritual: { title: string; description: string }[];
+  steps: { title: string; description: string }[];
   whyUs: string[];
   gallery: string[];
   faq: { q: string; a: string }[];
@@ -39,11 +39,12 @@ export const CATEGORIES: CategoryInfo[] = [
     title: "Soins des mains",
     tagline: "Manucure couture",
     intro:
-      "Un rituel complet pour des mains soignées : limage sur-mesure, soin des cuticules, gommage et massage hydratant. La pose est précise, élégante et adaptée à la forme naturelle de vos ongles.",
+      "Un soin complet pour des mains soignées : limage sur-mesure, soin des cuticules, gommage et massage hydratant. La pose est précise, élégante et adaptée à la forme naturelle de vos ongles.",
     duration: "45 min – 1 h 15",
     image: mainsHero,
     flat: mainsFlat,
-    bestFor: "Pour les femmes qui veulent des mains soignées au quotidien, prêtes à briller en réunion comme en sortie.",
+    bestFor:
+      "Pour les femmes qui veulent des mains soignées au quotidien, prêtes à briller en réunion comme en sortie.",
     highlights: [
       "Limage et mise en forme personnalisée",
       "Soin des cuticules au repousse-cuticules",
@@ -55,11 +56,20 @@ export const CATEGORIES: CategoryInfo[] = [
       "Porter des gants pour les tâches ménagères pour préserver la pose.",
       "Éviter d'utiliser les ongles comme outils — privilégier la pulpe du doigt.",
     ],
-    ritual: [
-      { title: "Diagnostic & accueil", description: "On échange sur vos envies, votre quotidien et la forme idéale." },
+    steps: [
+      {
+        title: "Diagnostic & accueil",
+        description: "On échange sur vos envies, votre quotidien et la forme idéale.",
+      },
       { title: "Préparation", description: "Limage, mise en forme et soin doux des cuticules." },
-      { title: "Gommage & massage", description: "Exfoliation sucrée et massage à l'huile nourrissante." },
-      { title: "Pose & finition", description: "Vernis classique ou semi-permanent, sceller, sublimer." },
+      {
+        title: "Gommage & massage",
+        description: "Exfoliation sucrée et massage à l'huile nourrissante.",
+      },
+      {
+        title: "Pose & finition",
+        description: "Vernis classique ou semi-permanent, sceller, sublimer.",
+      },
     ],
     whyUs: [
       "Outils stérilisés à chaque cliente.",
@@ -68,8 +78,14 @@ export const CATEGORIES: CategoryInfo[] = [
     ],
     gallery: [mainsHero, mainsFlat],
     faq: [
-      { q: "Combien de temps tient la pose ?", a: "Vernis classique : 5 à 7 jours. Semi-permanent : jusqu'à 3 semaines." },
-      { q: "Puis-je venir avec une ancienne pose ?", a: "Oui, prévoyez une dépose en supplément pour préserver l'ongle naturel." },
+      {
+        q: "Combien de temps tient la pose ?",
+        a: "Vernis classique : 5 à 7 jours. Semi-permanent : jusqu'à 3 semaines.",
+      },
+      {
+        q: "Puis-je venir avec une ancienne pose ?",
+        a: "Oui, prévoyez une dépose en supplément pour préserver l'ongle naturel.",
+      },
     ],
   },
   {
@@ -82,7 +98,8 @@ export const CATEGORIES: CategoryInfo[] = [
     duration: "45 min – 1 h 15",
     image: piedsHero,
     flat: piedsFlat,
-    bestFor: "Pour celles qui veulent des pieds impeccables — saison des sandales ou bien-être tout au long de l'année.",
+    bestFor:
+      "Pour celles qui veulent des pieds impeccables — saison des sandales ou bien-être tout au long de l'année.",
     highlights: [
       "Bain de pieds aromatique et gommage",
       "Soin des callosités et des ongles",
@@ -94,7 +111,7 @@ export const CATEGORIES: CategoryInfo[] = [
       "Privilégier des chaussures confortables pendant 24 h après la pose.",
       "Pédicure d'entretien conseillée toutes les 4 à 6 semaines.",
     ],
-    ritual: [
+    steps: [
       { title: "Bain relaxant", description: "Bain tiède aromatique pour assouplir et détendre." },
       { title: "Soin des callosités", description: "Gommage et lissage doux des zones rugueuses." },
       { title: "Massage", description: "Massage des pieds et mollets à la crème nourrissante." },
@@ -108,7 +125,10 @@ export const CATEGORIES: CategoryInfo[] = [
     gallery: [piedsHero, piedsFlat],
     faq: [
       { q: "C'est douloureux ?", a: "Non, le soin est entièrement non invasif et relaxant." },
-      { q: "Quelle finition choisir l'été ?", a: "Le semi-permanent est idéal — tenue 3 semaines, brillance intacte." },
+      {
+        q: "Quelle finition choisir l'été ?",
+        a: "Le semi-permanent est idéal — tenue 3 semaines, brillance intacte.",
+      },
     ],
   },
   {
@@ -121,7 +141,8 @@ export const CATEGORIES: CategoryInfo[] = [
     duration: "1 h 15 – 2 h",
     image: naturelsHero,
     flat: naturelsFlat,
-    bestFor: "Pour les ongles fins, cassants ou qui peinent à pousser — sans alourdir, sans agresser.",
+    bestFor:
+      "Pour les ongles fins, cassants ou qui peinent à pousser — sans alourdir, sans agresser.",
     highlights: [
       "Renforcement de l'ongle naturel sans capsule",
       "Pose discrète, fine et confortable",
@@ -133,7 +154,7 @@ export const CATEGORIES: CategoryInfo[] = [
       "Hydrater les cuticules pour favoriser la tenue.",
       "Prévoir un remplissage avant 4 semaines pour préserver la solidité.",
     ],
-    ritual: [
+    steps: [
       { title: "Préparation", description: "Limage doux et préparation de l'ongle naturel." },
       { title: "Pose de la base", description: "Application d'une base renforçante adaptée." },
       { title: "Gainage", description: "Modelage du gel pour une protection invisible." },
@@ -172,8 +193,11 @@ export const CATEGORIES: CategoryInfo[] = [
       "Huile cuticule quotidienne pour la souplesse.",
       "Remplissage toutes les 3 à 4 semaines.",
     ],
-    ritual: [
-      { title: "Préparation douce", description: "Repousse-cuticules et mat doux sur l'ongle naturel." },
+    steps: [
+      {
+        title: "Préparation douce",
+        description: "Repousse-cuticules et mat doux sur l'ongle naturel.",
+      },
       { title: "Application BIAB", description: "Pose du gel autolissant en fine couche." },
       { title: "Catalysation", description: "Séchage LED pour une accroche optimale." },
       { title: "Finition couleur", description: "Top brillant, mat, ou pose semi-permanent." },
@@ -185,8 +209,14 @@ export const CATEGORIES: CategoryInfo[] = [
     ],
     gallery: [biabHero, biabFlat],
     faq: [
-      { q: "Quelle différence avec un gel classique ?", a: "Le BIAB est plus souple, plus léger et respecte mieux l'ongle naturel." },
-      { q: "Puis-je rallonger avec du BIAB ?", a: "Légèrement, oui. Pour de vraies extensions, optez pour les capsules." },
+      {
+        q: "Quelle différence avec un gel classique ?",
+        a: "Le BIAB est plus souple, plus léger et respecte mieux l'ongle naturel.",
+      },
+      {
+        q: "Puis-je rallonger avec du BIAB ?",
+        a: "Légèrement, oui. Pour de vraies extensions, optez pour les capsules.",
+      },
     ],
   },
   {
@@ -199,7 +229,8 @@ export const CATEGORIES: CategoryInfo[] = [
     duration: "1 h 45 – 2 h 30",
     image: capsulesHero,
     flat: capsulesFlat,
-    bestFor: "Pour un événement, un mariage, ou simplement pour oser une forme et une longueur signature.",
+    bestFor:
+      "Pour un événement, un mariage, ou simplement pour oser une forme et une longueur signature.",
     highlights: [
       "Pose de capsules sur-mesure",
       "Finition gel, polygel ou pose américaine",
@@ -211,11 +242,17 @@ export const CATEGORIES: CategoryInfo[] = [
       "Hydrater les cuticules quotidiennement.",
       "Dépose obligatoire en institut pour préserver l'ongle naturel.",
     ],
-    ritual: [
-      { title: "Choix de la forme", description: "Amande, ballerine, carré, stiletto — selon votre style." },
+    steps: [
+      {
+        title: "Choix de la forme",
+        description: "Amande, ballerine, carré, stiletto — selon votre style.",
+      },
       { title: "Pose des capsules", description: "Ajustement précis et collage sécurisé." },
       { title: "Modelage", description: "Sculpture du gel ou polygel pour un rendu fin." },
-      { title: "Couleur & décor", description: "Pose couleur, french, baby boomer, strass au choix." },
+      {
+        title: "Couleur & décor",
+        description: "Pose couleur, french, baby boomer, strass au choix.",
+      },
     ],
     whyUs: [
       "Pose minutieuse — chaque ongle est sculpté à la main.",
@@ -224,8 +261,14 @@ export const CATEGORIES: CategoryInfo[] = [
     ],
     gallery: [capsulesHero, capsulesFlat],
     faq: [
-      { q: "C'est lourd à porter ?", a: "Non, nos poses sont travaillées pour être fines et confortables." },
-      { q: "Combien de temps ça tient ?", a: "3 à 4 semaines, avec un remplissage conseillé ensuite." },
+      {
+        q: "C'est lourd à porter ?",
+        a: "Non, nos poses sont travaillées pour être fines et confortables.",
+      },
+      {
+        q: "Combien de temps ça tient ?",
+        a: "3 à 4 semaines, avec un remplissage conseillé ensuite.",
+      },
     ],
   },
   {
@@ -238,7 +281,8 @@ export const CATEGORIES: CategoryInfo[] = [
     duration: "+ 15 à 30 min",
     image: supplementsHero,
     flat: supplementsFlat,
-    bestFor: "Pour celles qui veulent une touche unique — un détail qui transforme une pose en bijou.",
+    bestFor:
+      "Pour celles qui veulent une touche unique — un détail qui transforme une pose en bijou.",
     highlights: [
       "Strass premium posés à la main",
       "Effets chrome, miroir, holographique",
@@ -250,11 +294,17 @@ export const CATEGORIES: CategoryInfo[] = [
       "Éviter les détergents agressifs sans gants.",
       "Repassez nous voir si un strass se décolle — on le replace gracieusement.",
     ],
-    ritual: [
-      { title: "Inspiration", description: "On regarde ensemble vos références ou vous propose un moodboard." },
+    steps: [
+      {
+        title: "Inspiration",
+        description: "On regarde ensemble vos références ou vous propose un moodboard.",
+      },
       { title: "Préparation", description: "Pose de base couleur ou french selon le design." },
       { title: "Décor à la main", description: "Strass, chrome ou dessins minutieux." },
-      { title: "Scellage longue tenue", description: "Top coat renforcé pour préserver chaque détail." },
+      {
+        title: "Scellage longue tenue",
+        description: "Top coat renforcé pour préserver chaque détail.",
+      },
     ],
     whyUs: [
       "Strass et chrome premium, jamais ternes.",
@@ -263,8 +313,14 @@ export const CATEGORIES: CategoryInfo[] = [
     ],
     gallery: [supplementsHero, supplementsFlat],
     faq: [
-      { q: "Puis-je n'orner qu'un seul ongle ?", a: "Bien sûr — beaucoup de clientes choisissent un accent nail." },
-      { q: "Les strass tiennent-ils ?", a: "Oui, scellés au top coat, ils tiennent toute la durée de la pose." },
+      {
+        q: "Puis-je n'orner qu'un seul ongle ?",
+        a: "Bien sûr — beaucoup de clientes choisissent un accent nail.",
+      },
+      {
+        q: "Les strass tiennent-ils ?",
+        a: "Oui, scellés au top coat, ils tiennent toute la durée de la pose.",
+      },
     ],
   },
   {
@@ -289,11 +345,14 @@ export const CATEGORIES: CategoryInfo[] = [
       "Prévoyez une cure d'huile cuticule après chaque dépose.",
       "Pause de quelques jours possible si l'ongle est fatigué.",
     ],
-    ritual: [
+    steps: [
       { title: "Diagnostic", description: "On évalue l'état de la pose et de l'ongle naturel." },
       { title: "Dépose douce", description: "Ponçage minutieux ou trempage selon la pose." },
       { title: "Soin réparateur", description: "Nourrissage et lissage de l'ongle naturel." },
-      { title: "Conseil", description: "On vous oriente vers la suite : pause, BIAB, nouvelle pose." },
+      {
+        title: "Conseil",
+        description: "On vous oriente vers la suite : pause, BIAB, nouvelle pose.",
+      },
     ],
     whyUs: [
       "Aucun arrachage — votre ongle naturel reste intact.",
@@ -303,7 +362,10 @@ export const CATEGORIES: CategoryInfo[] = [
     gallery: [deposeHero, deposeFlat],
     faq: [
       { q: "Combien de temps prévoir ?", a: "Environ 30 à 45 minutes selon le type de pose." },
-      { q: "Puis-je reposer juste après ?", a: "Oui, c'est souvent l'idéal pour préserver vos ongles." },
+      {
+        q: "Puis-je reposer juste après ?",
+        a: "Oui, c'est souvent l'idéal pour préserver vos ongles.",
+      },
     ],
   },
 ];
@@ -326,4 +388,3 @@ export function slugifyService(name: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
-

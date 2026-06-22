@@ -8,8 +8,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/lib/service-categories";
 import {
@@ -45,23 +58,47 @@ function AdminPage() {
   const delGallery = useServerFn(adminDeleteGalleryImage);
 
   const admin = useQuery({ queryKey: ["isAdmin"], queryFn: () => checkAdmin() });
-  const bookings = useQuery({ queryKey: ["admin", "bookings"], queryFn: () => listBookings(), enabled: !!admin.data?.isAdmin });
-  const subs = useQuery({ queryKey: ["admin", "subs"], queryFn: () => listSubs(), enabled: !!admin.data?.isAdmin });
-  const gallery = useQuery({ queryKey: ["admin", "gallery"], queryFn: () => listGallery(), enabled: !!admin.data?.isAdmin });
+  const bookings = useQuery({
+    queryKey: ["admin", "bookings"],
+    queryFn: () => listBookings(),
+    enabled: !!admin.data?.isAdmin,
+  });
+  const subs = useQuery({
+    queryKey: ["admin", "subs"],
+    queryFn: () => listSubs(),
+    enabled: !!admin.data?.isAdmin,
+  });
+  const gallery = useQuery({
+    queryKey: ["admin", "gallery"],
+    queryFn: () => listGallery(),
+    enabled: !!admin.data?.isAdmin,
+  });
 
   const statusMut = useMutation({
-    mutationFn: (v: { id: string; status: "pending" | "confirmed" | "cancelled" | "completed" }) => updateStatus({ data: v }),
-    onSuccess: () => { toast.success("Statut mis à jour"); qc.invalidateQueries({ queryKey: ["admin", "bookings"] }); },
+    mutationFn: (v: { id: string; status: "pending" | "confirmed" | "cancelled" | "completed" }) =>
+      updateStatus({ data: v }),
+    onSuccess: () => {
+      toast.success("Statut mis à jour");
+      qc.invalidateQueries({ queryKey: ["admin", "bookings"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
   const addMut = useMutation({
     mutationFn: (v: { url: string; caption?: string }) => addGallery({ data: v }),
-    onSuccess: () => { toast.success("Image ajoutée"); qc.invalidateQueries({ queryKey: ["admin", "gallery"] }); qc.invalidateQueries({ queryKey: ["gallery"] }); },
+    onSuccess: () => {
+      toast.success("Image ajoutée");
+      qc.invalidateQueries({ queryKey: ["admin", "gallery"] });
+      qc.invalidateQueries({ queryKey: ["gallery"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
   const delMut = useMutation({
     mutationFn: (id: string) => delGallery({ data: { id } }),
-    onSuccess: () => { toast.success("Image supprimée"); qc.invalidateQueries({ queryKey: ["admin", "gallery"] }); qc.invalidateQueries({ queryKey: ["gallery"] }); },
+    onSuccess: () => {
+      toast.success("Image supprimée");
+      qc.invalidateQueries({ queryKey: ["admin", "gallery"] });
+      qc.invalidateQueries({ queryKey: ["gallery"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -89,18 +126,26 @@ function AdminPage() {
   const registerMut = useMutation({
     mutationFn: (v: { slug: string; storagePath: string; caption?: string }) =>
       registerSvcImg({ data: v }),
-    onSuccess: (_d, v) => { toast.success("Image ajoutée"); invalidateSvcGallery(v.slug); },
+    onSuccess: (_d, v) => {
+      toast.success("Image ajoutée");
+      invalidateSvcGallery(v.slug);
+    },
     onError: (e: Error) => toast.error(e.message),
   });
   const updateSvcMut = useMutation({
     mutationFn: (v: { id: string; sort?: number; caption?: string | null; slug?: string }) =>
       updateSvcImg({ data: { id: v.id, sort: v.sort, caption: v.caption } }),
-    onSuccess: (_d, v) => { invalidateSvcGallery(v.slug); },
+    onSuccess: (_d, v) => {
+      invalidateSvcGallery(v.slug);
+    },
     onError: (e: Error) => toast.error(e.message),
   });
   const deleteSvcMut = useMutation({
     mutationFn: (v: { id: string; slug: string }) => deleteSvcImg({ data: { id: v.id } }),
-    onSuccess: (_d, v) => { toast.success("Image supprimée"); invalidateSvcGallery(v.slug); },
+    onSuccess: (_d, v) => {
+      toast.success("Image supprimée");
+      invalidateSvcGallery(v.slug);
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -133,14 +178,24 @@ function AdminPage() {
     navigate({ to: "/auth" });
   }
 
-  if (admin.isLoading) return <SiteLayout><div className="p-10 text-sm text-muted-foreground">Chargement…</div></SiteLayout>;
+  if (admin.isLoading)
+    return (
+      <SiteLayout>
+        <div className="p-10 text-sm text-muted-foreground">Chargement…</div>
+      </SiteLayout>
+    );
   if (!admin.data?.isAdmin) {
     return (
       <SiteLayout>
         <div className="mx-auto max-w-xl px-5 py-20 text-center">
           <h1 className="font-serif text-3xl text-primary">Accès refusé</h1>
-          <p className="mt-3 text-muted-foreground">Votre compte n'a pas le rôle administrateur. Contactez le support pour activer cet accès.</p>
-          <Button className="mt-6 rounded-full" onClick={signOut}>Se déconnecter</Button>
+          <p className="mt-3 text-muted-foreground">
+            Votre compte n'a pas le rôle administrateur. Contactez le support pour activer cet
+            accès.
+          </p>
+          <Button className="mt-6 rounded-full" onClick={signOut}>
+            Se déconnecter
+          </Button>
         </div>
       </SiteLayout>
     );
@@ -164,7 +219,9 @@ function AdminPage() {
             <p className="text-[11px] uppercase tracking-[0.25em] text-accent">Administration</p>
             <h1 className="mt-2 font-serif text-4xl text-primary">Tableau de bord</h1>
           </div>
-          <Button variant="outline" className="rounded-full" onClick={signOut}>Déconnexion</Button>
+          <Button variant="outline" className="rounded-full" onClick={signOut}>
+            Déconnexion
+          </Button>
         </div>
 
         <Tabs defaultValue="bookings" className="mt-8">
@@ -190,13 +247,28 @@ function AdminPage() {
                 <TableBody>
                   {(bookings.data ?? []).map((b) => (
                     <TableRow key={b.id}>
-                      <TableCell className="whitespace-nowrap">{new Date(b.scheduled_at).toLocaleString("fr-FR")}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {new Date(b.scheduled_at).toLocaleString("fr-FR")}
+                      </TableCell>
                       <TableCell>{b.name}</TableCell>
-                      <TableCell className="text-xs"><div>{b.phone}</div><div className="text-muted-foreground">{b.email}</div></TableCell>
+                      <TableCell className="text-xs">
+                        <div>{b.phone}</div>
+                        <div className="text-muted-foreground">{b.email}</div>
+                      </TableCell>
                       <TableCell>{b.service_name}</TableCell>
                       <TableCell>
-                        <Select value={b.status} onValueChange={(s) => statusMut.mutate({ id: b.id, status: s as any })}>
-                          <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
+                        <Select
+                          value={b.status}
+                          onValueChange={(s) =>
+                            statusMut.mutate({
+                              id: b.id,
+                              status: s as "pending" | "confirmed" | "cancelled" | "completed",
+                            })
+                          }
+                        >
+                          <SelectTrigger className="h-8 w-36">
+                            <SelectValue />
+                          </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="pending">En attente</SelectItem>
                             <SelectItem value="confirmed">Confirmé</SelectItem>
@@ -208,7 +280,11 @@ function AdminPage() {
                     </TableRow>
                   ))}
                   {(bookings.data ?? []).length === 0 && (
-                    <TableRow><TableCell colSpan={5} className="py-10 text-center text-muted-foreground">Aucune réservation pour le moment.</TableCell></TableRow>
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                        Aucune réservation pour le moment.
+                      </TableCell>
+                    </TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -218,20 +294,47 @@ function AdminPage() {
           <TabsContent value="gallery" className="mt-6 space-y-6">
             <form
               className="grid gap-3 rounded-2xl border border-border bg-card p-5 md:grid-cols-[2fr_2fr_auto] md:items-end"
-              onSubmit={(e) => { e.preventDefault(); if (imgUrl) addMut.mutate({ url: imgUrl, caption: imgCaption || undefined }); setImgUrl(""); setImgCaption(""); }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (imgUrl) addMut.mutate({ url: imgUrl, caption: imgCaption || undefined });
+                setImgUrl("");
+                setImgCaption("");
+              }}
             >
-              <div className="space-y-2"><Label>URL de l'image</Label><Input value={imgUrl} onChange={(e) => setImgUrl(e.target.value)} placeholder="https://…" required /></div>
-              <div className="space-y-2"><Label>Légende (optionnel)</Label><Input value={imgCaption} onChange={(e) => setImgCaption(e.target.value)} /></div>
-              <Button type="submit" className="rounded-full" disabled={addMut.isPending}>Ajouter</Button>
+              <div className="space-y-2">
+                <Label>URL de l'image</Label>
+                <Input
+                  value={imgUrl}
+                  onChange={(e) => setImgUrl(e.target.value)}
+                  placeholder="https://…"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Légende (optionnel)</Label>
+                <Input value={imgCaption} onChange={(e) => setImgCaption(e.target.value)} />
+              </div>
+              <Button type="submit" className="rounded-full" disabled={addMut.isPending}>
+                Ajouter
+              </Button>
             </form>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {(gallery.data ?? []).map((img) => (
-                <div key={img.id} className="group relative overflow-hidden rounded-2xl border border-border">
-                  <img src={img.url} alt={img.caption ?? ""} className="aspect-square w-full object-cover" />
+                <div
+                  key={img.id}
+                  className="group relative overflow-hidden rounded-2xl border border-border"
+                >
+                  <img
+                    src={img.url}
+                    alt={img.caption ?? ""}
+                    className="aspect-square w-full object-cover"
+                  />
                   <button
                     className="absolute right-2 top-2 rounded-full bg-destructive px-3 py-1 text-xs text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
                     onClick={() => delMut.mutate(img.id)}
-                  >Supprimer</button>
+                  >
+                    Supprimer
+                  </button>
                 </div>
               ))}
             </div>
@@ -242,10 +345,14 @@ function AdminPage() {
               <div className="space-y-2">
                 <Label>Prestation</Label>
                 <Select value={svcSlug} onValueChange={setSvcSlug}>
-                  <SelectTrigger><SelectValue placeholder="Choisir…" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir…" />
+                  </SelectTrigger>
                   <SelectContent>
                     {CATEGORIES.map((c) => (
-                      <SelectItem key={c.slug} value={c.slug}>{c.title}</SelectItem>
+                      <SelectItem key={c.slug} value={c.slug}>
+                        {c.title}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -257,11 +364,16 @@ function AdminPage() {
                   accept="image/*"
                   multiple
                   disabled={uploading || !svcSlug}
-                  onChange={(e) => { void handleSvcUpload(e.target.files); e.target.value = ""; }}
+                  onChange={(e) => {
+                    void handleSvcUpload(e.target.files);
+                    e.target.value = "";
+                  }}
                 />
               </div>
               <p className="text-xs text-muted-foreground md:pb-2">
-                {uploading ? "Téléversement en cours…" : "JPG/PNG/WebP — ordre modifiable ci-dessous"}
+                {uploading
+                  ? "Téléversement en cours…"
+                  : "JPG/PNG/WebP — ordre modifiable ci-dessous"}
               </p>
             </div>
 
@@ -269,7 +381,10 @@ function AdminPage() {
               const imgs = (svcGallery.data ?? []).filter((g) => g.slug === cat.slug);
               if (imgs.length === 0) return null;
               return (
-                <div key={cat.slug} className="space-y-3 rounded-2xl border border-border bg-card p-5">
+                <div
+                  key={cat.slug}
+                  className="space-y-3 rounded-2xl border border-border bg-card p-5"
+                >
                   <div className="flex items-center justify-between">
                     <h3 className="font-serif text-xl text-primary">{cat.title}</h3>
                     <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
@@ -278,10 +393,19 @@ function AdminPage() {
                   </div>
                   <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
                     {imgs.map((img, idx) => (
-                      <li key={img.id} className="group relative overflow-hidden rounded-xl border border-border">
-                        <img src={img.url} alt={img.caption ?? cat.title} className="aspect-square w-full object-cover" />
+                      <li
+                        key={img.id}
+                        className="group relative overflow-hidden rounded-xl border border-border"
+                      >
+                        <img
+                          src={img.url}
+                          alt={img.caption ?? cat.title}
+                          className="aspect-square w-full object-cover"
+                        />
                         <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-ink/80 px-2 py-1.5 text-primary-foreground">
-                          <span className="text-[10px] uppercase tracking-[0.2em] opacity-70">#{idx + 1}</span>
+                          <span className="text-[10px] uppercase tracking-[0.2em] opacity-70">
+                            #{idx + 1}
+                          </span>
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
@@ -291,8 +415,16 @@ function AdminPage() {
                               onClick={() => {
                                 const prev = imgs[idx - 1];
                                 if (!prev) return;
-                                updateSvcMut.mutate({ id: img.id, sort: prev.sort, slug: cat.slug });
-                                updateSvcMut.mutate({ id: prev.id, sort: img.sort, slug: cat.slug });
+                                updateSvcMut.mutate({
+                                  id: img.id,
+                                  sort: prev.sort,
+                                  slug: cat.slug,
+                                });
+                                updateSvcMut.mutate({
+                                  id: prev.id,
+                                  sort: img.sort,
+                                  slug: cat.slug,
+                                });
                               }}
                             >
                               <ArrowUp className="h-3 w-3" />
@@ -305,8 +437,16 @@ function AdminPage() {
                               onClick={() => {
                                 const next = imgs[idx + 1];
                                 if (!next) return;
-                                updateSvcMut.mutate({ id: img.id, sort: next.sort, slug: cat.slug });
-                                updateSvcMut.mutate({ id: next.id, sort: img.sort, slug: cat.slug });
+                                updateSvcMut.mutate({
+                                  id: img.id,
+                                  sort: next.sort,
+                                  slug: cat.slug,
+                                });
+                                updateSvcMut.mutate({
+                                  id: next.id,
+                                  sort: img.sort,
+                                  slug: cat.slug,
+                                });
                               }}
                             >
                               <ArrowDown className="h-3 w-3" />
@@ -330,7 +470,8 @@ function AdminPage() {
 
             {(svcGallery.data ?? []).length === 0 && (
               <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
-                Aucune image téléversée pour le moment. Sélectionnez une prestation puis ajoutez vos images.
+                Aucune image téléversée pour le moment. Sélectionnez une prestation puis ajoutez vos
+                images.
               </div>
             )}
           </TabsContent>
@@ -338,17 +479,33 @@ function AdminPage() {
           <TabsContent value="newsletter" className="mt-6">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">{subs.data?.length ?? 0} inscrits</p>
-              <Button onClick={exportCsv} variant="outline" className="rounded-full">Exporter CSV</Button>
+              <Button onClick={exportCsv} variant="outline" className="rounded-full">
+                Exporter CSV
+              </Button>
             </div>
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
               <Table>
-                <TableHeader><TableRow><TableHead>Email</TableHead><TableHead>Inscrit le</TableHead></TableRow></TableHeader>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Inscrit le</TableHead>
+                  </TableRow>
+                </TableHeader>
                 <TableBody>
                   {(subs.data ?? []).map((s) => (
-                    <TableRow key={s.id}><TableCell>{s.email}</TableCell><TableCell className="text-muted-foreground">{new Date(s.created_at).toLocaleDateString("fr-FR")}</TableCell></TableRow>
+                    <TableRow key={s.id}>
+                      <TableCell>{s.email}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(s.created_at).toLocaleDateString("fr-FR")}
+                      </TableCell>
+                    </TableRow>
                   ))}
                   {(subs.data ?? []).length === 0 && (
-                    <TableRow><TableCell colSpan={2} className="py-10 text-center text-muted-foreground">Aucun inscrit pour le moment.</TableCell></TableRow>
+                    <TableRow>
+                      <TableCell colSpan={2} className="py-10 text-center text-muted-foreground">
+                        Aucun inscrit pour le moment.
+                      </TableCell>
+                    </TableRow>
                   )}
                 </TableBody>
               </Table>

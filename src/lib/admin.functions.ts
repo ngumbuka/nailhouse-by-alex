@@ -1,8 +1,10 @@
+import { type SupabaseClient } from "@supabase/supabase-js";
+import { type Database } from "@/integrations/supabase/types";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function assertAdmin(ctx: { supabase: any; userId: string }) {
+async function assertAdmin(ctx: { supabase: SupabaseClient<Database>; userId: string }) {
   const { data, error } = await ctx.supabase.rpc("has_role", {
     _user_id: ctx.userId,
     _role: "admin",
@@ -38,12 +40,20 @@ export const adminListBookings = createServerFn({ method: "GET" })
 export const adminUpdateBookingStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ id: z.string().uuid(), status: z.enum(["pending", "confirmed", "cancelled", "completed"]) }).parse(input),
+    z
+      .object({
+        id: z.string().uuid(),
+        status: z.enum(["pending", "confirmed", "cancelled", "completed"]),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("bookings").update({ status: data.status }).eq("id", data.id);
+    const { error } = await supabaseAdmin
+      .from("bookings")
+      .update({ status: data.status })
+      .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

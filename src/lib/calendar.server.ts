@@ -19,8 +19,7 @@ async function getAccessToken(sa: ServiceAccount): Promise<string> {
     iat: now,
     exp: now + 3600,
   };
-  const b64 = (o: object) =>
-    Buffer.from(JSON.stringify(o)).toString("base64url");
+  const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
   const unsigned = `${b64(header)}.${b64(claim)}`;
   const signer = createSign("RSA-SHA256");
   signer.update(unsigned);

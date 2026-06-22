@@ -36,7 +36,7 @@ export function CatalogFilters({ active, sort, count }: Props) {
         </div>
 
         <div className="flex items-center justify-between gap-4 md:justify-end">
-          <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+          <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
             {count} prestation{count > 1 ? "s" : ""}
           </p>
           <Select
@@ -78,9 +78,9 @@ function Chip({
   return (
     <Link
       {...to}
-      className={`shrink-0 whitespace-nowrap border px-4 py-2 text-[11px] uppercase tracking-[0.22em] transition ${
+      className={`shrink-0 whitespace-nowrap border px-4 py-2 text-xs sm:text-sm uppercase tracking-wider font-semibold transition ${
         active
-          ? "border-gold bg-gold text-ink"
+          ? "border-gold bg-gold text-white dark:text-ink"
           : "border-gold/25 text-muted-foreground hover:border-gold/60 hover:text-primary"
       }`}
     >

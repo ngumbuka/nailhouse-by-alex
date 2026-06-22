@@ -53,7 +53,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
-            onClick={() => { router.invalidate(); reset(); }}
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
             className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             Réessayer
@@ -76,18 +79,38 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "NailHouse — Salon d'onglerie boutique à Yaoundé" },
-      { name: "description", content: "NailHouse — pour la beauté des ongles. Manucures, pédicures et prothésie ongulaire à Ekoumdoum, à côté du Bilbao Lounge." },
+      {
+        name: "description",
+        content:
+          "NailHouse — pour la beauté des ongles. Manucures, pédicures et prothésie ongulaire à Ekoumdoum, à côté du Bilbao Lounge.",
+      },
       { name: "author", content: "NailHouse" },
       { property: "og:title", content: "NailHouse — Salon d'onglerie boutique à Yaoundé" },
-      { property: "og:description", content: "NailHouse — pour la beauté des ongles. Manucures, pédicures et prothésie ongulaire à Ekoumdoum, à côté du Bilbao Lounge." },
+      {
+        property: "og:description",
+        content:
+          "NailHouse — pour la beauté des ongles. Manucures, pédicures et prothésie ongulaire à Ekoumdoum, à côté du Bilbao Lounge.",
+      },
       { property: "og:type", content: "website" },
       { property: "og:image", content: ASSETS.burgundyManicure },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "NailHouse — Salon d'onglerie boutique à Yaoundé" },
-      { name: "twitter:description", content: "NailHouse — pour la beauté des ongles. Manucures, pédicures et prothésie ongulaire à Ekoumdoum, à côté du Bilbao Lounge." },
+      {
+        name: "twitter:description",
+        content:
+          "NailHouse — pour la beauté des ongles. Manucures, pédicures et prothésie ongulaire à Ekoumdoum, à côté du Bilbao Lounge.",
+      },
       { name: "twitter:image", content: ASSETS.burgundyManicure },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/OLnkiIGM9GgQA2kKLPBrIEXzR8D3/social-images/social-1781168553576-WhatsApp_Image_2026-06-10_at_22.11.46.webp" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/OLnkiIGM9GgQA2kKLPBrIEXzR8D3/social-images/social-1781168553576-WhatsApp_Image_2026-06-10_at_22.11.46.webp" },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/OLnkiIGM9GgQA2kKLPBrIEXzR8D3/social-images/social-1781168553576-WhatsApp_Image_2026-06-10_at_22.11.46.webp",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/OLnkiIGM9GgQA2kKLPBrIEXzR8D3/social-images/social-1781168553576-WhatsApp_Image_2026-06-10_at_22.11.46.webp",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -96,7 +119,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@300;400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@300;400;500;600;700&display=swap",
       },
     ],
   }),
@@ -120,6 +143,8 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+import { LanguageProvider } from "@/hooks/use-i18n";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
@@ -136,8 +161,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster richColors position="top-center" />
+      <LanguageProvider>
+        <Outlet />
+        <Toaster richColors position="top-center" />
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

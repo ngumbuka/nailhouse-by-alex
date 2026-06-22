@@ -1,11 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { type SupabaseClient } from "@supabase/supabase-js";
+import { type Database } from "@/integrations/supabase/types";
 
 const BUCKET = "service-gallery";
 const SIGN_TTL = 60 * 60 * 24 * 365; // 1 year
 
-async function signMany(client: any, paths: string[]) {
+async function signMany(client: SupabaseClient<Database>, paths: string[]) {
   const map = new Map<string, string>();
   if (paths.length === 0) return map;
   const { data, error } = await client.storage.from(BUCKET).createSignedUrls(paths, SIGN_TTL);
@@ -16,7 +18,7 @@ async function signMany(client: any, paths: string[]) {
   return map;
 }
 
-async function assertAdmin(ctx: { supabase: any; userId: string }) {
+async function assertAdmin(ctx: { supabase: SupabaseClient<Database>; userId: string }) {
   const { data, error } = await ctx.supabase.rpc("has_role", {
     _user_id: ctx.userId,
     _role: "admin",
@@ -28,21 +30,24 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
 export const listServiceGallery = createServerFn({ method: "GET" })
   .inputValidator((i: unknown) => z.object({ slug: z.string().min(1) }).parse(i))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await supabaseAdmin
-      .from("service_gallery_images")
-      .select("id, slug, url, storage_path, caption, sort")
-      .eq("slug", data.slug)
-      .order("sort", { ascending: true });
-    if (error) throw new Error(error.message);
-    const paths = (rows ?? [])
-      .map((r) => r.storage_path)
-      .filter((p): p is string => !!p);
-    const signed = await signMany(supabaseAdmin, paths);
-    return (rows ?? []).map((r) => ({
-      ...r,
-      url: r.storage_path && signed.get(r.storage_path) ? signed.get(r.storage_path)! : r.url,
-    }));
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: rows, error } = await supabaseAdmin
+        .from("service_gallery_images")
+        .select("id, slug, url, storage_path, caption, sort")
+        .eq("slug", data.slug)
+        .order("sort", { ascending: true });
+      if (error) throw new Error(error.message);
+      const paths = (rows ?? []).map((r) => r.storage_path).filter((p): p is string => !!p);
+      const signed = await signMany(supabaseAdmin, paths);
+      return (rows ?? []).map((r) => ({
+        ...r,
+        url: r.storage_path && signed.get(r.storage_path) ? signed.get(r.storage_path)! : r.url,
+      }));
+    } catch (err) {
+      console.warn("[listServiceGallery] fallback to empty gallery", err);
+      return [];
+    }
   });
 
 export const adminListServiceGallery = createServerFn({ method: "GET" })
@@ -56,9 +61,7 @@ export const adminListServiceGallery = createServerFn({ method: "GET" })
       .order("slug", { ascending: true })
       .order("sort", { ascending: true });
     if (error) throw new Error(error.message);
-    const paths = (rows ?? [])
-      .map((r) => r.storage_path)
-      .filter((p): p is string => !!p);
+    const paths = (rows ?? []).map((r) => r.storage_path).filter((p): p is string => !!p);
     const signed = await signMany(supabaseAdmin, paths);
     return (rows ?? []).map((r) => ({
       ...r,
@@ -142,10 +145,7 @@ export const adminDeleteServiceGalleryImage = createServerFn({ method: "POST" })
     if (row?.storage_path) {
       await supabaseAdmin.storage.from(BUCKET).remove([row.storage_path]);
     }
-    const { error } = await supabaseAdmin
-      .from("service_gallery_images")
-      .delete()
-      .eq("id", data.id);
+    const { error } = await supabaseAdmin.from("service_gallery_images").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

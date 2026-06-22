@@ -27,7 +27,7 @@ function AuthPage() {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Connectée");
-    navigate({ to: "/_authenticated/admin" as any });
+    navigate({ to: "/admin" });
   }
 
   async function signUp(e: React.FormEvent) {
@@ -50,7 +50,9 @@ function AuthPage() {
           <img src={ASSETS.burgundyManicure} alt="" className="h-full w-full object-cover" />
         </div>
         <div className="rounded-3xl border border-border bg-card p-8">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-accent">Espace administration</p>
+          <p className="text-[11px] uppercase tracking-[0.25em] text-accent">
+            Espace administration
+          </p>
           <h1 className="mt-3 font-serif text-3xl text-primary">Connexion</h1>
           <Tabs defaultValue="signin" className="mt-6">
             <TabsList className="grid w-full grid-cols-2">
@@ -59,21 +61,57 @@ function AuthPage() {
             </TabsList>
             <TabsContent value="signin">
               <form onSubmit={signIn} className="mt-4 space-y-4">
-                <Field label="Email"><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
-                <Field label="Mot de passe"><Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
-                <Button type="submit" disabled={loading} className="w-full rounded-full">{loading ? "…" : "Se connecter"}</Button>
+                <Field label="Email">
+                  <Input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </Field>
+                <Field label="Mot de passe">
+                  <Input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </Field>
+                <Button type="submit" disabled={loading} className="w-full rounded-full">
+                  {loading ? "…" : "Se connecter"}
+                </Button>
               </form>
             </TabsContent>
             <TabsContent value="signup">
               <form onSubmit={signUp} className="mt-4 space-y-4">
-                <Field label="Email"><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
-                <Field label="Mot de passe"><Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
-                <Button type="submit" disabled={loading} className="w-full rounded-full">{loading ? "…" : "Créer mon compte"}</Button>
+                <Field label="Email">
+                  <Input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </Field>
+                <Field label="Mot de passe">
+                  <Input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </Field>
+                <Button type="submit" disabled={loading} className="w-full rounded-full">
+                  {loading ? "…" : "Créer mon compte"}
+                </Button>
               </form>
             </TabsContent>
           </Tabs>
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            <Link to="/" className="hover:text-primary">← Retour à l'accueil</Link>
+            <Link to="/" className="hover:text-primary">
+              ← Retour à l'accueil
+            </Link>
           </p>
         </div>
       </section>

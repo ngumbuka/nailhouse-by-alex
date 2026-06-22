@@ -1,33 +1,53 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Languages } from "lucide-react";
 import { ASSETS } from "@/lib/assets";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const NAV = [
-  { to: "/", label: "Accueil" },
-  { to: "/services", label: "Prestations" },
-  { to: "/tarifs", label: "Grille tarifaire" },
-  { to: "/gallery", label: "Galerie" },
-  { to: "/about", label: "L'atelier" },
-  { to: "/contact", label: "Contact" },
-] as const;
+import { useI18n } from "@/hooks/use-i18n";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const { language, setLanguage, t } = useI18n();
+
+  const navItems = [
+    { to: "/", label: t("nav_home") },
+    { to: "/services", label: t("nav_services") },
+    { to: "/tarifs", label: t("nav_prices") },
+    { to: "/gallery", label: t("nav_gallery") },
+    { to: "/about", label: t("nav_about") },
+    { to: "/contact", label: t("nav_contact") },
+  ] as const;
+
+  const LangSwitcher = () => (
+    <button
+      onClick={() => setLanguage(language === "fr" ? "en" : "fr")}
+      className="flex items-center gap-1.5 py-1.5 transition-all cursor-pointer text-xs font-bold uppercase tracking-wider text-gold hover:opacity-80"
+      title={language === "fr" ? "Switch to English" : "Passer en Français"}
+    >
+      <Languages className="h-4.5 w-4.5 text-primary dark:text-zinc-300" />
+      <span>{language.toUpperCase()}</span>
+    </button>
+  );
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-        <Link to="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
-          <img src={ASSETS.logo} alt="NailHouse" className="h-10 w-10 rounded-full object-cover ring-1 ring-primary/20" />
-          <div className="leading-tight">
-            <p className="font-serif text-xl text-primary">NailHouse</p>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">For the beauty of nails</p>
+        <Link to="/" className="flex items-center gap-3 shrink-0" onClick={() => setOpen(false)}>
+          <img
+            src={ASSETS.logo}
+            alt="NailHouse"
+            className="h-10 w-10 rounded-full object-cover ring-1 ring-primary/20 shrink-0"
+          />
+          <div className="leading-tight max-w-[150px] sm:max-w-[180px] md:max-w-[140px] lg:max-w-[180px]">
+            <p className="font-serif text-xl text-primary font-semibold">NailHouse</p>
+            <p className="text-[7.5px] uppercase tracking-[0.16em] text-muted-foreground whitespace-normal leading-normal mt-0.5">
+              {t("footer_tagline")}
+            </p>
           </div>
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
-          {NAV.map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.to}
               to={item.to}
@@ -38,21 +58,30 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
+          <LangSwitcher />
           <Button asChild size="sm" className="rounded-full px-5">
-            <Link to="/booking">Réserver</Link>
+            <Link to="/booking">{t("btn_book")}</Link>
           </Button>
         </nav>
-        <button
-          aria-label="Menu"
-          className="md:hidden rounded-full border border-border/70 p-2"
-          onClick={() => setOpen((o) => !o)}
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-3 md:hidden">
+          <LangSwitcher />
+          <button
+            aria-label="Menu"
+            className="rounded-full border border-border/70 p-2"
+            onClick={() => setOpen((o) => !o)}
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
-      <div className={cn("md:hidden overflow-hidden border-t border-border/60 transition-all", open ? "max-h-96" : "max-h-0")}>
+      <div
+        className={cn(
+          "md:hidden overflow-hidden border-t border-border/60 transition-all",
+          open ? "max-h-96" : "max-h-0",
+        )}
+      >
         <nav className="flex flex-col gap-1 px-5 py-3">
-          {NAV.map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.to}
               to={item.to}
@@ -65,7 +94,7 @@ export function SiteHeader() {
             </Link>
           ))}
           <Button asChild className="mt-2 rounded-full" onClick={() => setOpen(false)}>
-            <Link to="/booking">Réserver un rendez-vous</Link>
+            <Link to="/booking">{t("btn_book_now")}</Link>
           </Button>
         </nav>
       </div>

@@ -28,8 +28,8 @@ Replace the category-card grid with a product-style catalog:
 
 - **Hero** — current hero kept, simplified (title + one-line intro + CTA "Réserver").
 - **Filter bar** (sticky on scroll, horizontal scroll on mobile):
-`Tout · Mains · Pieds · Naturels renforcés · BIAB · Capsules · Suppléments · Dépose`
-Driven by `?cat=<slug>` search param so the filter is shareable and back-button friendly.
+  `Tout · Mains · Pieds · Naturels renforcés · BIAB · Capsules · Suppléments · Dépose`
+  Driven by `?cat=<slug>` search param so the filter is shareable and back-button friendly.
 - **Sort** (lightweight): `Populaire · Prix ↑ · Prix ↓ · Durée`.
 - **Product grid** — 2 cols mobile / 3 cols tablet / 4 cols desktop. Each card:
   - service image (per-category hero fallback)
@@ -50,9 +50,9 @@ Data: `listServices()` already returns all services with `category` + `price_fcf
 The page already has hero, description, ritual, price + booking, aftercare, FAQ, gallery, related strip. Add:
 
 - **Sticky purchase bar** on scroll (mobile + desktop):
-service name · price · "Réserver ce soin" button. Mirrors PDP add-to-cart bars.
+  service name · price · "Réserver ce soin" button. Mirrors PDP add-to-cart bars.
 - **Trust row** under the hero: `Outils stérilisés · Produits pro · Réservation en ligne · Conseil sur-mesure` — small icon strip.
-- **"Souvent réservé avec"** section (cross-sell) above the existing related strip: 3 hand-picked complementary services from *other* categories (e.g. Manucure + Pédicure + Dépose). Picked via a small rule: same category siblings already shown below, so this pulls the 3 nearest by category affinity.
+- **"Souvent réservé avec"** section (cross-sell) above the existing related strip: 3 hand-picked complementary services from _other_ categories (e.g. Manucure + Pédicure + Dépose). Picked via a small rule: same category siblings already shown below, so this pulls the 3 nearest by category affinity.
 - **"Autres prestations"** strip: kept, restyled as horizontal product cards (image + name + price) instead of text-only cards.
 - **Breadcrumb** kept; gains a "Back to catalog" link on mobile.
 
@@ -101,8 +101,8 @@ This makes the category page an editorial landing, while the actual shopping hap
 ---
 
 - Real product imagery per individual service (we keep per-category hero/flat images as fallbacks).  
-Permit a user to pick and schedule multipl services at once in one flow  
-  
+  Permit a user to pick and schedule multipl services at once in one flow
+
 6. Out of scope (this round)
 
 - Wishlist / favorites, comparison, reviews, variants, real cart. Booking remains a single-service flow.

@@ -18,8 +18,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ServicesSlugIndexRouteImport } from './routes/services.$slug.index'
 import { Route as ServicesSlugServiceRouteImport } from './routes/services.$slug.$service'
 
 const TarifsRoute = TarifsRouteImport.update({
@@ -66,6 +68,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServicesIndexRoute = ServicesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ServicesRoute,
+} as any)
 const ServicesSlugRoute = ServicesSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -75,6 +82,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ServicesSlugIndexRoute = ServicesSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ServicesSlugRoute,
 } as any)
 const ServicesSlugServiceRoute = ServicesSlugServiceRouteImport.update({
   id: '/$service',
@@ -93,7 +105,9 @@ export interface FileRoutesByFullPath {
   '/tarifs': typeof TarifsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/services/$slug': typeof ServicesSlugRouteWithChildren
+  '/services/': typeof ServicesIndexRoute
   '/services/$slug/$service': typeof ServicesSlugServiceRoute
+  '/services/$slug/': typeof ServicesSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,11 +116,11 @@ export interface FileRoutesByTo {
   '/booking': typeof BookingRoute
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
-  '/services': typeof ServicesRouteWithChildren
   '/tarifs': typeof TarifsRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/services/$slug': typeof ServicesSlugRouteWithChildren
+  '/services': typeof ServicesIndexRoute
   '/services/$slug/$service': typeof ServicesSlugServiceRoute
+  '/services/$slug': typeof ServicesSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -121,7 +135,9 @@ export interface FileRoutesById {
   '/tarifs': typeof TarifsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/services/$slug': typeof ServicesSlugRouteWithChildren
+  '/services/': typeof ServicesIndexRoute
   '/services/$slug/$service': typeof ServicesSlugServiceRoute
+  '/services/$slug/': typeof ServicesSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -136,7 +152,9 @@ export interface FileRouteTypes {
     | '/tarifs'
     | '/admin'
     | '/services/$slug'
+    | '/services/'
     | '/services/$slug/$service'
+    | '/services/$slug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -145,11 +163,11 @@ export interface FileRouteTypes {
     | '/booking'
     | '/contact'
     | '/gallery'
-    | '/services'
     | '/tarifs'
     | '/admin'
-    | '/services/$slug'
+    | '/services'
     | '/services/$slug/$service'
+    | '/services/$slug'
   id:
     | '__root__'
     | '/'
@@ -163,7 +181,9 @@ export interface FileRouteTypes {
     | '/tarifs'
     | '/_authenticated/admin'
     | '/services/$slug'
+    | '/services/'
     | '/services/$slug/$service'
+    | '/services/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -243,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/services/': {
+      id: '/services/'
+      path: '/'
+      fullPath: '/services/'
+      preLoaderRoute: typeof ServicesIndexRouteImport
+      parentRoute: typeof ServicesRoute
+    }
     '/services/$slug': {
       id: '/services/$slug'
       path: '/$slug'
@@ -256,6 +283,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/services/$slug/': {
+      id: '/services/$slug/'
+      path: '/'
+      fullPath: '/services/$slug/'
+      preLoaderRoute: typeof ServicesSlugIndexRouteImport
+      parentRoute: typeof ServicesSlugRoute
     }
     '/services/$slug/$service': {
       id: '/services/$slug/$service'
@@ -280,10 +314,12 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface ServicesSlugRouteChildren {
   ServicesSlugServiceRoute: typeof ServicesSlugServiceRoute
+  ServicesSlugIndexRoute: typeof ServicesSlugIndexRoute
 }
 
 const ServicesSlugRouteChildren: ServicesSlugRouteChildren = {
   ServicesSlugServiceRoute: ServicesSlugServiceRoute,
+  ServicesSlugIndexRoute: ServicesSlugIndexRoute,
 }
 
 const ServicesSlugRouteWithChildren = ServicesSlugRoute._addFileChildren(
@@ -292,10 +328,12 @@ const ServicesSlugRouteWithChildren = ServicesSlugRoute._addFileChildren(
 
 interface ServicesRouteChildren {
   ServicesSlugRoute: typeof ServicesSlugRouteWithChildren
+  ServicesIndexRoute: typeof ServicesIndexRoute
 }
 
 const ServicesRouteChildren: ServicesRouteChildren = {
   ServicesSlugRoute: ServicesSlugRouteWithChildren,
+  ServicesIndexRoute: ServicesIndexRoute,
 }
 
 const ServicesRouteWithChildren = ServicesRoute._addFileChildren(
@@ -316,3 +354,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
