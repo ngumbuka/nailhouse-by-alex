@@ -142,6 +142,29 @@ export type TranslationDictionary = {
   cart_book_selection: string;
   cart_count_label: string;
   cart_total_prefix: string;
+
+  // Portal & Admin
+  portal_title: string;
+  portal_welcome: string;
+  portal_bookings_tab: string;
+  portal_profile_tab: string;
+  portal_favorites_tab: string;
+  portal_chat_tab: string;
+  portal_settings_tab: string;
+  portal_no_bookings: string;
+  portal_no_favorites: string;
+  portal_no_notifications: string;
+  portal_phone_label: string;
+  portal_newsletter_subscribe: string;
+  portal_message_placeholder: string;
+  portal_chat_with_admin: string;
+  admin_clients_tab: string;
+  admin_services_tab: string;
+  admin_inbox_tab: string;
+  admin_btn_save: string;
+  admin_btn_delete: string;
+  admin_btn_add: string;
+  rating_login_prompt: string;
 };
 
 export const TRANSLATIONS_FR: TranslationDictionary = {
@@ -294,6 +317,29 @@ export const TRANSLATIONS_FR: TranslationDictionary = {
   cart_book_selection: "Réserver la sélection",
   cart_count_label: "Ma Sélection",
   cart_total_prefix: "Total",
+
+  // Portal & Admin
+  portal_title: "Mon Espace Client",
+  portal_welcome: "Bienvenue sur votre portail d'exception",
+  portal_bookings_tab: "Rendez-vous",
+  portal_profile_tab: "Profil",
+  portal_favorites_tab: "Favoris",
+  portal_chat_tab: "Messagerie",
+  portal_settings_tab: "Préférences",
+  portal_no_bookings: "Vous n'avez aucun rendez-vous pour le moment.",
+  portal_no_favorites: "Aucune prestation dans vos favoris.",
+  portal_no_notifications: "Aucune notification.",
+  portal_phone_label: "Téléphone",
+  portal_newsletter_subscribe: "Je souhaite recevoir la newsletter et les offres exclusives.",
+  portal_message_placeholder: "Écrivez votre message à l'administration ici...",
+  portal_chat_with_admin: "Échangez avec l'équipe NailHouse",
+  admin_clients_tab: "Clients",
+  admin_services_tab: "Prestations",
+  admin_inbox_tab: "Messagerie",
+  admin_btn_save: "Enregistrer les modifications",
+  admin_btn_delete: "Supprimer",
+  admin_btn_add: "Ajouter",
+  rating_login_prompt: "Veuillez vous connecter pour évaluer cette prestation.",
 };
 
 export const TRANSLATIONS_EN: TranslationDictionary = {
@@ -445,6 +491,29 @@ export const TRANSLATIONS_EN: TranslationDictionary = {
   cart_book_selection: "Book selection",
   cart_count_label: "My Selection",
   cart_total_prefix: "Total",
+
+  // Portal & Admin
+  portal_title: "Client Portal",
+  portal_welcome: "Welcome to your personal dashboard",
+  portal_bookings_tab: "Appointments",
+  portal_profile_tab: "Profile",
+  portal_favorites_tab: "Favorites",
+  portal_chat_tab: "Inbox",
+  portal_settings_tab: "Preferences",
+  portal_no_bookings: "You have no appointments scheduled.",
+  portal_no_favorites: "No services saved to your wishlist.",
+  portal_no_notifications: "No notifications.",
+  portal_phone_label: "Phone",
+  portal_newsletter_subscribe: "Subscribe to newsletter & exclusive news.",
+  portal_message_placeholder: "Write your message to the team here...",
+  portal_chat_with_admin: "Chat with the NailHouse team",
+  admin_clients_tab: "Clients",
+  admin_services_tab: "Services & Catalog",
+  admin_inbox_tab: "Inbox Messages",
+  admin_btn_save: "Save Changes",
+  admin_btn_delete: "Delete",
+  admin_btn_add: "Add New",
+  rating_login_prompt: "Please log in to rate this service.",
 };
 
 // ── SERVICES DATABASE LOCAL ENGLISH MAPPING ──

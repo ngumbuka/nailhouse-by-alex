@@ -123,8 +123,8 @@ function AboutPage() {
               <Button
                 asChild
                 size="lg"
-                variant="outline"
-                className="rounded-full border-zinc-700 text-white hover:bg-white/10 hover:text-white"
+                variant="ghost"
+                className="rounded-full border border-zinc-700 text-white hover:bg-white/10 hover:text-white"
               >
                 <Link to="/services">
                   {language === "en" ? "Explore the menu" : "Explorer la carte"}

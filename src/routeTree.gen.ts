@@ -20,6 +20,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
+import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ServicesSlugIndexRouteImport } from './routes/services.$slug.index'
 import { Route as ServicesSlugServiceRouteImport } from './routes/services.$slug.$service'
@@ -78,6 +79,11 @@ const ServicesSlugRoute = ServicesSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => ServicesRoute,
 } as any)
+const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/services': typeof ServicesRouteWithChildren
   '/tarifs': typeof TarifsRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/portal': typeof AuthenticatedPortalRoute
   '/services/$slug': typeof ServicesSlugRouteWithChildren
   '/services/': typeof ServicesIndexRoute
   '/services/$slug/$service': typeof ServicesSlugServiceRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/gallery': typeof GalleryRoute
   '/tarifs': typeof TarifsRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/portal': typeof AuthenticatedPortalRoute
   '/services': typeof ServicesIndexRoute
   '/services/$slug/$service': typeof ServicesSlugServiceRoute
   '/services/$slug': typeof ServicesSlugIndexRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/services': typeof ServicesRouteWithChildren
   '/tarifs': typeof TarifsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/services/$slug': typeof ServicesSlugRouteWithChildren
   '/services/': typeof ServicesIndexRoute
   '/services/$slug/$service': typeof ServicesSlugServiceRoute
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/tarifs'
     | '/admin'
+    | '/portal'
     | '/services/$slug'
     | '/services/'
     | '/services/$slug/$service'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/tarifs'
     | '/admin'
+    | '/portal'
     | '/services'
     | '/services/$slug/$service'
     | '/services/$slug'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/tarifs'
     | '/_authenticated/admin'
+    | '/_authenticated/portal'
     | '/services/$slug'
     | '/services/'
     | '/services/$slug/$service'
@@ -277,6 +289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesSlugRouteImport
       parentRoute: typeof ServicesRoute
     }
+    '/_authenticated/portal': {
+      id: '/_authenticated/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof AuthenticatedPortalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -303,10 +322,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedPortalRoute: AuthenticatedPortalRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

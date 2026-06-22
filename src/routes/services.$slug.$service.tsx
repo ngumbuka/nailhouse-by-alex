@@ -12,7 +12,8 @@ import {
   Gem,
   Share2,
 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { SiteLayout } from "@/components/site/site-layout";
@@ -116,6 +117,19 @@ function ServiceDetailPage() {
   const [isPending, startTransition] = useTransition();
 
   const submitReview = useServerFn(createReview);
+
+  const [user, setUser] = useState<import("@supabase/supabase-js").User | null>(null);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+    });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   if (!service) {
     return (
@@ -376,129 +390,147 @@ function ServiceDetailPage() {
               </div>
 
               <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.2fr]">
-                {/* Submit Form */}
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (!clientName.trim()) {
-                      toast.error(
-                        language === "en"
-                          ? "Please enter your name."
-                          : "Veuillez saisir votre nom.",
-                      );
-                      return;
-                    }
-                    startTransition(async () => {
-                      try {
-                        await submitReview({
-                          data: {
-                            service_id: service.id,
-                            client_name: clientName,
-                            rating,
-                            comment: comment.trim() || null,
-                          },
-                        });
-                        toast.success(
-                          language === "en"
-                            ? "Thank you! Your review has been saved."
-                            : "Merci ! Votre avis a été enregistré.",
-                        );
-                        setClientName("");
-                        setComment("");
-                        setRating(5);
-                        queryClient.invalidateQueries({
-                          queryKey: ["service-reviews", service.id],
-                        });
-                      } catch (err) {
-                        console.error(err);
+                {user ? (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!clientName.trim()) {
                         toast.error(
                           language === "en"
-                            ? "Error submitting review."
-                            : "Erreur lors de la soumission de l'avis.",
+                            ? "Please enter your name."
+                            : "Veuillez saisir votre nom.",
                         );
+                        return;
                       }
-                    });
-                  }}
-                  className="rounded-2xl border border-border/40 bg-card p-6 shadow-sm space-y-4"
-                >
-                  <h4 className="font-serif text-base text-primary font-semibold">
-                    {language === "en" ? "Your Feedback" : "Votre retour d'expérience"}
-                  </h4>
-                  <div className="space-y-1.5">
-                    <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                      {language === "en" ? "Overall Rating" : "Note globale"}
-                    </label>
-                    <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setRating(star)}
-                          onMouseEnter={() => setHoverRating(star)}
-                          onMouseLeave={() => setHoverRating(0)}
-                          className="text-gold focus:outline-none cursor-pointer transition-transform hover:scale-110"
-                        >
-                          <Star
-                            className={`h-5 w-5 ${
-                              star <= (hoverRating || rating)
-                                ? "fill-gold text-gold"
-                                : "text-muted-foreground/30"
-                            }`}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-1.5 font-sans">
-                    <label
-                      htmlFor="clientName"
-                      className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
-                    >
-                      {language === "en" ? "Your Name" : "Votre nom"}
-                    </label>
-                    <input
-                      id="clientName"
-                      value={clientName}
-                      onChange={(e) => setClientName(e.target.value)}
-                      placeholder={language === "en" ? "E.g. Sarah M." : "Ex: Sophie L."}
-                      required
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:border-gold focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1.5 font-sans">
-                    <label
-                      htmlFor="comment"
-                      className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
-                    >
-                      {language === "en" ? "Comment" : "Commentaire"}
-                    </label>
-                    <textarea
-                      id="comment"
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      placeholder={
-                        language === "en"
-                          ? "Share your experience..."
-                          : "Partagez votre ressenti..."
-                      }
-                      rows={3}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:border-gold focus:outline-none resize-none"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={isPending}
-                    className="w-full rounded-full bg-gold text-white dark:text-ink hover:bg-gold/90 cursor-pointer text-xs"
+                      startTransition(async () => {
+                        try {
+                          await submitReview({
+                            data: {
+                              service_id: service.id,
+                              client_name: clientName,
+                              rating,
+                              comment: comment.trim() || null,
+                            },
+                          });
+                          toast.success(
+                            language === "en"
+                              ? "Thank you! Your review has been saved."
+                              : "Merci ! Votre avis a été enregistré.",
+                          );
+                          setClientName("");
+                          setComment("");
+                          setRating(5);
+                          queryClient.invalidateQueries({
+                            queryKey: ["service-reviews", service.id],
+                          });
+                        } catch (err) {
+                          console.error(err);
+                          toast.error(
+                            language === "en"
+                              ? "Error submitting review."
+                              : "Erreur lors de la soumission de l'avis.",
+                          );
+                        }
+                      });
+                    }}
+                    className="rounded-2xl border border-border/40 bg-card p-6 shadow-sm space-y-4"
                   >
-                    {isPending
-                      ? language === "en"
-                        ? "Publishing..."
-                        : "Publication..."
-                      : language === "en"
-                        ? "Post my review"
-                        : "Publier mon avis"}
-                  </Button>
-                </form>
+                    <h4 className="font-serif text-base text-primary font-semibold">
+                      {language === "en" ? "Your Feedback" : "Votre retour d'expérience"}
+                    </h4>
+                    <div className="space-y-1.5">
+                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                        {language === "en" ? "Overall Rating" : "Note globale"}
+                      </label>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setRating(star)}
+                            onMouseEnter={() => setHoverRating(star)}
+                            onMouseLeave={() => setHoverRating(0)}
+                            className="text-gold focus:outline-none cursor-pointer transition-transform hover:scale-110"
+                          >
+                            <Star
+                              className={`h-5 w-5 ${
+                                star <= (hoverRating || rating)
+                                  ? "fill-gold text-gold"
+                                  : "text-muted-foreground/30"
+                              }`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 font-sans">
+                      <label
+                        htmlFor="clientName"
+                        className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                      >
+                        {language === "en" ? "Your Name" : "Votre nom"}
+                      </label>
+                      <input
+                        id="clientName"
+                        value={clientName}
+                        onChange={(e) => setClientName(e.target.value)}
+                        placeholder={language === "en" ? "E.g. Sarah M." : "Ex: Sophie L."}
+                        required
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:border-gold focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1.5 font-sans">
+                      <label
+                        htmlFor="comment"
+                        className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                      >
+                        {language === "en" ? "Comment" : "Commentaire"}
+                      </label>
+                      <textarea
+                        id="comment"
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        placeholder={
+                          language === "en"
+                            ? "Share your experience..."
+                            : "Partagez votre ressenti..."
+                        }
+                        rows={3}
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:border-gold focus:outline-none resize-none"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={isPending}
+                      className="w-full rounded-full bg-gold text-white dark:text-ink hover:bg-gold/90 cursor-pointer text-xs"
+                    >
+                      {isPending
+                        ? language === "en"
+                          ? "Publishing..."
+                          : "Publication..."
+                        : language === "en"
+                          ? "Post my review"
+                          : "Publier mon avis"}
+                    </Button>
+                  </form>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-border/80 bg-card/40 p-6 text-center space-y-3.5 flex flex-col items-center justify-center">
+                    <Star className="h-7 w-7 text-gold/30 stroke-1" />
+                    <h4 className="font-serif text-base text-primary font-semibold">
+                      {language === "en" ? "Leave a Review" : "Laisser un avis"}
+                    </h4>
+                    <p className="text-xs text-muted-foreground max-w-[240px] leading-relaxed">
+                      {t("rating_login_prompt")}
+                    </p>
+                    <Button
+                      asChild
+                      size="sm"
+                      className="rounded-full bg-gold text-white dark:text-ink hover:bg-gold/90 font-semibold px-6 shadow-md shadow-gold/5"
+                    >
+                      <Link to="/auth">{language === "en" ? "Log In" : "Se connecter"}</Link>
+                    </Button>
+                  </div>
+                )}
 
                 {/* List of Reviews */}
                 <div className="space-y-3 max-h-[420px] overflow-y-auto pr-2">

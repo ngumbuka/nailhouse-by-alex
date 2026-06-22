@@ -1,14 +1,28 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { Menu, X, Languages } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Menu, X, Languages, UserCheck } from "lucide-react";
 import { ASSETS } from "@/lib/assets";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/hooks/use-i18n";
+import { supabase } from "@/integrations/supabase/client";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const { language, setLanguage, t } = useI18n();
+  const [user, setUser] = useState<import("@supabase/supabase-js").User | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+    });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const navItems = [
     { to: "/", label: t("nav_home") },
@@ -29,6 +43,8 @@ export function SiteHeader() {
       <span>{language.toUpperCase()}</span>
     </button>
   );
+
+  const isAdmin = user?.email === "admin@nailhouse.com";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
@@ -58,6 +74,16 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
+          {user && (
+            <Link
+              to={isAdmin ? "/admin" : "/portal"}
+              className="text-sm font-semibold tracking-wide text-gold transition-colors hover:text-gold/80 flex items-center gap-1.5"
+              activeProps={{ className: "text-gold font-bold underline underline-offset-4" }}
+            >
+              <UserCheck className="h-4 w-4" />
+              {isAdmin ? "Admin" : language === "en" ? "My Space" : "Mon Espace"}
+            </Link>
+          )}
           <LangSwitcher />
           <Button asChild size="sm" className="rounded-full px-5">
             <Link to="/booking">{t("btn_book")}</Link>
@@ -93,6 +119,16 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
+          {user && (
+            <Link
+              to={isAdmin ? "/admin" : "/portal"}
+              onClick={() => setOpen(false)}
+              className="rounded-md px-3 py-2 text-sm text-gold font-semibold hover:bg-muted"
+              activeProps={{ className: "bg-muted text-gold font-bold" }}
+            >
+              {isAdmin ? "Admin" : language === "en" ? "My Space" : "Mon Espace"}
+            </Link>
+          )}
           <Button asChild className="mt-2 rounded-full" onClick={() => setOpen(false)}>
             <Link to="/booking">{t("btn_book_now")}</Link>
           </Button>
