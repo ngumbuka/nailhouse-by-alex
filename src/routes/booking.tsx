@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { createBooking, listServices } from "@/lib/booking.functions";
 import { ASSETS } from "@/lib/assets";
 import { useI18n } from "@/hooks/use-i18n";
+import { SoftImage } from "@/components/ui/soft-image";
 
 const opts = queryOptions({ queryKey: ["services"], queryFn: () => listServices() });
 
@@ -114,9 +115,9 @@ function BookingPage() {
   const currentLocale = language === "en" ? enUS : fr;
 
   const STEPS = [
-    { id: 1, label: language === "en" ? "Services" : "Prestations", icon: Sparkles },
-    { id: 2, label: language === "en" ? "Date & Time" : "Date & Heure", icon: CalendarIcon },
-    { id: 3, label: language === "en" ? "Your details" : "Vos infos", icon: User },
+    { id: 1, label: t("booking_step_1").replace(/^\d+\.\s*/, ""), icon: Sparkles },
+    { id: 2, label: t("booking_step_2").replace(/^\d+\.\s*/, ""), icon: CalendarIcon },
+    { id: 3, label: t("booking_step_3").replace(/^\d+\.\s*/, ""), icon: User },
   ];
 
   async function onSubmit(e: React.FormEvent) {
@@ -147,8 +148,8 @@ function BookingPage() {
           : "Votre demande de rendez-vous a bien été envoyée.",
       );
       if (typeof window !== "undefined") {
-        window.localStorage.removeItem("nailhouse-selected-services");
-        window.dispatchEvent(new Event("storage"));
+        window.localStorage.removeItem("nailhouse-service-selection");
+        window.dispatchEvent(new Event("nailhouse-selection-change"));
       }
     } catch (err) {
       console.error(err);
@@ -178,8 +179,8 @@ function BookingPage() {
   if (done) {
     return (
       <SiteLayout>
-        <section className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center px-6 py-20 text-center">
-          <span className="mb-6 grid h-16 w-16 place-items-center rounded-full bg-gold/15 text-gold">
+        <section className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center px-6 py-20 text-center animate-in fade-in duration-500">
+          <span className="mb-6 grid h-16 w-16 place-items-center rounded-full bg-gold/15 text-gold border border-gold/30">
             <Check className="h-7 w-7" />
           </span>
           <h1 className="font-serif text-3xl text-primary md:text-4xl">
@@ -199,8 +200,8 @@ function BookingPage() {
               </>
             ) : (
               <>
-                Votre demande est bien arrivée. Nous vous rappelons au{" "}
-                <span className="font-medium text-foreground">{phone}</span> pour confirmer votre
+                Votre demande est bien enregistrée. Nous vous rappelons au{" "}
+                <span className="font-medium text-foreground">{phone}</span> pour valider votre
                 créneau du{" "}
                 <span className="font-medium text-foreground">
                   {date && format(date, "EEEE d MMMM", { locale: currentLocale })} à {time}
@@ -209,32 +210,37 @@ function BookingPage() {
               </>
             )}
           </p>
-          <div className="mt-6 w-full rounded-2xl border border-border bg-card p-5 text-left">
-            <p className="mb-3 text-xs uppercase tracking-[0.22em] text-muted-foreground font-semibold">
-              {language === "en" ? "Summary" : "Récapitulatif"}
+          <div className="mt-6 w-full rounded-2xl border border-gold/15 bg-card p-6 text-left shadow-sm">
+            <p className="mb-3 text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-semibold">
+              {t("booking_summary_title")}
             </p>
             {selectedServices.map((s) => (
-              <div key={s.id} className="flex justify-between py-1.5 text-sm">
-                <span className="font-serif text-primary">{s.name}</span>
-                <span className="text-gold">{s.price_fcfa.toLocaleString("fr-FR")} F</span>
+              <div
+                key={s.id}
+                className="flex justify-between py-2 text-sm border-b border-muted/50 last:border-none"
+              >
+                <span className="font-serif text-primary font-medium">{s.name}</span>
+                <span className="text-gold font-semibold">
+                  {s.price_fcfa.toLocaleString("fr-FR")} F
+                </span>
               </div>
             ))}
-            <div className="mt-3 flex justify-between border-t border-border pt-3 font-serif text-base font-semibold text-primary">
-              <span>{language === "en" ? "Total" : "Total"}</span>
-              <span className="text-gold">{totalPrice.toLocaleString("fr-FR")} FCFA</span>
+            <div className="mt-4 flex justify-between border-t border-gold/15 pt-3.5 font-serif text-base font-semibold text-primary">
+              <span>{t("cart_total_prefix")}</span>
+              <span className="text-gold font-bold">{totalPrice.toLocaleString("fr-FR")} FCFA</span>
             </div>
           </div>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button
               onClick={reset}
               variant="outline"
-              className="rounded-full border-gold/40 cursor-pointer"
+              className="rounded-full border-gold/40 hover:bg-gold/5 cursor-pointer"
             >
               {language === "en" ? "New booking" : "Nouvelle réservation"}
             </Button>
             <Button
               asChild
-              className="rounded-full bg-gold text-white dark:text-ink hover:bg-gold/90 cursor-pointer"
+              className="rounded-full bg-gold text-white dark:text-ink hover:bg-gold/90 cursor-pointer shadow-lg shadow-gold/10"
             >
               <Link to="/">{t("btn_back_home")}</Link>
             </Button>
@@ -249,12 +255,10 @@ function BookingPage() {
     <SiteLayout>
       <section className="mx-auto max-w-6xl px-5 py-12 md:py-16">
         {/* Header */}
-        <div className="mb-10 text-center">
-          <p className="label-luxe">
-            {language === "en" ? "Online Reservation" : "Réservation en ligne"}
-          </p>
-          <h1 className="mt-4 font-serif text-4xl text-primary md:text-5xl">
-            {language === "en" ? "Book an Appointment" : "Prenez rendez-vous"}
+        <div className="mb-12 text-center">
+          <p className="label-luxe">{t("booking_hero_tag")}</p>
+          <h1 className="mt-4 font-serif text-4xl text-primary md:text-5xl tracking-tight">
+            {t("booking_hero_title")}
           </h1>
           <p className="mx-auto mt-3 max-w-sm text-sm text-muted-foreground">
             {language === "en"
@@ -264,57 +268,64 @@ function BookingPage() {
         </div>
 
         {/* Progress stepper */}
-        <div className="mx-auto mb-10 flex max-w-md items-center justify-between">
-          {STEPS.map((s, i) => (
-            <div key={s.id} className="flex flex-1 items-center">
-              <button
-                type="button"
-                onClick={() => step > s.id && setStep(s.id)}
-                className={cn(
-                  "flex flex-col items-center gap-1.5 transition-opacity",
-                  step < s.id ? "opacity-40 cursor-default" : "cursor-pointer",
+        <div className="mx-auto mb-12 flex max-w-md items-center justify-between px-2">
+          {STEPS.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <div key={s.id} className="flex flex-1 items-center">
+                <button
+                  type="button"
+                  onClick={() => step > s.id && setStep(s.id)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 transition-all duration-200",
+                    step < s.id ? "opacity-35 cursor-default" : "cursor-pointer hover:opacity-90",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "grid h-10 w-10 place-items-center rounded-full border-2 text-sm font-semibold transition-all duration-300",
+                      step === s.id
+                        ? "border-gold bg-gold text-white dark:text-ink shadow-lg shadow-gold/20"
+                        : step > s.id
+                          ? "border-gold/50 bg-gold/10 text-gold"
+                          : "border-border bg-card text-muted-foreground",
+                    )}
+                  >
+                    {step > s.id ? (
+                      <Check className="h-4.5 w-4.5" />
+                    ) : (
+                      <Icon className="h-4.5 w-4.5" />
+                    )}
+                  </span>
+                  <span
+                    className={cn(
+                      "hidden text-[10px] uppercase tracking-[0.2em] font-semibold sm:block",
+                      step === s.id ? "text-gold font-bold" : "text-muted-foreground",
+                    )}
+                  >
+                    {s.label}
+                  </span>
+                </button>
+                {i < STEPS.length - 1 && (
+                  <div
+                    className={cn(
+                      "mx-3 h-0.5 flex-1 transition-all duration-500",
+                      step > s.id ? "bg-gold/40" : "bg-border",
+                    )}
+                  />
                 )}
-              >
-                <span
-                  className={cn(
-                    "grid h-9 w-9 place-items-center rounded-full border-2 text-sm font-medium transition-all",
-                    step === s.id
-                      ? "border-gold bg-gold text-white dark:text-ink shadow-sm shadow-gold/30"
-                      : step > s.id
-                        ? "border-gold/60 bg-gold/10 text-gold"
-                        : "border-border bg-card text-muted-foreground",
-                  )}
-                >
-                  {step > s.id ? <Check className="h-4 w-4" /> : s.id}
-                </span>
-                <span
-                  className={cn(
-                    "hidden text-xs uppercase tracking-[0.2em] sm:block",
-                    step === s.id ? "text-gold font-medium" : "text-muted-foreground",
-                  )}
-                >
-                  {s.label}
-                </span>
-              </button>
-              {i < STEPS.length - 1 && (
-                <div
-                  className={cn(
-                    "mx-2 h-px flex-1 transition-colors",
-                    step > s.id ? "bg-gold/40" : "bg-border",
-                  )}
-                />
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
 
         {/* Content grid */}
-        <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+        <div className="grid gap-8 lg:grid-cols-[1fr_340px] items-start">
           {/* Left: step panels */}
-          <div className="rounded-2xl border border-border bg-card p-6 md:p-8">
+          <div className="rounded-2xl border border-border bg-card p-6 md:p-8 shadow-sm">
             {/* ── STEP 1: Services ────────────────────────── */}
             {step === 1 && (
-              <div>
+              <div className="animate-in fade-in duration-300">
                 <h2 className="font-serif text-2xl text-primary">
                   {language === "en" ? "Choose your treatments" : "Choisissez vos soins"}
                 </h2>
@@ -324,13 +335,16 @@ function BookingPage() {
                     : "Sélectionnez une ou plusieurs prestations."}
                 </p>
 
-                <div className="mt-6 space-y-4">
+                <div className="mt-6 space-y-6">
                   {Object.entries(grouped).map(([cat, items]) => (
-                    <div key={cat}>
-                      <p className="mb-2 text-xs uppercase tracking-[0.24em] text-muted-foreground font-semibold">
+                    <div
+                      key={cat}
+                      className="border-b border-muted last:border-none pb-4 last:pb-0"
+                    >
+                      <p className="mb-3 text-[10px] uppercase tracking-[0.25em] text-gold font-bold">
                         {cat}
                       </p>
-                      <div className="space-y-2">
+                      <div className="space-y-2.5">
                         {items.map((s) => {
                           const selected = selectedIds.includes(s.id);
                           return (
@@ -345,16 +359,16 @@ function BookingPage() {
                                 )
                               }
                               className={cn(
-                                "flex w-full cursor-pointer items-center justify-between rounded-xl border px-4 py-3 text-left transition-all",
+                                "flex w-full cursor-pointer items-center justify-between rounded-xl border p-4 text-left transition-all duration-200 hover:scale-[1.005]",
                                 selected
-                                  ? "border-gold/50 bg-gold/8 ring-1 ring-gold/20"
+                                  ? "border-gold/50 bg-gold/5 shadow-sm ring-1 ring-gold/25"
                                   : "border-border hover:border-gold/30 hover:bg-muted/40",
                               )}
                             >
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
                                 <span
                                   className={cn(
-                                    "grid h-5 w-5 shrink-0 place-items-center rounded border transition-all",
+                                    "grid h-5 w-5 shrink-0 place-items-center rounded border transition-all duration-200",
                                     selected
                                       ? "border-gold bg-gold text-white dark:text-ink"
                                       : "border-border bg-background",
@@ -362,7 +376,9 @@ function BookingPage() {
                                 >
                                   {selected && <Check className="h-3 w-3" />}
                                 </span>
-                                <span className="font-serif text-sm text-primary">{s.name}</span>
+                                <span className="font-serif text-sm text-primary font-medium truncate">
+                                  {s.name}
+                                </span>
                               </div>
                               <span className="ml-3 shrink-0 font-serif text-sm text-gold font-bold">
                                 {s.price_fcfa.toLocaleString("fr-FR")} F
@@ -379,9 +395,9 @@ function BookingPage() {
                   <Button
                     onClick={() => setStep(2)}
                     disabled={!canProceed[1]}
-                    className="rounded-full bg-gold px-8 text-white dark:text-ink hover:bg-gold/90 cursor-pointer"
+                    className="rounded-full bg-gold px-8 text-white dark:text-ink hover:bg-gold/90 cursor-pointer shadow-lg shadow-gold/10 font-semibold"
                   >
-                    {language === "en" ? "Next" : "Suivant"}{" "}
+                    {t("booking_btn_next").replace(/\s*step\s*/i, "")}{" "}
                     <ChevronRight className="ml-1.5 h-4 w-4" />
                   </Button>
                 </div>
@@ -390,7 +406,7 @@ function BookingPage() {
 
             {/* ── STEP 2: Date & Time ──────────────────────── */}
             {step === 2 && (
-              <div>
+              <div className="animate-in fade-in duration-300">
                 <h2 className="font-serif text-2xl text-primary">
                   {language === "en" ? "Choose a time slot" : "Choisissez un créneau"}
                 </h2>
@@ -403,7 +419,7 @@ function BookingPage() {
                 <div className="mt-6 space-y-6">
                   {/* Date picker */}
                   <div>
-                    <Label className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold">
+                    <Label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
                       Date
                     </Label>
                     <Popover>
@@ -412,20 +428,23 @@ function BookingPage() {
                           type="button"
                           variant="outline"
                           className={cn(
-                            "mt-2 w-full justify-start rounded-xl border-border text-left font-normal cursor-pointer",
+                            "mt-2 w-full justify-start rounded-xl border-border hover:border-gold/30 text-left font-normal cursor-pointer py-6 shadow-sm",
                             !date && "text-muted-foreground",
+                            date && "border-gold/30 bg-gold/5",
                           )}
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4 text-gold" />
-                          {date
-                            ? format(
-                                date,
-                                language === "en" ? "EEEE, MMMM d, yyyy" : "EEEE d MMMM yyyy",
-                                { locale: currentLocale },
-                              )
-                            : language === "en"
-                              ? "Choose a date"
-                              : "Choisir une date"}
+                          <CalendarIcon className="mr-2 h-4.5 w-4.5 text-gold shrink-0" />
+                          <span className="font-serif text-sm text-primary">
+                            {date
+                              ? format(
+                                  date,
+                                  language === "en" ? "EEEE, MMMM d, yyyy" : "EEEE d MMMM yyyy",
+                                  { locale: currentLocale },
+                                )
+                              : language === "en"
+                                ? "Choose a date"
+                                : "Choisir une date"}
+                          </span>
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -443,7 +462,7 @@ function BookingPage() {
 
                   {/* Time slots grid */}
                   <div>
-                    <Label className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold">
+                    <Label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
                       {language === "en" ? "Time" : "Heure"}
                     </Label>
                     <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
@@ -453,13 +472,13 @@ function BookingPage() {
                           type="button"
                           onClick={() => setTime(t)}
                           className={cn(
-                            "flex cursor-pointer items-center justify-center rounded-lg border py-2 text-sm font-medium transition-all",
+                            "flex cursor-pointer items-center justify-center rounded-lg border py-2 text-xs font-semibold tracking-wider transition-all duration-200 hover:scale-[1.03]",
                             time === t
-                              ? "border-gold bg-gold text-white dark:text-ink shadow-sm"
-                              : "border-border hover:border-gold/40 hover:bg-muted/50",
+                              ? "border-gold bg-[#6D5337] text-white dark:bg-gold dark:text-ink shadow-md"
+                              : "border-border hover:border-gold/40 hover:bg-muted/50 text-primary",
                           )}
                         >
-                          <Clock className="mr-1 h-3 w-3 opacity-50" />
+                          <Clock className="mr-1 h-3 w-3 opacity-50 shrink-0" />
                           {t}
                         </button>
                       ))}
@@ -472,16 +491,17 @@ function BookingPage() {
                     type="button"
                     variant="ghost"
                     onClick={() => setStep(1)}
-                    className="rounded-full text-muted-foreground cursor-pointer"
+                    className="rounded-full text-muted-foreground cursor-pointer font-semibold"
                   >
-                    <ChevronLeft className="mr-1 h-4 w-4" /> {language === "en" ? "Back" : "Retour"}
+                    <ChevronLeft className="mr-1 h-4 w-4" />{" "}
+                    {t("booking_btn_prev").replace(/\s*step\s*/i, "")}
                   </Button>
                   <Button
                     onClick={() => setStep(3)}
                     disabled={!canProceed[2]}
-                    className="rounded-full bg-gold px-8 text-white dark:text-ink hover:bg-gold/90 cursor-pointer"
+                    className="rounded-full bg-gold px-8 text-white dark:text-ink hover:bg-gold/90 cursor-pointer shadow-lg shadow-gold/10 font-semibold"
                   >
-                    {language === "en" ? "Next" : "Suivant"}{" "}
+                    {t("booking_btn_next").replace(/\s*step\s*/i, "")}{" "}
                     <ChevronRight className="ml-1.5 h-4 w-4" />
                   </Button>
                 </div>
@@ -490,9 +510,9 @@ function BookingPage() {
 
             {/* ── STEP 3: Contact ──────────────────────────── */}
             {step === 3 && (
-              <form onSubmit={onSubmit}>
+              <form onSubmit={onSubmit} className="animate-in fade-in duration-300">
                 <h2 className="font-serif text-2xl text-primary">
-                  {language === "en" ? "Your details" : "Vos coordonnées"}
+                  {t("booking_step_3").replace(/^\d+\.\s*/, "")}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {language === "en"
@@ -505,9 +525,9 @@ function BookingPage() {
                     <div className="space-y-1.5">
                       <Label
                         htmlFor="name"
-                        className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold"
+                        className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold"
                       >
-                        {language === "en" ? "Full name *" : "Nom complet *"}
+                        {t("booking_field_name")} *
                       </Label>
                       <Input
                         id="name"
@@ -516,15 +536,15 @@ function BookingPage() {
                         required
                         minLength={2}
                         placeholder="Amina Bello"
-                        className="rounded-xl"
+                        className="rounded-xl border-border focus-visible:ring-gold"
                       />
                     </div>
                     <div className="space-y-1.5">
                       <Label
                         htmlFor="phone"
-                        className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold"
+                        className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold"
                       >
-                        {language === "en" ? "Phone *" : "Téléphone *"}
+                        {t("booking_field_phone")} *
                       </Label>
                       <Input
                         id="phone"
@@ -533,7 +553,7 @@ function BookingPage() {
                         onChange={(e) => setPhone(e.target.value)}
                         required
                         placeholder="6XX XXX XXX"
-                        className="rounded-xl"
+                        className="rounded-xl border-border focus-visible:ring-gold"
                       />
                     </div>
                   </div>
@@ -541,9 +561,9 @@ function BookingPage() {
                   <div className="space-y-1.5">
                     <Label
                       htmlFor="email"
-                      className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold"
+                      className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold"
                     >
-                      {language === "en" ? "Email address *" : "Adresse email *"}
+                      {t("booking_field_email")} *
                     </Label>
                     <Input
                       id="email"
@@ -552,28 +572,24 @@ function BookingPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       placeholder="vous@exemple.com"
-                      className="rounded-xl"
+                      className="rounded-xl border-border focus-visible:ring-gold"
                     />
                   </div>
 
                   <div className="space-y-1.5">
                     <Label
                       htmlFor="notes"
-                      className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold"
+                      className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold"
                     >
-                      {language === "en" ? "Notes (optional)" : "Notes (optionnel)"}
+                      {t("booking_field_notes")}
                     </Label>
                     <Textarea
                       id="notes"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       rows={3}
-                      placeholder={
-                        language === "en"
-                          ? "Details, special requests, allergies..."
-                          : "Précisions, demandes particulières, allergies…"
-                      }
-                      className="rounded-xl resize-none"
+                      placeholder={t("booking_notes_placeholder")}
+                      className="rounded-xl border-border focus-visible:ring-gold resize-none"
                     />
                   </div>
                 </div>
@@ -583,14 +599,15 @@ function BookingPage() {
                     type="button"
                     variant="ghost"
                     onClick={() => setStep(2)}
-                    className="rounded-full text-muted-foreground cursor-pointer"
+                    className="rounded-full text-muted-foreground cursor-pointer font-semibold"
                   >
-                    <ChevronLeft className="mr-1 h-4 w-4" /> {language === "en" ? "Back" : "Retour"}
+                    <ChevronLeft className="mr-1 h-4 w-4" />{" "}
+                    {t("booking_btn_prev").replace(/\s*step\s*/i, "")}
                   </Button>
                   <Button
                     type="submit"
                     disabled={loading || !canProceed[3]}
-                    className="rounded-full bg-gold px-8 text-white dark:text-ink hover:bg-gold/90 cursor-pointer"
+                    className="rounded-full bg-gold px-8 text-white dark:text-ink hover:bg-gold/90 cursor-pointer shadow-lg shadow-gold/10 font-semibold"
                   >
                     {loading ? (
                       language === "en" ? (
@@ -600,8 +617,8 @@ function BookingPage() {
                       )
                     ) : (
                       <>
-                        {language === "en" ? "Confirm" : "Confirmer"}{" "}
-                        <Check className="ml-1.5 h-4 w-4" />
+                        {t("booking_btn_confirm")}{" "}
+                        <Check className="ml-1.5 h-4.5 w-4.5 font-bold" />
                       </>
                     )}
                   </Button>
@@ -611,7 +628,7 @@ function BookingPage() {
                   {language === "en" ? "Or call us at" : "Ou appelez-nous au"}{" "}
                   <a
                     href="tel:+237677216185"
-                    className="text-gold underline-offset-2 hover:underline"
+                    className="text-gold font-bold underline-offset-2 hover:underline"
                   >
                     677 216 185
                   </a>
@@ -623,14 +640,14 @@ function BookingPage() {
           {/* Right: sticky summary */}
           <aside className="space-y-4">
             {/* Order summary */}
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <p className="mb-3 text-xs uppercase tracking-[0.24em] text-muted-foreground font-semibold">
-                {language === "en" ? "Summary" : "Récapitulatif"}
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <p className="mb-3 text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
+                {t("booking_summary_title")}
               </p>
 
               {selectedServices.length === 0 ? (
                 <p className="py-4 text-center text-sm text-muted-foreground">
-                  {language === "en" ? "No service selected" : "Aucun soin sélectionné"}
+                  {t("booking_summary_empty")}
                 </p>
               ) : (
                 <>
@@ -638,8 +655,12 @@ function BookingPage() {
                     {selectedServices.map((s) => (
                       <div key={s.id} className="flex items-start justify-between py-3">
                         <div className="mr-3 min-w-0">
-                          <p className="font-serif text-sm leading-snug text-primary">{s.name}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">{s.category}</p>
+                          <p className="font-serif text-sm leading-snug text-primary font-medium">
+                            {s.name}
+                          </p>
+                          <p className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            {s.category}
+                          </p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
                           <span className="font-serif text-sm text-gold font-bold">
@@ -662,7 +683,7 @@ function BookingPage() {
                     ))}
                   </div>
                   <div className="mt-1 flex justify-between border-t border-border pt-3 font-serif text-base font-semibold text-primary">
-                    <span>{language === "en" ? "Total" : "Total"}</span>
+                    <span>{t("cart_total_prefix")}</span>
                     <span className="text-gold font-bold">
                       {totalPrice.toLocaleString("fr-FR")} FCFA
                     </span>
@@ -673,28 +694,33 @@ function BookingPage() {
 
             {/* Date / time summary */}
             {(date || time) && (
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <p className="mb-3 text-xs uppercase tracking-[0.24em] text-muted-foreground font-semibold">
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm animate-in fade-in duration-300">
+                <p className="mb-3 text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
                   {language === "en" ? "Time Slot" : "Créneau"}
                 </p>
                 {date && (
-                  <p className="font-serif text-sm text-primary">
+                  <p className="font-serif text-sm text-primary font-medium">
                     {format(date, language === "en" ? "EEEE, MMMM d, yyyy" : "EEEE d MMMM yyyy", {
                       locale: currentLocale,
                     })}
                   </p>
                 )}
                 {time && (
-                  <p className="mt-1 flex items-center gap-1.5 text-sm text-gold font-semibold">
+                  <p className="mt-1.5 flex items-center gap-1.5 text-xs uppercase tracking-wider text-gold font-bold">
                     <Clock className="h-3.5 w-3.5" /> {time}
                   </p>
                 )}
               </div>
             )}
 
-            {/* Sticky image */}
-            <div className="hidden aspect-[3/4] overflow-hidden rounded-2xl lg:block">
-              <img src={ASSETS.polkaDotNails} alt="" className="h-full w-full object-cover" />
+            {/* Sticky image with SoftImage visual polish matching home page */}
+            <div className="hidden overflow-hidden lg:block shrink-0">
+              <SoftImage
+                src={ASSETS.polkaDotNails}
+                alt="NailHouse Boutique"
+                aspectRatio="portrait"
+                className="rounded-2xl shadow-sm border border-gold/10"
+              />
             </div>
           </aside>
         </div>

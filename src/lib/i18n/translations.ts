@@ -132,6 +132,16 @@ export type TranslationDictionary = {
   booking_field_email: string;
   booking_field_notes: string;
   booking_notes_placeholder: string;
+
+  // Cart / Drawer
+  cart_title: string;
+  cart_details: string;
+  cart_total_estimated: string;
+  cart_clear: string;
+  cart_continue: string;
+  cart_book_selection: string;
+  cart_count_label: string;
+  cart_total_prefix: string;
 };
 
 export const TRANSLATIONS_FR: TranslationDictionary = {
@@ -274,6 +284,16 @@ export const TRANSLATIONS_FR: TranslationDictionary = {
   booking_field_email: "Adresse email",
   booking_field_notes: "Notes ou demandes particulières (facultatif)",
   booking_notes_placeholder: "Ex: longueur souhaitée, dépose à prévoir, événement particulier...",
+
+  // Cart / Drawer
+  cart_title: "Ma Sélection",
+  cart_details: "Détails",
+  cart_total_estimated: "Total Estimé",
+  cart_clear: "Vider",
+  cart_continue: "Continuer la réservation",
+  cart_book_selection: "Réserver la sélection",
+  cart_count_label: "Ma Sélection",
+  cart_total_prefix: "Total",
 };
 
 export const TRANSLATIONS_EN: TranslationDictionary = {
@@ -415,6 +435,16 @@ export const TRANSLATIONS_EN: TranslationDictionary = {
   booking_field_email: "Email address",
   booking_field_notes: "Special notes or requests (optional)",
   booking_notes_placeholder: "E.g. preferred length, removal needed, special event...",
+
+  // Cart / Drawer
+  cart_title: "My Selection",
+  cart_details: "Details",
+  cart_total_estimated: "Estimated Total",
+  cart_clear: "Clear",
+  cart_continue: "Continue booking",
+  cart_book_selection: "Book selection",
+  cart_count_label: "My Selection",
+  cart_total_prefix: "Total",
 };
 
 // ── SERVICES DATABASE LOCAL ENGLISH MAPPING ──
