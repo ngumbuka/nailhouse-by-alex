@@ -7,9 +7,7 @@ export function PageLoader() {
           <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
           <div className="absolute inset-2 rounded-full border-2 border-transparent border-b-gold animate-spin [animation-duration:1.5s] [animation-direction:reverse]" />
         </div>
-        <p className="font-serif text-lg tracking-wide text-foreground/70 animate-pulse">
-          NailHouse
-        </p>
+        <p className="font-serif text-lg tracking-wide text-foreground/70 animate-pulse">Nail House</p>
       </div>
     </div>
   );
