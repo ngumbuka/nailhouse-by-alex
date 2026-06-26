@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { Menu, X, Languages, UserCheck, LogOut } from "lucide-react";

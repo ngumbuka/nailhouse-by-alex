@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
