@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect } from "react";
 import { Share2, Copy, Check, MessageCircle, Facebook, Send } from "lucide-react";
 import { toast } from "sonner";

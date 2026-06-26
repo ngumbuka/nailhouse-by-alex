@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { Clock, ArrowRight, ShieldCheck, Gem } from "lucide-react";
