@@ -13,6 +13,13 @@ export interface MockProfile {
   role: "admin" | "client";
   created_at: string;
   newsletter: boolean;
+  birthday?: string;
+  preferred_stylist?: string;
+  instagram?: string;
+  preferred_length?: "short" | "medium" | "long" | "none";
+  preferred_shape?: "round" | "square" | "oval" | "almond" | "coffin" | "stiletto" | "none";
+  preferred_style?: "natural" | "classic" | "french" | "nail_art" | "biab" | "none";
+  allergies_contraindications?: string;
 }
 
 export interface MockBooking {
@@ -28,6 +35,8 @@ export interface MockBooking {
   notes: string | null;
   status: "pending" | "confirmed" | "completed" | "cancelled";
   created_at: string;
+  admin_comment?: string | null;
+  proposed_scheduled_at?: string | null;
 }
 
 export interface MockGalleryImage {
@@ -72,6 +81,17 @@ export interface MockSubscriber {
   created_at: string;
 }
 
+export interface MockVideo {
+  id: string;
+  url: string;
+  title: string;
+  description: string;
+  category: string;
+  active: boolean;
+  sort: number;
+  created_at: string;
+}
+
 export interface MockService {
   id: string;
   name: string;
@@ -80,6 +100,25 @@ export interface MockService {
   duration_mins: number;
   description: string;
   slug: string;
+  seasonal_price_fcfa?: number | null;
+  seasonal_price_start?: string | null;
+  seasonal_price_end?: string | null;
+  is_active?: boolean;
+  sort?: number;
+  image_url?: string | null;
+  is_addon?: boolean;
+}
+
+export interface MockPromotion {
+  id: string;
+  code: string;
+  discount_percent: number;
+  description: string;
+  active: boolean;
+  service_id: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
 }
 
 export interface MockReview {
@@ -101,6 +140,18 @@ export interface MockDatabaseSchema {
   favorites: MockFavorite[];
   subscribers: MockSubscriber[];
   reviews: MockReview[];
+  promotions: MockPromotion[];
+  videos: MockVideo[];
+  settings: MockSettings;
+}
+
+export interface MockSettings {
+  id: string;
+  opening_time: string;
+  closing_time: string;
+  closed_days: number[];
+  blocked_dates: string[];
+  buffer_time_mins: number;
 }
 
 const INITIAL_DB: MockDatabaseSchema = {
@@ -207,6 +258,70 @@ const INITIAL_DB: MockDatabaseSchema = {
       created_at: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
     },
   ],
+  promotions: [
+    {
+      id: "promo-1",
+      code: "SUMMER20",
+      discount_percent: 20,
+      description: "20% de réduction sur toutes les prestations pour l'été !",
+      active: true,
+      service_id: null,
+      start_date: null,
+      end_date: null,
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: "promo-2",
+      code: "WELCOME10",
+      discount_percent: 10,
+      description: "10% de réduction pour votre première visite.",
+      active: true,
+      service_id: null,
+      start_date: null,
+      end_date: null,
+      created_at: new Date().toISOString(),
+    },
+  ],
+  videos: [
+    {
+      id: "v1",
+      url: "/placeholder-manicure.html",
+      title: "Soin Signature Manucure",
+      description: "Sublimez vos mains avec un soin complet sur peau foncée.",
+      category: "mains",
+      active: true,
+      sort: 1,
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: "v2",
+      url: "/placeholder-manicure.html",
+      title: "Vernis Semi-Permanent",
+      description: "Des couleurs éclatantes et durables qui mettent en valeur votre carnation.",
+      category: "vernis",
+      active: true,
+      sort: 2,
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: "v3",
+      url: "/placeholder-pedicure.html",
+      title: "Spa Pédicure Rituel",
+      description: "Détente absolue et soin profond.",
+      category: "pieds",
+      active: true,
+      sort: 3,
+      created_at: new Date().toISOString(),
+    },
+  ],
+  settings: {
+    id: "global",
+    opening_time: "09:00",
+    closing_time: "19:00",
+    closed_days: [0], // Default closed on Sunday
+    blocked_dates: [],
+    buffer_time_mins: 0,
+  },
 };
 
 // Reads the DB from disk, initializing if not present.
@@ -222,7 +337,10 @@ export function readMockDB(): MockDatabaseSchema {
       return INITIAL_DB;
     }
     const raw = fs.readFileSync(DB_PATH, "utf8");
-    return JSON.parse(raw);
+    const data = JSON.parse(raw);
+    if (!data.promotions) data.promotions = [];
+    if (!data.videos) data.videos = INITIAL_DB.videos;
+    return data;
   } catch (err) {
     console.error("[readMockDB] failed, fallback to INITIAL_DB", err);
     return INITIAL_DB;

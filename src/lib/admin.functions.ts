@@ -5,8 +5,23 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import * as db from "@/lib/db";
 
-async function assertAdmin(ctx: { supabase: SupabaseClient<Database>; userId: string }) {
-  const role = db.getMockUserRole(ctx.userId);
+async function assertAdmin(ctx: {
+  supabase: SupabaseClient<Database>;
+  userId: string;
+  claims?: Record<string, unknown>;
+}) {
+  // 1. Check real DB profile first
+  const { data } = await ctx.supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", ctx.userId)
+    .maybeSingle();
+
+  if (data?.role === "admin") return; // Authorized
+
+  // 2. Fallback to mock logic for local dev / unmigrated accounts
+  const email = ctx.claims?.email;
+  const role = db.getMockUserRole(ctx.userId, email);
   if (role !== "admin") throw new Error("Forbidden: Admin access required");
 }
 
@@ -108,6 +123,13 @@ export const adminAddService = createServerFn({ method: "POST" })
         slug: z.string().min(1),
         highlights: z.array(z.string()).optional(),
         best_for: z.string().optional(),
+        seasonal_price_fcfa: z.number().nullable().optional(),
+        seasonal_price_start: z.string().nullable().optional(),
+        seasonal_price_end: z.string().nullable().optional(),
+        is_active: z.boolean().optional(),
+        sort: z.number().optional(),
+        image_url: z.string().nullable().optional(),
+        is_addon: z.boolean().optional(),
       })
       .parse(input),
   )
@@ -130,6 +152,13 @@ export const adminUpdateService = createServerFn({ method: "POST" })
         slug: z.string().min(1),
         highlights: z.array(z.string()).optional(),
         best_for: z.string().optional(),
+        seasonal_price_fcfa: z.number().nullable().optional(),
+        seasonal_price_start: z.string().nullable().optional(),
+        seasonal_price_end: z.string().nullable().optional(),
+        is_active: z.boolean().optional(),
+        sort: z.number().optional(),
+        image_url: z.string().nullable().optional(),
+        is_addon: z.boolean().optional(),
       })
       .parse(input),
   )
@@ -196,4 +225,147 @@ export const adminSendMessage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     return db.sendMessage(context.userId, data.receiverId, data.message);
+  });
+
+export const adminUpdateBookingDetails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string(),
+        notes: z.string().optional().nullable(),
+        scheduled_at: z.string().optional().nullable(),
+        proposed_scheduled_at: z.string().optional().nullable(),
+        admin_comment: z.string().optional().nullable(),
+        status: z.enum(["pending", "confirmed", "cancelled", "completed"]).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const updates: Partial<Omit<db.MockBooking, "id" | "created_at">> = {};
+    if (data.notes !== undefined) updates.notes = data.notes;
+    if (data.scheduled_at !== undefined) updates.scheduled_at = data.scheduled_at;
+    if (data.proposed_scheduled_at !== undefined)
+      updates.proposed_scheduled_at = data.proposed_scheduled_at;
+    if (data.admin_comment !== undefined) updates.admin_comment = data.admin_comment;
+    if (data.status !== undefined) updates.status = data.status;
+
+    return db.updateBookingDetails(data.id, updates);
+  });
+
+export const adminListPromotions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    return db.listPromotions();
+  });
+
+export const adminCreatePromotion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        code: z.string().min(1),
+        discount_percent: z.number().int().min(0).max(100),
+        description: z.string().min(1),
+        active: z.boolean(),
+        service_id: z.string().optional().nullable(),
+        start_date: z.string().optional().nullable(),
+        end_date: z.string().optional().nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    return db.createPromotion(data);
+  });
+
+export const adminDeletePromotion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    return db.deletePromotion(data.id);
+  });
+
+// ─── SETTINGS ─────────────────────────────────────────────────────────────────
+export const adminGetSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    return db.getSettings();
+  });
+
+export const adminUpdateSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        opening_time: z.string(),
+        closing_time: z.string(),
+        closed_days: z.array(z.number()),
+        blocked_dates: z.array(z.string()),
+        buffer_time_mins: z.number().int().min(0),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    return db.updateSettings(data);
+  });
+
+// ─── VIDEOS ─────────────────────────────────────────────────────────────────
+export const adminListVideos = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    return db.listVideos();
+  });
+
+export const adminAddVideo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        url: z.string().url(),
+        title: z.string().min(1),
+        description: z.string(),
+        category: z.string(),
+        active: z.boolean(),
+        sort: z.number().int(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    return db.addVideo(data);
+  });
+
+export const adminUpdateVideo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string(),
+        url: z.string().url().optional(),
+        title: z.string().min(1).optional(),
+        description: z.string().optional(),
+        category: z.string().optional(),
+        active: z.boolean().optional(),
+        sort: z.number().int().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    return db.updateVideo(data.id, data);
+  });
+
+export const adminDeleteVideo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    return db.deleteVideo(data.id);
   });

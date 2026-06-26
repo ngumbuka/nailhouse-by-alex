@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pedicure Placeholder</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap");
+
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #050505;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: "Playfair Display", serif;
+        overflow: hidden;
+        color: white;
+      }
+
+      .container {
+        text-align: center;
+        position: relative;
+        z-index: 10;
+      }
+
+      .bg-gradient {
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(166, 124, 0, 0.1) 0%, rgba(5, 5, 5, 1) 70%);
+        animation: pulse 10s ease-in-out infinite alternate;
+        z-index: 1;
+      }
+
+      .subtitle {
+        font-family: "Inter", sans-serif;
+        font-size: 14px;
+        letter-spacing: 6px;
+        text-transform: uppercase;
+        color: #a67c00;
+        margin-bottom: 20px;
+        opacity: 0;
+        animation: fadeUp 2s 0.5s forwards ease-out;
+      }
+
+      .title {
+        font-size: 64px;
+        font-weight: 400;
+        margin: 0;
+        letter-spacing: 2px;
+        background: linear-gradient(to right, #ccc, #fff, #ccc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        opacity: 0;
+        animation: fadeUp 2s 1s forwards ease-out;
+      }
+
+      .desc {
+        font-family: "Inter", sans-serif;
+        font-size: 16px;
+        color: #777;
+        margin-top: 30px;
+        font-weight: 300;
+        max-width: 450px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.6;
+        opacity: 0;
+        animation: fadeUp 2s 1.5s forwards ease-out;
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 0.7;
+        }
+        100% {
+          transform: scale(1.05);
+          opacity: 1;
+        }
+      }
+
+      .water-ripple {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        border: 1px solid rgba(166, 124, 0, 0.3);
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        animation: ripple 6s infinite ease-out;
+        z-index: 2;
+      }
+      .water-ripple:nth-child(2) {
+        animation-delay: 2s;
+      }
+      .water-ripple:nth-child(3) {
+        animation-delay: 4s;
+      }
+
+      @keyframes ripple {
+        0% {
+          transform: translate(-50%, -50%) scale(0);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(4);
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-gradient"></div>
+
+    <div class="water-ripple"></div>
+    <div class="water-ripple"></div>
+    <div class="water-ripple"></div>
+
+    <div class="container">
+      <div class="subtitle">Spa & Détente</div>
+      <h1 class="title">votre Pédicure</h1>
+      <!-- <div class="desc">
+        Plongez dans une oasis de bien-être absolu.<br />Des soins profonds sublimant chaque détail.
+      </div> -->
+    </div>
+  </body>
+</html>

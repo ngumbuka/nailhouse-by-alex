@@ -6,12 +6,14 @@ import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
 import { SoftImage } from "@/components/ui/soft-image";
 import { ASSETS } from "@/lib/assets";
-import { listServices, listGalleryImages } from "@/lib/booking.functions";
+import { listServices, listGalleryImages, listActiveVideos } from "@/lib/booking.functions";
 import { CATEGORIES } from "@/lib/service-categories";
 import { useI18n } from "@/hooks/use-i18n";
+import { resolveAssetUrl } from "@/lib/resolver";
 
 const servicesOpts = queryOptions({ queryKey: ["services"], queryFn: () => listServices() });
 const galleryOpts = queryOptions({ queryKey: ["gallery"], queryFn: () => listGalleryImages() });
+const videosOpts = queryOptions({ queryKey: ["videos"], queryFn: () => listActiveVideos() });
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -35,6 +37,7 @@ export const Route = createFileRoute("/")({
     await Promise.all([
       context.queryClient.ensureQueryData(servicesOpts),
       context.queryClient.ensureQueryData(galleryOpts),
+      context.queryClient.ensureQueryData(videosOpts),
     ]);
   },
   component: HomePage,
@@ -46,6 +49,7 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const { data: services } = useSuspenseQuery(servicesOpts);
+  const { data: videos } = useSuspenseQuery(videosOpts);
   const { language, t } = useI18n();
 
   const [activeValue, setActiveValue] = useState(0);
@@ -187,7 +191,7 @@ function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
           {/* Top Floating Nav details */}
-          <div className="relative z-10 flex justify-between items-center text-xs tracking-widest text-zinc-300">
+          <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0 text-xs tracking-widest text-zinc-300 text-center sm:text-left">
             <span>YAOUNDÉ · EKOUMDOUM</span>
             <span>
               {language === "en"
@@ -403,27 +407,48 @@ function HomePage() {
           <div className="grid gap-8 lg:grid-cols-12 items-center">
             {/* Left: Video block */}
             <div className="lg:col-span-7 relative rounded-[2rem] overflow-hidden aspect-[16/9] shadow-inner bg-zinc-950">
-              <video
-                src="https://player.vimeo.com/external/393710502.sd.mp4?s=d9be9582d96c968c9bb0a071ee0115e51307b0db&profile_id=164&oauth2_token_id=57447761"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover opacity-80 filter saturate-[0.8]"
-              />
-              <div className="absolute inset-0 bg-black/10" />
+              {(() => {
+                const rawUrl = videos?.[0]?.url || "/placeholder-manicure.html";
+                const resolvedUrl = resolveAssetUrl(rawUrl);
+                const isHtml = resolvedUrl.endsWith(".html");
+                return (
+                  <>
+                    {isHtml ? (
+                      <iframe
+                        src={resolvedUrl}
+                        className="w-full h-full border-0 object-cover opacity-80"
+                        title="Presentation Video"
+                        sandbox="allow-scripts allow-same-origin"
+                      />
+                    ) : (
+                      <video
+                        src={resolvedUrl}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover opacity-80 filter saturate-[0.8]"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-black/10 pointer-events-none" />
 
-              {/* Play overlay button */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg animate-pulse">
-                  <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-                </div>
-              </div>
+                    {/* Play overlay button - only show for actual video */}
+                    {!isHtml && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg animate-pulse">
+                          <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
 
               {/* Tag overlay */}
               <div className="absolute left-4 bottom-4 z-10 bg-zinc-900/90 backdrop-blur-md border border-zinc-800 px-3 py-1.5 rounded-full">
                 <span className="text-[10px] uppercase tracking-widest text-zinc-300">
-                  {language === "en" ? "« The perfect gesture »" : "« Le geste parfait »"}
+                  {videos?.[0]?.title ||
+                    (language === "en" ? "« The perfect gesture »" : "« Le geste parfait »")}
                 </span>
               </div>
             </div>
@@ -482,6 +507,59 @@ function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ── 4.5 HIGHLIGHT REELS SECTION (Dynamic Promotional Videos) ── */}
+      {videos && videos.length > 1 && (
+        <section className="mx-auto max-w-6xl px-6 py-20 md:py-28">
+          <div className="mb-12 text-center">
+            <p className="label-luxe">{language === "en" ? "Our Realizations" : "Nos Créations"}</p>
+            <h2 className="mt-4 font-serif text-3xl sm:text-4xl text-primary">
+              {language === "en" ? "The Art of Detail" : "L'Art du Détail"}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {videos.slice(1, 4).map((video) => {
+              const resolvedUrl = resolveAssetUrl(video.url);
+              const isHtml = resolvedUrl.endsWith(".html");
+              return (
+                <div
+                  key={video.id}
+                  className="group relative rounded-3xl overflow-hidden shadow-lg border border-border/40 aspect-[9/16] bg-zinc-950"
+                >
+                  {isHtml ? (
+                    <iframe
+                      src={resolvedUrl}
+                      className="w-full h-full border-0 object-cover opacity-90 transition-transform duration-700 group-hover:scale-105"
+                      title={video.title}
+                      sandbox="allow-scripts allow-same-origin"
+                    />
+                  ) : (
+                    <video
+                      src={resolvedUrl}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+                  <div className="absolute bottom-6 left-6 right-6 pointer-events-none">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-gold bg-black/40 px-2 py-1 rounded backdrop-blur-sm">
+                      {video.category}
+                    </span>
+                    <h3 className="text-white font-serif text-xl mt-3 leading-snug">
+                      {video.title}
+                    </h3>
+                    <p className="text-zinc-300 text-xs mt-2 line-clamp-2">{video.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* ── 5. SPLIT FEATURE SECTION — L'Atelier preview ── */}
       <section className="mx-auto max-w-6xl px-6 pb-20 md:pb-28">

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Manicure Placeholder</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap");
+
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #0a0a0a;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: "Playfair Display", serif;
+        overflow: hidden;
+        color: white;
+      }
+
+      .container {
+        text-align: center;
+        position: relative;
+        z-index: 10;
+      }
+
+      .bg-gradient {
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(166, 124, 0, 0.15) 0%, rgba(0, 0, 0, 1) 60%);
+        animation: pulse 8s ease-in-out infinite alternate;
+        z-index: 1;
+      }
+
+      .subtitle {
+        font-family: "Inter", sans-serif;
+        font-size: 14px;
+        letter-spacing: 6px;
+        text-transform: uppercase;
+        color: #a67c00;
+        margin-bottom: 20px;
+        opacity: 0;
+        animation: fadeUp 2s 0.5s forwards ease-out;
+      }
+
+      .title {
+        font-size: 64px;
+        font-weight: 400;
+        margin: 0;
+        letter-spacing: 2px;
+        background: linear-gradient(to right, #fff, #a67c00, #fff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        opacity: 0;
+        animation: fadeUp 2s 1s forwards ease-out;
+      }
+
+      .desc {
+        font-family: "Inter", sans-serif;
+        font-size: 16px;
+        color: #888;
+        margin-top: 30px;
+        font-weight: 300;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.6;
+        opacity: 0;
+        animation: fadeUp 2s 1.5s forwards ease-out;
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 0.8;
+        }
+        100% {
+          transform: scale(1.1);
+          opacity: 1;
+        }
+      }
+
+      .sparkle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: white;
+        border-radius: 50%;
+        box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.8);
+        animation: float 4s infinite linear;
+        z-index: 5;
+      }
+
+      @keyframes float {
+        0% {
+          transform: translateY(0) scale(1);
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100px) scale(0);
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-gradient"></div>
+
+    <div class="sparkle" style="top: 30%; left: 20%; animation-delay: 0s"></div>
+    <div class="sparkle" style="top: 70%; left: 80%; animation-delay: 1s"></div>
+    <div class="sparkle" style="top: 40%; left: 70%; animation-delay: 2s"></div>
+    <div class="sparkle" style="top: 80%; left: 30%; animation-delay: 3s"></div>
+
+    <div class="container">
+      <div class="subtitle">Atelier NailHouse</div>
+      <h1 class="title">Soin Signature</h1>
+      <!-- <div class="desc">
+        L'élégance du geste. La précision du soin.<br />Pour toutes les carnations.
+      </div> -->
+    </div>
+  </body>
+</html>

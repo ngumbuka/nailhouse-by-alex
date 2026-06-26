@@ -1,6 +1,6 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Menu, X, Languages, UserCheck } from "lucide-react";
+import { Menu, X, Languages, UserCheck, LogOut } from "lucide-react";
 import { ASSETS } from "@/lib/assets";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,16 +11,50 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const { language, setLanguage, t } = useI18n();
   const [user, setUser] = useState<import("@supabase/supabase-js").User | null>(null);
+  const [role, setRole] = useState<"admin" | "client" | null>(null);
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    navigate({ to: "/" });
+  }
 
   useEffect(() => {
+    const fetchRole = async (usr: import("@supabase/supabase-js").User | null) => {
+      if (!usr) {
+        setRole(null);
+        return;
+      }
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", usr.id)
+          .maybeSingle();
+        if (data?.role) {
+          setRole(data.role as "admin" | "client");
+        } else {
+          const isMockAdmin = usr.email === "admin@nailhouse.com" || usr.id.includes("admin");
+          setRole(isMockAdmin ? "admin" : "client");
+        }
+      } catch (err) {
+        const isMockAdmin = usr.email === "admin@nailhouse.com" || usr.id.includes("admin");
+        setRole(isMockAdmin ? "admin" : "client");
+      }
+    };
+
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
+      fetchRole(data.session?.user ?? null);
     });
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      fetchRole(session?.user ?? null);
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -44,7 +78,7 @@ export function SiteHeader() {
     </button>
   );
 
-  const isAdmin = user?.email === "admin@nailhouse.com";
+  const isAdmin = role === "admin" || user?.email === "admin@nailhouse.com";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
@@ -67,25 +101,43 @@ export function SiteHeader() {
             <Link
               key={item.to}
               to={item.to}
-              className="text-sm tracking-wide text-foreground/80 transition-colors hover:text-primary"
+              className="text-sm tracking-wide text-foreground/80 transition-colors hover:text-primary whitespace-nowrap"
               activeProps={{ className: "text-primary font-medium" }}
               activeOptions={{ exact: item.to === "/" }}
             >
               {item.label}
             </Link>
           ))}
-          {user && (
+          {user ? (
+            <div className="flex items-center gap-6">
+              <Link
+                to={isAdmin ? "/admin" : "/portal"}
+                className="text-sm font-semibold tracking-wide text-gold transition-colors hover:text-gold/80 flex items-center gap-1.5 whitespace-nowrap"
+                activeProps={{ className: "text-gold font-bold underline underline-offset-4" }}
+              >
+                <UserCheck className="h-4 w-4" />
+                {isAdmin ? "Admin" : language === "en" ? "My Space" : "Mon Espace"}
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="text-sm font-semibold tracking-wide text-foreground/80 transition-colors hover:text-destructive flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+              >
+                <LogOut className="h-4 w-4" />
+                {language === "en" ? "Sign Out" : "Déconnexion"}
+              </button>
+            </div>
+          ) : (
             <Link
-              to={isAdmin ? "/admin" : "/portal"}
-              className="text-sm font-semibold tracking-wide text-gold transition-colors hover:text-gold/80 flex items-center gap-1.5"
-              activeProps={{ className: "text-gold font-bold underline underline-offset-4" }}
+              to="/auth"
+              className="text-xs font-bold tracking-widest uppercase text-gold bg-gold/10 hover:bg-gold hover:text-white px-4 py-2 rounded-full transition-all flex items-center gap-2 border border-gold/20 whitespace-nowrap"
+              activeProps={{ className: "bg-gold text-white" }}
             >
-              <UserCheck className="h-4 w-4" />
-              {isAdmin ? "Admin" : language === "en" ? "My Space" : "Mon Espace"}
+              <UserCheck className="w-3.5 h-3.5" />
+              {language === "en" ? "Sign In" : "Connexion"}
             </Link>
           )}
           <LangSwitcher />
-          <Button asChild size="sm" className="rounded-full px-5">
+          <Button asChild size="sm" className="rounded-full px-5 whitespace-nowrap">
             <Link to="/booking">{t("btn_book")}</Link>
           </Button>
         </nav>
@@ -119,14 +171,35 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
-          {user && (
+          {user ? (
+            <>
+              <Link
+                to={isAdmin ? "/admin" : "/portal"}
+                onClick={() => setOpen(false)}
+                className="rounded-md px-3 py-2 text-sm text-gold font-semibold hover:bg-muted"
+                activeProps={{ className: "bg-muted text-gold font-bold" }}
+              >
+                {isAdmin ? "Admin" : language === "en" ? "My Space" : "Mon Espace"}
+              </Link>
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  handleLogout();
+                }}
+                className="rounded-md px-3 py-2 text-sm text-left font-semibold text-foreground/80 hover:bg-muted hover:text-destructive flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                {language === "en" ? "Sign Out" : "Déconnexion"}
+              </button>
+            </>
+          ) : (
             <Link
-              to={isAdmin ? "/admin" : "/portal"}
+              to="/auth"
               onClick={() => setOpen(false)}
-              className="rounded-md px-3 py-2 text-sm text-gold font-semibold hover:bg-muted"
-              activeProps={{ className: "bg-muted text-gold font-bold" }}
+              className="rounded-md px-3 py-2 text-sm font-semibold text-foreground/80 hover:bg-muted"
+              activeProps={{ className: "bg-muted text-primary font-bold" }}
             >
-              {isAdmin ? "Admin" : language === "en" ? "My Space" : "Mon Espace"}
+              {language === "en" ? "Sign In" : "Connexion"}
             </Link>
           )}
           <Button asChild className="mt-2 rounded-full" onClick={() => setOpen(false)}>

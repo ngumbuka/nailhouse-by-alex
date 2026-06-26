@@ -1,0 +1,352 @@
+{
+  "profiles": [
+    {
+      "id": "mock-admin-id-456",
+      "email": "admin@nailhouse.com",
+      "name": "NailHouse Admin",
+      "phone": "+237 677 216 185",
+      "role": "admin",
+      "created_at": "2026-06-22T15:47:52.319Z",
+      "newsletter": true
+    },
+    {
+      "id": "mock-client-id-123",
+      "email": "client@example.com",
+      "name": "Amina Bello",
+      "phone": "677 123 456",
+      "role": "client",
+      "created_at": "2026-06-22T15:47:52.320Z",
+      "newsletter": true
+    },
+    {
+      "id": "92c00c32-6e2e-4fe6-b481-d874e72188f4",
+      "email": "ngumbukafon@gmail.com",
+      "name": "nickaise",
+      "phone": "697835780",
+      "role": "client",
+      "created_at": "2026-06-22T15:47:58.306Z",
+      "newsletter": true
+    }
+  ],
+  "bookings": [
+    {
+      "id": "b-mock-1",
+      "name": "Amina Bello",
+      "phone": "677 123 456",
+      "email": "client@example.com",
+      "service_id": "7c9a4192-b430-4e33-8a39-ebde89bb12e7",
+      "service_name": "Manucure Classique",
+      "service_ids": ["7c9a4192-b430-4e33-8a39-ebde89bb12e7"],
+      "service_names": ["Manucure Classique"],
+      "scheduled_at": "2026-06-24T15:47:52.320Z",
+      "notes": "Soin des cuticules de préférence.",
+      "status": "confirmed",
+      "created_at": "2026-06-22T15:47:52.320Z"
+    }
+  ],
+  "services": [
+    {
+      "id": "7c9a4192-b430-4e33-8a39-ebde89bb12e7",
+      "category": "Soins des mains",
+      "name": "Manucure classique",
+      "price_fcfa": 5000,
+      "sort": 10,
+      "description": "Un soin complet de précision pour des mains nettes et soignées au quotidien. Comprend le limage personnalisé pour définir la forme idéale de vos ongles, le traitement minutieux des cuticules avec des instruments stérilisés, suivi d'un massage hydratant relaxant et de l'application d'une base fortifiante protectrice.",
+      "duration": "45 min",
+      "best_for": "Pour celles et ceux qui souhaitent des mains soignées, propres et élégantes sans pose de couleur."
+    },
+    {
+      "id": "de03195b-0be1-432d-8386-77891ef9f12d",
+      "category": "Soins des mains",
+      "name": "Manucure spa",
+      "price_fcfa": 7000,
+      "sort": 20,
+      "description": "L'expérience sensorielle et relaxante ultime pour la beauté et le confort de vos mains. Elle associe toutes les étapes de notre manucure classique à un bain tiède aromatique, un gommage exfoliant doux aux huiles essentielles, l'application d'un masque enveloppant ultra-nourrissant et un massage prolongé.",
+      "duration": "1 h 15",
+      "best_for": "Idéal pour s'offrir une pause détente absolue tout en régénérant en profondeur la peau de ses mains."
+    },
+    {
+      "id": "09c69341-382a-4f51-b844-48f8cbf5e9d9",
+      "category": "Soins des pieds",
+      "name": "Pédicure classique",
+      "price_fcfa": 4000,
+      "sort": 10,
+      "description": "Un soin indispensable des pieds pour retrouver légèreté et douceur. Cette prestation comprend un bain de pieds délassant, la mise en forme personnalisée des ongles, le retrait délicat des cuticules, l'élimination douce des rugosités superficielles, complétés par un massage hydratant relaxant.",
+      "duration": "45 min",
+      "best_for": "Indiqué pour l'entretien régulier des pieds et pour conserver des ongles impeccables et sains."
+    },
+    {
+      "id": "ba5d8205-d148-4cb1-b0db-b27bcfb99db1",
+      "category": "Soins des pieds",
+      "name": "Pédicure spa",
+      "price_fcfa": 7000,
+      "sort": 20,
+      "description": "Le soin d'exception ultime pour vos pieds fatigués. Ce rituel complet comprend un bain de pieds aromatique aux sels marins, un gommage purifiant, un masque réparateur enveloppant sous serviette chaude, le traitement des cuticules et callosités, et un massage drainant des pieds et mollets.",
+      "duration": "1 h 15",
+      "best_for": "Recommandé pour relâcher les tensions accumulées, adoucir la peau et passer un moment de pure évasion."
+    },
+    {
+      "id": "d2b512bb-1a5c-4a30-8012-bd921b7ce3a2",
+      "category": "Soins des pieds",
+      "name": "Vernis semi-permanent pieds",
+      "price_fcfa": 3000,
+      "sort": 30,
+      "description": "La pose rapide de notre vernis gel semi-permanent haut de gamme sur les pieds. Comprend la préparation de l'ongle, le limage et l'application soignée de la couleur avec une brillance miroir préservée pendant plus de 3 semaines.",
+      "duration": "30 min",
+      "best_for": "Pour celles qui recherchent une couleur éclatante longue tenue sur les ongles de pieds sans le soin complet."
+    },
+    {
+      "id": "6bc001d9-5cc8-4e89-9a72-f155df987be7",
+      "category": "Soins des pieds",
+      "name": "Vernis gainage pieds",
+      "price_fcfa": 5000,
+      "sort": 40,
+      "description": "Une technique avancée combinant la tenue du vernis gel à une base protectrice renforcée sur les ongles de pieds. Elle permet de lisser la surface des ongles, combler les stries et assurer une résistance parfaite face aux chocs.",
+      "duration": "45 min",
+      "best_for": "Parfait pour uniformiser et fortifier les ongles de pieds striés ou fragilisés."
+    },
+    {
+      "id": "210ea8f4-6aeb-4202-a169-be573db1b742",
+      "category": "Ongles naturels renforcés",
+      "name": "Gainage",
+      "price_fcfa": 5000,
+      "sort": 10,
+      "description": "L'application d'un gel protecteur sur vos ongles naturels pour lisser leur surface et leur apporter la résistance nécessaire face aux chocs quotidiens, sans rallongement. Idéal pour conserver sa longueur naturelle.",
+      "duration": "1 h 15",
+      "best_for": "Conseillé pour fortifier les ongles de longueur moyenne sans ajouter d'épaisseur artificielle."
+    },
+    {
+      "id": "fdf538e1-d2f6-4f4d-8758-e4b77bc002c9",
+      "category": "Ongles naturels renforcés",
+      "name": "Rallongement",
+      "price_fcfa": 7000,
+      "sort": 20,
+      "description": "La création minutieuse de longueur sur-mesure sur vos ongles naturels à l'aide de chablons ou de capsules de gel pour redessiner la main avec finesse et assurer un résultat résistant et harmonieux.",
+      "duration": "1 h 45",
+      "best_for": "Idéal pour restructurer et rallonger les ongles courts, cassés ou rongés."
+    },
+    {
+      "id": "32c2864c-f187-4180-87a3-cb20db7b4699",
+      "category": "Ongles naturels renforcés",
+      "name": "Semi-permanent",
+      "price_fcfa": 3000,
+      "sort": 30,
+      "description": "Une pose de vernis gel semi-permanent de prestige polymérisé sous lampe LED. Comprend le limage soigné, un nettoyage rapide des cuticules et l'application d'une couleur vibrante avec finition miroir.",
+      "duration": "45 min",
+      "best_for": "Parfait pour celles qui souhaitent une couleur éclatante sans besoin de renforcement ou gainage gel."
+    },
+    {
+      "id": "33ca82bb-df51-40ef-8b89-29177a284be5",
+      "category": "Ongles naturels renforcés",
+      "name": "Construction gel sans limage",
+      "price_fcfa": 7000,
+      "sort": 40,
+      "description": "Une technique moderne de pose de gel sculptée sur-mesure. En évitant le limage excessif, nous protégeons la plaque naturelle de l'ongle tout en construisant une architecture fine, solide et parfaitement équilibrée.",
+      "duration": "1 h 30",
+      "best_for": "Idéal pour une pose fine et naturelle préservant la santé de l'ongle naturel."
+    },
+    {
+      "id": "1007ea45-5d9c-4be2-a39c-e77a21644781",
+      "category": "Ongles naturels renforcés",
+      "name": "Renforcement",
+      "price_fcfa": 9000,
+      "sort": 50,
+      "description": "Un soin de renforcement intensif combinant une base structurante haute densité et un gel de gainage protecteur pour redonner force et flexibilité aux ongles les plus abîmés.",
+      "duration": "1 h 30",
+      "best_for": "Recommandé pour les ongles très fins, mous ou abîmés par des déposes agressives antérieures."
+    },
+    {
+      "id": "d690184c-cb1a-4639-9d90-33230bdf31c4",
+      "category": "Ongles naturels renforcés",
+      "name": "Extensions élégants",
+      "price_fcfa": 10000,
+      "sort": 60,
+      "description": "Un rallongement artistique haut de gamme conçu pour sublimer vos mains. Chaque extension est sculptée avec précision pour s'adapter à l'anatomie de votre doigt, avec un fini d'une finesse incomparable.",
+      "duration": "2 h",
+      "best_for": "Pour une longueur signature sophistiquée et élégante lors d'occasions spéciales."
+    },
+    {
+      "id": "b8cbb81e-624b-4f0f-863a-7d2fb709cc8e",
+      "category": "Ongle naturel BIAB",
+      "name": "Gainage BIAB naturel",
+      "price_fcfa": 7000,
+      "sort": 10,
+      "description": "Le soin signature NailHouse. Le BIAB (Builder in a Bottle) est un gel de renforcement souple et riche en nutriments qui s'auto-égalise pour solidifier l'ongle naturel tout en favorisant sa pousse saine, avec un fini nude ou rosé ultra-chic.",
+      "duration": "1 h 15",
+      "best_for": "Recommandé pour les ongles fragiles ou cassants qui nécessitent un gainage solide au fini naturel."
+    },
+    {
+      "id": "614917dc-4db7-4c47-af03-4f9e13d94269",
+      "category": "Ongle naturel BIAB",
+      "name": "BIAB + semi-permanent",
+      "price_fcfa": 9000,
+      "sort": 20,
+      "description": "L'alliance parfaite de la protection fortifiante du gel BIAB et de la brillance de la couleur de votre choix. Nous sculptons d'abord la base BIAB avant d'appliquer une couleur semi-permanente laquée longue tenue.",
+      "duration": "1 h 45",
+      "best_for": "Pour celles qui veulent allier la santé d'un renforcement BIAB à la couleur haute couture."
+    },
+    {
+      "id": "1b9c9f0b-4de0-4752-b6be-b6a9e144a1d4",
+      "category": "Ongle naturel BIAB",
+      "name": "Remplissage BIAB",
+      "price_fcfa": 6000,
+      "sort": 30,
+      "description": "L'entretien régulier indispensable de votre pose BIAB. Nous retirons délicatement l'ancienne couleur, préparons la repousse de l'ongle naturel et appliquons une nouvelle couche de BIAB pour rétablir la structure et la solidité.",
+      "duration": "1 h 30",
+      "best_for": "À réaliser toutes les 3 à 4 semaines pour préserver l'équilibre et la beauté de vos ongles."
+    },
+    {
+      "id": "24b0de31-a8ee-4444-93ff-d9c0e4871e4d",
+      "category": "Capsule sur ongle",
+      "name": "Gainage",
+      "price_fcfa": 7000,
+      "sort": 10,
+      "description": "L'application d'une couche de gel de construction sur capsules pré-posées pour unifier la surface et apporter une solidité maximale, idéale pour un fini naturel.",
+      "duration": "1 h 30",
+      "best_for": "Pour consolider des extensions sur capsules avec un aspect sobre et résistant."
+    },
+    {
+      "id": "524ea264-b656-42d1-a901-b3b4de74b5c7",
+      "category": "Capsule sur ongle",
+      "name": "Semi-permanente",
+      "price_fcfa": 4000,
+      "sort": 20,
+      "description": "La pose de capsules avec une finition de couleur semi-permanente laquée. Comprend le limage, l'ajustement des capsules, le soin des cuticules et l'application de la couleur.",
+      "duration": "1 h 30",
+      "best_for": "Pour des extensions rapides avec une couleur vibrante longue tenue."
+    },
+    {
+      "id": "e38dfb42-126a-4d2b-aa90-b1ffbc9bf822",
+      "category": "Capsule sur ongle",
+      "name": "Construction gel sans limage",
+      "price_fcfa": 9000,
+      "sort": 30,
+      "description": "Des extensions sur capsules sculptées avec un gel de construction autolissant. Cette méthode moderne préserve l'ongle naturel en limitant le limage au strict nécessaire, offrant une finesse et une légèreté remarquables.",
+      "duration": "2 h",
+      "best_for": "Pour des ongles longs, fins et élégants sans effet d'épaisseur."
+    },
+    {
+      "id": "93ca31b2-10f8-4e8c-85df-ccbe81a3d9ff",
+      "category": "Capsule sur ongle",
+      "name": "Construction polygel",
+      "price_fcfa": 10000,
+      "sort": 40,
+      "description": "Des extensions haut de gamme réalisées en Polygel — un matériau hybride combinant la force de l'acrylique et la flexibilité du gel. Offre un contrôle de forme absolu et une légèreté incomparable au porter.",
+      "duration": "2 h",
+      "best_for": "Parfait pour les formes artistiques complexes ou pour un confort maximal de port."
+    },
+    {
+      "id": "d43be612-4cfb-4a58-86d9-86ab8e7b9ee9",
+      "category": "Capsule sur ongle",
+      "name": "Gel x pose américaine",
+      "price_fcfa": 10000,
+      "sort": 50,
+      "description": "La technique révolutionnaire d'extensions rapides. Des capsules entièrement faites de gel souple sont fixées sur la totalité de l'ongle naturel à l'aide d'une base gel spécifique catalysée sous LED. Offre une longueur parfaite instantanée.",
+      "duration": "1 h 30",
+      "best_for": "La solution idéale pour une longueur parfaite rapide, confortable et facile à retirer."
+    },
+    {
+      "id": "18f8e02d-eb3b-489e-8c34-eb17a78ef3a7",
+      "category": "Capsule sur ongle",
+      "name": "Remplissage",
+      "price_fcfa": 7000,
+      "sort": 60,
+      "description": "L'entretien indispensable de vos extensions sur capsules. Nous comblons la repousse à la base de l'ongle avec du gel, nettoyons les cuticules et ré-équilibrons l'architecture de la pose pour assurer sa solidité.",
+      "duration": "1 h 45",
+      "best_for": "Conseillé toutes les 3 à 4 semaines pour préserver la structure et éviter les infiltrations."
+    },
+    {
+      "id": "ea9401d2-d278-43d9-959c-6a7516b3f71c",
+      "category": "Supplément",
+      "name": "Strass, chrome, effets, dessins",
+      "price_fcfa": 1000,
+      "sort": 10,
+      "description": "Personnalisez votre pose avec nos options de Nail Art couture : strass premium fixés à la main, effet miroir chrome, baby boomer délicat, french classique ou dessins personnalisés.",
+      "duration": "15 à 30 min",
+      "best_for": "Pour ajouter une touche unique, artistique ou festive à votre pose."
+    },
+    {
+      "id": "cf3a1e2b-f81d-4de8-9b88-51829e061803",
+      "category": "Dépose",
+      "name": "Gel, gainage, semi-permanent",
+      "price_fcfa": 2000,
+      "sort": 10,
+      "description": "Le retrait de votre ancienne pose effectué dans le respect absolu de la santé de vos ongles. Comprend la dépose douce par ponçage ou trempage doux, le soin cuticules et l'application d'une huile hydratante.",
+      "duration": "30 min",
+      "best_for": "Indispensable pour retirer une pose proprement sans abîmer ou affiner la plaque naturelle."
+    }
+  ],
+  "gallery_images": [
+    {
+      "id": "g1",
+      "url": "/__l5e/assets-v1/7ad8a9f2-afc9-4b97-b483-e0f7aed6edea/hero-manicure.jpg",
+      "caption": "Manucure Couture Bordeaux",
+      "sort": 1
+    },
+    {
+      "id": "g2",
+      "url": "/__l5e/assets-v1/c4fe05e1-2230-4da1-af6c-8467c842ad62/polka-dot-nails.jpg",
+      "caption": "Nail Art Graphique & Pois",
+      "sort": 2
+    },
+    {
+      "id": "g3",
+      "url": "/__l5e/assets-v1/c7122506-d906-40a3-9e65-1bb354594c12/salon-pedicure.jpg",
+      "caption": "Espace Pédicure Prestige",
+      "sort": 3
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-1",
+      "sender_id": "mock-admin-id-456",
+      "receiver_id": "mock-client-id-123",
+      "message": "Bonjour Amina, bienvenue chez NailHouse ! Des questions sur votre réservation ?",
+      "created_at": "2026-06-22T14:47:52.320Z",
+      "read": false
+    },
+    {
+      "id": "msg-8anjz0dfd",
+      "sender_id": "92c00c32-6e2e-4fe6-b481-d874e72188f4",
+      "receiver_id": "mock-admin-id-456",
+      "message": "test",
+      "created_at": "2026-06-22T16:04:18.106Z",
+      "read": false
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-1",
+      "user_id": "mock-client-id-123",
+      "title": "Bienvenue !",
+      "message": "Bienvenue sur votre portail client NailHouse. Vous pouvez gérer vos réservations et vos favoris.",
+      "read": false,
+      "created_at": "2026-06-22T15:47:52.320Z"
+    }
+  ],
+  "favorites": [
+    {
+      "id": "fav-1",
+      "user_id": "mock-client-id-123",
+      "service_id": "7c9a4192-b430-4e33-8a39-ebde89bb12e7",
+      "created_at": "2026-06-22T15:47:52.320Z"
+    }
+  ],
+  "subscribers": [
+    {
+      "id": "sub-1",
+      "email": "client@example.com",
+      "created_at": "2026-06-22T15:47:52.320Z"
+    }
+  ],
+  "reviews": [
+    {
+      "id": "rev-1",
+      "service_id": "7c9a4192-b430-4e33-8a39-ebde89bb12e7",
+      "client_name": "Sophie Laurent",
+      "rating": 5,
+      "comment": "Une expérience merveilleuse ! Les gestes sont d'une précision rare.",
+      "created_at": "2026-06-19T15:47:52.320Z"
+    }
+  ]
+}

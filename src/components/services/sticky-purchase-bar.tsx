@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useServiceSelection } from "@/hooks/use-service-selection";
 import { ShareButton } from "@/components/services/share-button";
 import { useI18n } from "@/hooks/use-i18n";
+import { Heart } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Props = {
   serviceId: string;
@@ -11,9 +13,19 @@ type Props = {
   priceFcfa: number;
   duration: string;
   path: string;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 };
 
-export function StickyPurchaseBar({ serviceId, serviceName, priceFcfa, duration, path }: Props) {
+export function StickyPurchaseBar({
+  serviceId,
+  serviceName,
+  priceFcfa,
+  duration,
+  path,
+  isFavorite = false,
+  onToggleFavorite,
+}: Props) {
   const { language, t } = useI18n();
   const [visible, setVisible] = useState(false);
   const { selectedIds } = useServiceSelection();
@@ -44,13 +56,25 @@ export function StickyPurchaseBar({ serviceId, serviceName, priceFcfa, duration,
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onToggleFavorite}
+                className={cn(
+                  "border-gold/35 text-gold hover:bg-gold/10 rounded-full h-9 w-9 shrink-0",
+                  isFavorite && "bg-gold/15 border-gold text-gold",
+                )}
+                aria-label="Toggle Favorite"
+              >
+                <Heart className={cn("h-4 w-4", isFavorite && "fill-gold")} />
+              </Button>
               <ShareButton
                 title={serviceName}
                 text={t("share_text", { name: serviceName, category: "" })}
                 path={path}
                 variant="outline"
                 size="icon"
-                className="border-gold/35 text-gold hover:bg-gold/10"
+                className="border-gold/35 text-gold hover:bg-gold/10 rounded-full h-9 w-9 shrink-0"
               />
               <Button
                 asChild

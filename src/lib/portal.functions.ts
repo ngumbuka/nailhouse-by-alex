@@ -16,6 +16,17 @@ export const updateUserProfile = createServerFn({ method: "POST" })
       .object({
         name: z.string().min(2).max(100),
         phone: z.string().max(30),
+        birthday: z.string().max(10).optional().nullable(),
+        preferred_stylist: z.string().max(100).optional().nullable(),
+        instagram: z.string().max(100).optional().nullable(),
+        preferred_length: z.enum(["short", "medium", "long", "none"]).optional(),
+        preferred_shape: z
+          .enum(["round", "square", "oval", "almond", "coffin", "stiletto", "none"])
+          .optional(),
+        preferred_style: z
+          .enum(["natural", "classic", "french", "nail_art", "biab", "none"])
+          .optional(),
+        allergies_contraindications: z.string().max(1000).optional().nullable(),
       })
       .parse(input),
   )
@@ -24,6 +35,13 @@ export const updateUserProfile = createServerFn({ method: "POST" })
       name: data.name,
       phone: data.phone,
       email: context.claims.email || "",
+      birthday: data.birthday || "",
+      preferred_stylist: data.preferred_stylist || "",
+      instagram: data.instagram || "",
+      preferred_length: data.preferred_length || "none",
+      preferred_shape: data.preferred_shape || "none",
+      preferred_style: data.preferred_style || "none",
+      allergies_contraindications: data.allergies_contraindications || "",
     });
   });
 
@@ -96,4 +114,34 @@ export const markUserNotificationsAsRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     return db.markNotificationsAsRead(context.userId);
+  });
+
+export const updateUserBookingDetails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string(),
+        notes: z.string().optional().nullable(),
+        scheduled_at: z.string().optional().nullable(),
+        proposed_scheduled_at: z.string().optional().nullable(),
+        status: z.enum(["pending", "confirmed", "completed", "cancelled"]).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const email = context.claims.email;
+    if (!email) throw new Error("Unauthorized");
+    const bookings = await db.listBookingsForUser(email);
+    const booking = bookings.find((b) => b.id === data.id);
+    if (!booking) throw new Error("Booking not found");
+
+    const updates: Partial<Omit<db.MockBooking, "id" | "created_at">> = {};
+    if (data.notes !== undefined) updates.notes = data.notes;
+    if (data.scheduled_at !== undefined) updates.scheduled_at = data.scheduled_at;
+    if (data.proposed_scheduled_at !== undefined)
+      updates.proposed_scheduled_at = data.proposed_scheduled_at;
+    if (data.status !== undefined) updates.status = data.status;
+
+    return db.updateBookingDetails(data.id, updates);
   });

@@ -1,5 +1,11 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useSuspenseQuery,
+  useQueryClient,
+  useQuery,
+  useMutation,
+} from "@tanstack/react-query";
 import {
   ChevronRight,
   Check,
@@ -11,6 +17,7 @@ import {
   Clock,
   Gem,
   Share2,
+  Heart,
 } from "lucide-react";
 import { useState, useTransition, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +27,7 @@ import { SiteLayout } from "@/components/site/site-layout";
 import { SoftImage } from "@/components/ui/soft-image";
 import { Button } from "@/components/ui/button";
 import { listServices, listReviewsForService, createReview } from "@/lib/booking.functions";
+import { getUserFavorites, removeUserFavorite, addUserFavorite } from "@/lib/portal.functions";
 import { listServiceGallery } from "@/lib/service-gallery.functions";
 import { CATEGORY_BY_SLUG, slugifyService, CATEGORIES } from "@/lib/service-categories";
 import { buildServiceCopy } from "@/lib/service-copy";
@@ -28,6 +36,7 @@ import { useServiceSelection } from "@/hooks/use-service-selection";
 import { ShareButton } from "@/components/services/share-button";
 import { ASSETS } from "@/lib/assets";
 import { useI18n } from "@/hooks/use-i18n";
+import { cn } from "@/lib/utils";
 
 const servicesOpts = queryOptions({
   queryKey: ["services"],
@@ -131,6 +140,51 @@ function ServiceDetailPage() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const getFavsFn = useServerFn(getUserFavorites);
+  const addFavFn = useServerFn(addUserFavorite);
+  const removeFavFn = useServerFn(removeUserFavorite);
+
+  const favsQuery = useQuery({
+    queryKey: ["portal", "favorites"],
+    queryFn: () => getFavsFn(),
+    enabled: !!user,
+  });
+
+  const isFavorite = favsQuery.data?.some((f) => f.id === serviceId) ?? false;
+
+  const toggleFavoriteMut = useMutation({
+    mutationFn: async () => {
+      if (!user) {
+        toast.error(
+          language === "en"
+            ? "Please connect to add this service to your favorites."
+            : "Veuillez vous connecter pour ajouter ce soin à vos favoris.",
+        );
+        return;
+      }
+      if (isFavorite) {
+        await removeFavFn({ data: { serviceId } });
+      } else {
+        await addFavFn({ data: { serviceId } });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["portal", "favorites"] });
+      toast.success(
+        isFavorite
+          ? language === "en"
+            ? "Removed from favorites."
+            : "Retiré de vos favoris."
+          : language === "en"
+            ? "Added to favorites."
+            : "Ajouté à vos favoris.",
+      );
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Error updating favorites.");
+    },
+  });
+
   if (!service) {
     return (
       <SiteLayout>
@@ -165,6 +219,14 @@ function ServiceDetailPage() {
     reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 5;
 
   const durationText = service.duration || info.duration;
+
+  const now = new Date();
+  const hasPromo =
+    service.seasonal_price_fcfa &&
+    (!service.seasonal_price_start || new Date(service.seasonal_price_start) <= now) &&
+    (!service.seasonal_price_end || new Date(service.seasonal_price_end) >= now);
+  const displayPrice = hasPromo ? service.seasonal_price_fcfa! : service.price_fcfa;
+  const originalPrice = hasPromo ? service.price_fcfa : null;
 
   return (
     <SiteLayout>
@@ -253,8 +315,13 @@ function ServiceDetailPage() {
                     <Gem className="w-4 h-4 text-gold/70 mr-1.5" />{" "}
                     {language === "en" ? "Price" : "Tarif"}
                   </dt>
-                  <dd className="font-serif font-medium text-gold">
-                    {service.price_fcfa.toLocaleString("fr-FR")} F
+                  <dd className="font-serif font-medium text-gold flex items-center gap-2">
+                    {originalPrice && (
+                      <span className="text-sm text-muted-foreground/60 line-through decoration-destructive/50">
+                        {originalPrice.toLocaleString("fr-FR")} F
+                      </span>
+                    )}
+                    <span>{displayPrice.toLocaleString("fr-FR")} F</span>
                   </dd>
                 </div>
                 <div className="flex items-center gap-2.5">
@@ -608,9 +675,16 @@ function ServiceDetailPage() {
                 <span className="text-xs text-muted-foreground">
                   {language === "en" ? "Unique price" : "Tarif unique"}
                 </span>
-                <span className="font-serif text-3xl text-gold font-bold">
-                  {service.price_fcfa.toLocaleString("fr-FR")} F
-                </span>
+                <div className="flex flex-col items-end">
+                  {originalPrice && (
+                    <span className="text-sm text-muted-foreground/60 line-through font-serif decoration-destructive/50 -mb-1">
+                      {originalPrice.toLocaleString("fr-FR")} F
+                    </span>
+                  )}
+                  <span className="font-serif text-3xl text-gold font-bold">
+                    {displayPrice.toLocaleString("fr-FR")} F
+                  </span>
+                </div>
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-muted-foreground">
@@ -686,15 +760,36 @@ function ServiceDetailPage() {
                 </Button>
               )}
 
-              <ShareButton
-                title={service.name}
-                text={t("share_text", { name: service.name, category: info.title })}
-                path={`/services/${slug}/${serviceSlug}`}
-                variant="outline"
-                size="lg"
-                showLabel={true}
-                className="w-full rounded-full h-11"
-              />
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  onClick={() => toggleFavoriteMut.mutate()}
+                  variant="outline"
+                  size="lg"
+                  className={cn(
+                    "rounded-full border-gold text-gold hover:bg-gold/10 cursor-pointer h-11 text-xs px-2",
+                    isFavorite && "bg-gold/15 text-gold border-gold",
+                  )}
+                >
+                  <Heart className={cn("mr-1.5 h-4 w-4", isFavorite && "fill-gold")} />
+                  {isFavorite
+                    ? language === "en"
+                      ? "Favorited"
+                      : "Favori"
+                    : language === "en"
+                      ? "Favorite"
+                      : "Ajouter aux favoris"}
+                </Button>
+
+                <ShareButton
+                  title={service.name}
+                  text={t("share_text", { name: service.name, category: info.title })}
+                  path={`/services/${slug}/${serviceSlug}`}
+                  variant="outline"
+                  size="lg"
+                  showLabel={true}
+                  className="w-full rounded-full h-11 text-xs"
+                />
+              </div>
             </div>
           </aside>
         </div>
@@ -846,6 +941,8 @@ function ServiceDetailPage() {
         priceFcfa={service.price_fcfa}
         duration={durationText}
         path={`/services/${slug}/${serviceSlug}`}
+        isFavorite={isFavorite}
+        onToggleFavorite={() => toggleFavoriteMut.mutate()}
       />
     </SiteLayout>
   );

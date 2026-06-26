@@ -1,11 +1,14 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { Mail, Lock, Sparkles, Loader2, Eye, EyeOff } from "lucide-react";
 import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useServerFn } from "@tanstack/react-start";
+import { isCurrentUserAdmin } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { ASSETS } from "@/lib/assets";
 
@@ -18,7 +21,41 @@ function AuthPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const checkAdmin = useServerFn(isCurrentUserAdmin);
+
+  useEffect(() => {
+    async function checkSessionAndRedirect(
+      session: import("@supabase/supabase-js").Session | null,
+    ) {
+      if (session) {
+        try {
+          const res = await checkAdmin();
+          if (res?.isAdmin) {
+            navigate({ to: "/admin" });
+          } else {
+            navigate({ to: "/portal" });
+          }
+        } catch (err) {
+          navigate({ to: "/portal" });
+        }
+      }
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      checkSessionAndRedirect(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      checkSessionAndRedirect(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate, checkAdmin]);
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
@@ -26,104 +63,319 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return toast.error(error.message);
-    toast.success("Connectée");
-    navigate({ to: "/admin" });
+    toast.success("Connexion réussie ! Bienvenue.");
   }
 
   async function signUp(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: `${window.location.origin}/auth` },
     });
     setLoading(false);
     if (error) return toast.error(error.message);
-    toast.success("Compte créé. Vous pouvez vous connecter.");
+
+    if (data?.session) {
+      toast.success("Compte créé et connecté avec succès !");
+    } else {
+      toast.success("Compte créé ! Connexion automatique en cours...");
+    }
+  }
+
+  async function signInWithGoogle() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth`,
+      },
+    });
+    setLoading(false);
+    if (error) return toast.error(error.message);
+  }
+
+  async function signInWithApple() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "apple",
+      options: {
+        redirectTo: `${window.location.origin}/auth`,
+      },
+    });
+    setLoading(false);
+    if (error) return toast.error(error.message);
   }
 
   return (
     <SiteLayout>
       <section className="mx-auto grid max-w-5xl items-stretch gap-8 px-5 py-16 md:grid-cols-2">
-        <div className="overflow-hidden rounded-[2rem]">
-          <img src={ASSETS.burgundyManicure} alt="" className="h-full w-full object-cover" />
+        <div className="relative overflow-hidden rounded-[2rem] shadow-2xl group min-h-[300px] md:min-h-full">
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/65 to-transparent z-10" />
+          <img
+            src={ASSETS.burgundyManicure}
+            alt="NailHouse Manicure"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          <div className="absolute bottom-8 left-8 right-8 z-20 text-white">
+            <p className="flex items-center gap-1.5 text-xs font-semibold tracking-[0.2em] text-gold uppercase mb-1">
+              <Sparkles className="h-3.5 w-3.5" /> L'élégance au bout des doigts
+            </p>
+            <h2 className="font-serif text-2xl tracking-wide leading-tight">
+              Une expérience boutique unique à Yaoundé.
+            </h2>
+          </div>
         </div>
-        <div className="rounded-3xl border border-border bg-card p-8">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-accent">
-            Espace administration
-          </p>
-          <h1 className="mt-3 font-serif text-3xl text-primary">Connexion</h1>
-          <Tabs defaultValue="signin" className="mt-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Connexion</TabsTrigger>
-              <TabsTrigger value="signup">Créer un compte</TabsTrigger>
-            </TabsList>
-            <TabsContent value="signin">
-              <form onSubmit={signIn} className="mt-4 space-y-4">
-                <Field label="Email">
-                  <Input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+
+        <div className="relative rounded-[2rem] border border-gold/15 bg-card/45 p-8 md:p-10 shadow-xl backdrop-blur-md flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-gold/80">
+                Salon NailHouse
+              </p>
+              <span className="h-1.5 w-1.5 rounded-full bg-gold animate-pulse" />
+            </div>
+            <h1 className="mt-2 font-serif text-3xl text-primary font-medium tracking-wide">
+              Votre Espace
+            </h1>
+            <p className="text-xs text-muted-foreground mt-1">
+              Connectez-vous pour gérer vos réservations et personnaliser vos préférences.
+            </p>
+
+            <Tabs defaultValue="signin" className="mt-8">
+              <TabsList className="grid w-full grid-cols-2 p-1 bg-ink/10 rounded-xl border border-gold/10">
+                <TabsTrigger
+                  value="signin"
+                  className="rounded-lg text-xs font-medium tracking-wider uppercase py-2 cursor-pointer transition-all duration-300 data-[state=active]:bg-gold data-[state=active]:text-ink"
+                >
+                  Connexion
+                </TabsTrigger>
+                <TabsTrigger
+                  value="signup"
+                  className="rounded-lg text-xs font-medium tracking-wider uppercase py-2 cursor-pointer transition-all duration-300 data-[state=active]:bg-gold data-[state=active]:text-ink"
+                >
+                  S'inscrire
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="signin" className="mt-6 outline-none">
+                <form onSubmit={signIn} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Adresse Email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
+                      <Input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="votre@email.com"
+                        className="pl-10 h-11 rounded-xl border-border/80 focus-visible:ring-gold/30 bg-background/40 transition-all duration-300"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Mot de passe
+                      </Label>
+                      <Link
+                        to="/auth/reset-password"
+                        className="text-[10px] text-gold hover:underline"
+                      >
+                        Mot de passe oublié ?
+                      </Link>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        disabled={loading}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="pl-10 pr-10 h-11 rounded-xl border-border/80 focus-visible:ring-gold/30 bg-background/40 transition-all duration-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-1 pb-1">
+                    <input
+                      type="checkbox"
+                      id="rememberMe"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      disabled={loading}
+                      className="rounded text-gold focus:ring-gold/30 h-3.5 w-3.5 accent-gold cursor-pointer"
+                    />
+                    <Label
+                      htmlFor="rememberMe"
+                      className="text-[10px] cursor-pointer text-muted-foreground"
+                    >
+                      Se souvenir de moi
+                    </Label>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-11 mt-2 rounded-xl bg-gold hover:bg-gold/90 text-ink font-semibold tracking-wider transition-all duration-300 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Connexion...
+                      </>
+                    ) : (
+                      "Se connecter"
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="signup" className="mt-6 outline-none">
+                <form onSubmit={signUp} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Adresse Email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
+                      <Input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="votre@email.com"
+                        className="pl-10 h-11 rounded-xl border-border/80 focus-visible:ring-gold/30 bg-background/40 transition-all duration-300"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Créer un mot de passe
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        minLength={6}
+                        disabled={loading}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="•••••••• (6 caractères min)"
+                        className="pl-10 pr-10 h-11 rounded-xl border-border/80 focus-visible:ring-gold/30 bg-background/40 transition-all duration-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-11 mt-2 rounded-xl bg-gold hover:bg-gold/90 text-ink font-semibold tracking-wider transition-all duration-300 shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Création...
+                      </>
+                    ) : (
+                      "Créer mon compte"
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gold/10" />
+              </div>
+              <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-wider">
+                <span className="bg-background px-4 text-muted-foreground">
+                  Ou se connecter avec
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3.5">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={loading}
+                onClick={signInWithGoogle}
+                className="h-11 rounded-xl border-gold/25 text-foreground hover:bg-gold/10 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer text-xs font-semibold"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    fill="#4285F4"
                   />
-                </Field>
-                <Field label="Mot de passe">
-                  <Input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853"
                   />
-                </Field>
-                <Button type="submit" disabled={loading} className="w-full rounded-full">
-                  {loading ? "…" : "Se connecter"}
-                </Button>
-              </form>
-            </TabsContent>
-            <TabsContent value="signup">
-              <form onSubmit={signUp} className="mt-4 space-y-4">
-                <Field label="Email">
-                  <Input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                  <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                    fill="#FBBC05"
                   />
-                </Field>
-                <Field label="Mot de passe">
-                  <Input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                    fill="#EA4335"
                   />
-                </Field>
-                <Button type="submit" disabled={loading} className="w-full rounded-full">
-                  {loading ? "…" : "Créer mon compte"}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            <Link to="/" className="hover:text-primary">
+                </svg>
+                Google
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                disabled={loading}
+                onClick={signInWithApple}
+                className="h-11 rounded-xl border-gold/25 text-foreground hover:bg-gold/10 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer text-xs font-semibold"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.51 12.09 1.01 1.454 2.208 3.083 3.783 3.024 1.52-.06 2.09-.98 3.928-.98 1.83 0 2.35.98 3.93.947 1.62-.027 2.66-1.473 3.64-2.9 1.12-1.64 1.59-3.23 1.62-3.32-.03-.02-3.11-1.19-3.14-4.75-.03-2.98 2.45-4.41 2.56-4.48-1.4-2.06-3.58-2.29-4.36-2.33-2-.17-3.41 1.04-3.94 1.04zM15.97 3.518c.84-1.02 1.4-2.44 1.24-3.518-.93.04-2.05.62-2.72 1.4-1.18 1.36-1.15 2.82-1.06 3.86.99.08 2.03-.49 2.54-1.742z" />
+                </svg>
+                Apple
+              </Button>
+            </div>
+          </div>
+
+          <p className="mt-8 text-center text-xs text-muted-foreground">
+            <Link to="/" className="hover:text-primary transition-colors">
               ← Retour à l'accueil
             </Link>
           </p>
         </div>
       </section>
     </SiteLayout>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      {children}
-    </div>
   );
 }

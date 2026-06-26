@@ -196,10 +196,12 @@ function AboutPage() {
                     key={slide.title}
                     className="group relative h-[380px] rounded-3xl overflow-hidden shadow-md transition-all duration-700 bg-zinc-900 text-white"
                   >
-                    <img
+                    <SoftImage
                       src={slide.image}
                       alt={slide.title}
-                      className="absolute inset-0 w-full h-full object-cover opacity-50 filter saturate-[0.8] contrast-105 transition-transform duration-700 group-hover:scale-105"
+                      aspect="h-full w-full absolute inset-0"
+                      className="rounded-none absolute inset-0 w-full h-full"
+                      imgClassName="opacity-50 filter saturate-[0.8] contrast-105 transition-transform duration-700 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 

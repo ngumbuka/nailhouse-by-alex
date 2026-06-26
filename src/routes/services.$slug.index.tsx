@@ -237,51 +237,69 @@ function ServiceCategoryPage() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
-            {filteredItems.map((s) => (
-              <div
-                key={s.id}
-                className="group relative flex flex-col justify-between rounded-3xl border border-gold/15 bg-card p-6 transition-all duration-300 hover:border-gold/30 hover:shadow-[0_12px_30px_rgba(195,161,95,0.06)] hover:-translate-y-0.5"
-              >
-                {/* Floating Share Button at the top right */}
-                <div className="absolute right-5 top-5 z-20">
-                  <ShareButton
-                    title={s.name}
-                    text={t("share_text", { name: s.name, category: info.title })}
-                    path={`/services/${slug}/${slugifyService(s.name)}`}
-                    variant="ghost"
-                    size="sm"
-                    className="hover:bg-gold/10 text-gold"
-                  />
-                </div>
+            {filteredItems.map((s) => {
+              const now = new Date();
+              const hasPromo =
+                s.seasonal_price_fcfa &&
+                (!s.seasonal_price_start || new Date(s.seasonal_price_start) <= now) &&
+                (!s.seasonal_price_end || new Date(s.seasonal_price_end) >= now);
+              const displayPrice = hasPromo ? s.seasonal_price_fcfa! : s.price_fcfa;
+              const originalPrice = hasPromo ? s.price_fcfa : null;
 
-                {/* Card content wrapped in Link */}
-                <Link
-                  to="/services/$slug/$service"
-                  params={{ slug, service: slugifyService(s.name) }}
-                  className="flex-1 flex flex-col justify-between cursor-pointer"
+              return (
+                <div
+                  key={s.id}
+                  className="group relative flex flex-col justify-between rounded-3xl border border-gold/15 bg-card p-6 transition-all duration-300 hover:border-gold/30 hover:shadow-[0_12px_30px_rgba(195,161,95,0.06)] hover:-translate-y-0.5"
                 >
-                  <div>
-                    <h3 className="font-serif text-xl pr-10 text-primary transition-colors duration-300 group-hover:text-gold">
-                      {s.name}
-                    </h3>
-                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground line-clamp-2">
-                      {s.description}
-                    </p>
+                  {/* Floating Share Button at the top right */}
+                  <div className="absolute right-5 top-5 z-20">
+                    <ShareButton
+                      title={s.name}
+                      text={t("share_text", { name: s.name, category: info.title })}
+                      path={`/services/${slug}/${slugifyService(s.name)}`}
+                      variant="ghost"
+                      size="sm"
+                      className="hover:bg-gold/10 text-gold"
+                    />
                   </div>
-                  <div className="mt-6 flex items-center justify-between">
-                    <span className="font-serif text-xl text-gold font-semibold">
-                      {s.price_fcfa.toLocaleString("fr-FR")}{" "}
-                      <span className="text-xs uppercase tracking-wider font-sans text-muted-foreground/60">
-                        FCFA
+
+                  {/* Card content wrapped in Link */}
+                  <Link
+                    to="/services/$slug/$service"
+                    params={{ slug, service: slugifyService(s.name) }}
+                    className="flex-1 flex flex-col justify-between cursor-pointer"
+                  >
+                    <div>
+                      <h3 className="font-serif text-xl pr-10 text-primary transition-colors duration-300 group-hover:text-gold">
+                        {s.name}
+                      </h3>
+                      <p className="mt-2 text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                        {s.description}
+                      </p>
+                    </div>
+                    <div className="mt-6 flex items-center justify-between">
+                      <div className="flex flex-col">
+                        {originalPrice && (
+                          <span className="text-xs text-muted-foreground/60 line-through font-serif decoration-destructive/50 -mb-1">
+                            {originalPrice.toLocaleString("fr-FR")} FCFA
+                          </span>
+                        )}
+                        <span className="font-serif text-xl text-gold font-semibold">
+                          {displayPrice.toLocaleString("fr-FR")}{" "}
+                          <span className="text-xs uppercase tracking-wider font-sans text-muted-foreground/60">
+                            FCFA
+                          </span>
+                        </span>
+                      </div>
+                      <span className="flex items-center gap-1.5 text-xs uppercase tracking-[0.22em] font-semibold text-gold opacity-75 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0.5">
+                        {language === "en" ? "Details" : "Détails"}{" "}
+                        <ArrowRight className="h-3 w-3" />
                       </span>
-                    </span>
-                    <span className="flex items-center gap-1.5 text-xs uppercase tracking-[0.22em] font-semibold text-gold opacity-75 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0.5">
-                      {language === "en" ? "Details" : "Détails"} <ArrowRight className="h-3 w-3" />
-                    </span>
-                  </div>
-                </Link>
-              </div>
-            ))}
+                    </div>
+                  </Link>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>

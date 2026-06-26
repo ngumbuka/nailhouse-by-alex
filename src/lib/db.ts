@@ -10,6 +10,9 @@ import {
   MockSubscriber,
   MockService,
   MockReview,
+  MockPromotion,
+  MockSettings,
+  MockVideo,
 } from "./mock-db";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,10 +20,12 @@ import { supabase } from "@/integrations/supabase/client";
 export const USE_MOCK_DB = true;
 
 // Helper to check role
-export function getMockUserRole(userId: string): "admin" | "client" {
+export function getMockUserRole(userId: string, email?: string): "admin" | "client" {
   const db = readMockDB();
   const prof = db.profiles.find((p) => p.id === userId);
-  return prof?.role ?? (userId.includes("admin") ? "admin" : "client");
+  return (
+    prof?.role ?? (userId.includes("admin") || email === "admin@nailhouse.com" ? "admin" : "client")
+  );
 }
 
 // ─── PROFILES ────────────────────────────────────────────────────────────────
@@ -34,9 +39,16 @@ export async function getProfile(userId: string, email?: string): Promise<MockPr
         email: email || "user@example.com",
         name: email ? email.split("@")[0] : "Client",
         phone: "",
-        role: userId.includes("admin") ? "admin" : "client",
+        role: userId.includes("admin") || email === "admin@nailhouse.com" ? "admin" : "client",
         created_at: new Date().toISOString(),
         newsletter: true,
+        birthday: "",
+        preferred_stylist: "",
+        instagram: "",
+        preferred_length: "none",
+        preferred_shape: "none",
+        preferred_style: "none",
+        allergies_contraindications: "",
       };
       db.profiles.push(prof);
       writeMockDB(db);
@@ -64,7 +76,18 @@ export async function getProfile(userId: string, email?: string): Promise<MockPr
         .select()
         .single();
       if (insErr) throw insErr;
-      return { ...inserted, role: inserted.role as "admin" | "client", newsletter: true };
+      return {
+        ...inserted,
+        role: inserted.role as "admin" | "client",
+        newsletter: true,
+        birthday: "",
+        preferred_stylist: "",
+        instagram: "",
+        preferred_length: "none",
+        preferred_shape: "none",
+        preferred_style: "none",
+        allergies_contraindications: "",
+      };
     }
     return {
       id: data.id,
@@ -74,13 +97,33 @@ export async function getProfile(userId: string, email?: string): Promise<MockPr
       role: (data.role || "client") as "admin" | "client",
       created_at: data.created_at || new Date().toISOString(),
       newsletter: true,
+      birthday: data.birthday || "",
+      preferred_stylist: data.preferred_stylist || "",
+      instagram: data.instagram || "",
+      preferred_length: (data.preferred_length || "none") as "short" | "medium" | "long" | "none",
+      preferred_shape: (data.preferred_shape || "none") as
+        | "round"
+        | "square"
+        | "oval"
+        | "almond"
+        | "coffin"
+        | "stiletto"
+        | "none",
+      preferred_style: (data.preferred_style || "none") as
+        | "natural"
+        | "classic"
+        | "french"
+        | "nail_art"
+        | "biab"
+        | "none",
+      allergies_contraindications: data.allergies_contraindications || "",
     };
   }
 }
 
 export async function updateProfile(
   userId: string,
-  data: { name: string; phone: string; email?: string },
+  data: Partial<MockProfile>,
 ): Promise<MockProfile> {
   if (USE_MOCK_DB) {
     const db = readMockDB();
@@ -92,7 +135,18 @@ export async function updateProfile(
   } else {
     const { data: updated, error } = await supabase
       .from("profiles")
-      .update({ name: data.name, phone: data.phone, email: data.email })
+      .update({
+        name: data.name,
+        phone: data.phone,
+        email: data.email,
+        birthday: data.birthday,
+        preferred_stylist: data.preferred_stylist,
+        instagram: data.instagram,
+        preferred_length: data.preferred_length,
+        preferred_shape: data.preferred_shape,
+        preferred_style: data.preferred_style,
+        allergies_contraindications: data.allergies_contraindications,
+      })
       .eq("id", userId)
       .select()
       .single();
@@ -105,6 +159,30 @@ export async function updateProfile(
       role: (updated.role || "client") as "admin" | "client",
       created_at: updated.created_at || new Date().toISOString(),
       newsletter: true,
+      birthday: updated.birthday || "",
+      preferred_stylist: updated.preferred_stylist || "",
+      instagram: updated.instagram || "",
+      preferred_length: (updated.preferred_length || "none") as
+        | "short"
+        | "medium"
+        | "long"
+        | "none",
+      preferred_shape: (updated.preferred_shape || "none") as
+        | "round"
+        | "square"
+        | "oval"
+        | "almond"
+        | "coffin"
+        | "stiletto"
+        | "none",
+      preferred_style: (updated.preferred_style || "none") as
+        | "natural"
+        | "classic"
+        | "french"
+        | "nail_art"
+        | "biab"
+        | "none",
+      allergies_contraindications: updated.allergies_contraindications || "",
     };
   }
 }
@@ -123,6 +201,26 @@ export async function listProfiles(): Promise<MockProfile[]> {
       role: (p.role || "client") as "admin" | "client",
       created_at: p.created_at || new Date().toISOString(),
       newsletter: true,
+      birthday: p.birthday || "",
+      preferred_stylist: p.preferred_stylist || "",
+      instagram: p.instagram || "",
+      preferred_length: (p.preferred_length || "none") as "short" | "medium" | "long" | "none",
+      preferred_shape: (p.preferred_shape || "none") as
+        | "round"
+        | "square"
+        | "oval"
+        | "almond"
+        | "coffin"
+        | "stiletto"
+        | "none",
+      preferred_style: (p.preferred_style || "none") as
+        | "natural"
+        | "classic"
+        | "french"
+        | "nail_art"
+        | "biab"
+        | "none",
+      allergies_contraindications: p.allergies_contraindications || "",
     }));
   }
 }
@@ -238,6 +336,62 @@ export async function updateBookingStatus(
   }
 }
 
+export async function updateBookingDetails(
+  id: string,
+  updates: Partial<Omit<MockBooking, "id" | "created_at">>,
+): Promise<boolean> {
+  if (USE_MOCK_DB) {
+    const db = readMockDB();
+    const idx = db.bookings.findIndex((b) => b.id === id);
+    if (idx === -1) return false;
+    db.bookings[idx] = {
+      ...db.bookings[idx],
+      ...updates,
+    };
+
+    // If status changed or rescheduling, add a notification
+    const userProf = db.profiles.find(
+      (p) => p.email.toLowerCase() === db.bookings[idx].email.toLowerCase(),
+    );
+    if (userProf) {
+      if (updates.status) {
+        const statusFr =
+          updates.status === "confirmed"
+            ? "confirmé"
+            : updates.status === "completed"
+              ? "terminé"
+              : updates.status === "cancelled"
+                ? "annulé"
+                : "en attente";
+        db.notifications.push({
+          id: "notif-" + Math.random().toString(36).substr(2, 9),
+          user_id: userProf.id,
+          title: "Statut mis à jour",
+          message: `Votre rendez-vous pour ${db.bookings[idx].service_name} est désormais ${statusFr}.`,
+          read: false,
+          created_at: new Date().toISOString(),
+        });
+      } else if (updates.proposed_scheduled_at) {
+        db.notifications.push({
+          id: "notif-" + Math.random().toString(36).substr(2, 9),
+          user_id: userProf.id,
+          title: "Proposition de report",
+          message: `L'administration propose de reporter votre rendez-vous pour ${db.bookings[idx].service_name}.`,
+          read: false,
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
+
+    writeMockDB(db);
+    return true;
+  } else {
+    const { error } = await supabase.from("bookings").update(updates).eq("id", id);
+    if (error) throw error;
+    return true;
+  }
+}
+
 // ─── SERVICES ────────────────────────────────────────────────────────────────
 export async function listServices() {
   if (USE_MOCK_DB) {
@@ -262,9 +416,13 @@ export async function addService(
     writeMockDB(db);
     return newService;
   } else {
-    const { data, error } = await supabase.from("services").insert(service).select().single();
+    const { data, error } = await supabase
+      .from("services")
+      .insert(service as unknown as Record<string, unknown>)
+      .select()
+      .single();
     if (error) throw error;
-    return data;
+    return data as unknown as MockService;
   }
 }
 
@@ -282,12 +440,12 @@ export async function updateService(
   } else {
     const { data, error } = await supabase
       .from("services")
-      .update(service)
+      .update(service as unknown as Record<string, unknown>)
       .eq("id", id)
       .select()
       .single();
     if (error) throw error;
-    return data;
+    return data as unknown as MockService;
   }
 }
 
@@ -506,7 +664,7 @@ export async function listSubscribers(): Promise<MockSubscriber[]> {
   if (USE_MOCK_DB) {
     return readMockDB().subscribers;
   } else {
-    const { data, error } = await supabase.from("subscribers").select("*");
+    const { data, error } = await supabase.from("newsletter_emails").select("*");
     if (error) throw error;
     return (data || []) as MockSubscriber[];
   }
@@ -526,7 +684,7 @@ export async function subscribeNewsletter(email: string): Promise<boolean> {
     }
     return true;
   } else {
-    const { error } = await supabase.from("subscribers").insert({ email }).select().single();
+    const { error } = await supabase.from("newsletter_emails").insert({ email }).select().single();
     if (error) throw error;
     return true;
   }
@@ -537,7 +695,10 @@ export async function listReviewsForService(serviceId: string) {
   if (USE_MOCK_DB) {
     return readMockDB().reviews.filter((r) => r.service_id === serviceId);
   } else {
-    const { data, error } = await supabase.from("reviews").select("*").eq("service_id", serviceId);
+    const { data, error } = await supabase
+      .from("service_reviews")
+      .select("*")
+      .eq("service_id", serviceId);
     if (error) throw error;
     return data || [];
   }
@@ -557,8 +718,200 @@ export async function createReview(
     writeMockDB(db);
     return newRev;
   } else {
-    const { data, error } = await supabase.from("reviews").insert(review).select().single();
+    const { data, error } = await supabase.from("service_reviews").insert(review).select().single();
     if (error) throw error;
     return data;
+  }
+}
+
+// ─── PROMOTIONS & DISCOUNTS ──────────────────────────────────────────────────
+export async function listPromotions(): Promise<MockPromotion[]> {
+  if (USE_MOCK_DB) {
+    return readMockDB().promotions;
+  } else {
+    const { data, error } = await supabase
+      .from("promotions")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data as unknown as MockPromotion[]) || [];
+  }
+}
+
+export async function createPromotion(
+  promo: Omit<MockPromotion, "id" | "created_at">,
+): Promise<MockPromotion> {
+  if (USE_MOCK_DB) {
+    const db = readMockDB();
+    const newPromo: MockPromotion = {
+      ...promo,
+      id: "promo-" + Math.random().toString(36).substr(2, 9),
+      created_at: new Date().toISOString(),
+    };
+    db.promotions.push(newPromo);
+    writeMockDB(db);
+    return newPromo;
+  } else {
+    const { data, error } = await supabase
+      .from("promotions")
+      .insert(promo as unknown as Record<string, unknown>)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as unknown as MockPromotion;
+  }
+}
+
+export async function deletePromotion(id: string): Promise<boolean> {
+  if (USE_MOCK_DB) {
+    const db = readMockDB();
+    db.promotions = db.promotions.filter((p) => p.id !== id);
+    writeMockDB(db);
+    return true;
+  } else {
+    const { error } = await supabase.from("promotions").delete().eq("id", id);
+    if (error) throw error;
+    return true;
+  }
+}
+
+export async function getPromotionByCode(code: string): Promise<MockPromotion | null> {
+  if (USE_MOCK_DB) {
+    const db = readMockDB();
+    const promo = db.promotions.find(
+      (p) => p.code.toUpperCase() === code.toUpperCase() && p.active,
+    );
+    return promo || null;
+  } else {
+    const { data, error } = await supabase
+      .from("promotions")
+      .select("*")
+      .eq("code", code)
+      .eq("active", true)
+      .maybeSingle();
+    if (error) throw error;
+    return (data as unknown as MockPromotion) || null;
+  }
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────────────────────────
+export async function getSettings(): Promise<MockSettings> {
+  if (USE_MOCK_DB) {
+    const db = readMockDB();
+    return (
+      db.settings || {
+        id: "global",
+        opening_time: "09:00",
+        closing_time: "19:00",
+        closed_days: [0],
+        blocked_dates: [],
+        buffer_time_mins: 0,
+      }
+    );
+  } else {
+    const { data, error } = await supabase
+      .from("settings")
+      .select("*")
+      .eq("id", "global")
+      .maybeSingle();
+    if (error && error.code !== "PGRST116") throw error; // Ignore not found error
+    return (
+      (data as unknown as MockSettings) || {
+        id: "global",
+        opening_time: "09:00",
+        closing_time: "19:00",
+        closed_days: [0],
+        blocked_dates: [],
+        buffer_time_mins: 0,
+      }
+    );
+  }
+}
+
+export async function updateSettings(settings: Partial<MockSettings>): Promise<MockSettings> {
+  if (USE_MOCK_DB) {
+    const db = readMockDB();
+    db.settings = { ...db.settings, ...settings };
+    writeMockDB(db);
+    return db.settings;
+  } else {
+    const { data, error } = await supabase
+      .from("settings")
+      .update(settings as unknown as Record<string, unknown>)
+      .eq("id", "global")
+      .select()
+      .single();
+    if (error) throw error;
+    return data as unknown as MockSettings;
+  }
+}
+
+// ─── VIDEOS ─────────────────────────────────────────────────────────────────
+export async function listVideos(): Promise<MockVideo[]> {
+  if (USE_MOCK_DB) {
+    return readMockDB().videos || [];
+  } else {
+    // Return mock since videos table may not exist in real supabase schema right now
+    return readMockDB().videos || [];
+  }
+}
+
+export async function addVideo(video: Omit<MockVideo, "id" | "created_at">): Promise<MockVideo> {
+  if (USE_MOCK_DB) {
+    const db = readMockDB();
+    const newVideo: MockVideo = {
+      ...video,
+      id: "vid-" + Math.random().toString(36).substr(2, 9),
+      created_at: new Date().toISOString(),
+    };
+    db.videos.push(newVideo);
+    writeMockDB(db);
+    return newVideo;
+  } else {
+    // Return mock mock DB implementation
+    const db = readMockDB();
+    const newVideo: MockVideo = {
+      ...video,
+      id: "vid-" + Math.random().toString(36).substr(2, 9),
+      created_at: new Date().toISOString(),
+    };
+    db.videos.push(newVideo);
+    writeMockDB(db);
+    return newVideo;
+  }
+}
+
+export async function updateVideo(
+  id: string,
+  video: Partial<MockVideo>,
+): Promise<MockVideo | null> {
+  if (USE_MOCK_DB) {
+    const db = readMockDB();
+    const idx = db.videos.findIndex((v) => v.id === id);
+    if (idx === -1) return null;
+    db.videos[idx] = { ...db.videos[idx], ...video };
+    writeMockDB(db);
+    return db.videos[idx];
+  } else {
+    const db = readMockDB();
+    const idx = db.videos.findIndex((v) => v.id === id);
+    if (idx === -1) return null;
+    db.videos[idx] = { ...db.videos[idx], ...video };
+    writeMockDB(db);
+    return db.videos[idx];
+  }
+}
+
+export async function deleteVideo(id: string): Promise<boolean> {
+  if (USE_MOCK_DB) {
+    const db = readMockDB();
+    db.videos = db.videos.filter((v) => v.id !== id);
+    writeMockDB(db);
+    return true;
+  } else {
+    const db = readMockDB();
+    db.videos = db.videos.filter((v) => v.id !== id);
+    writeMockDB(db);
+    return true;
   }
 }

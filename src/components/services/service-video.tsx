@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { listActiveVideos } from "@/lib/booking.functions";
+import { resolveAssetUrl } from "@/lib/resolver";
 
 interface ServiceVideoProps {
   serviceName: string;
@@ -14,10 +17,23 @@ export function ServiceVideo({ serviceName, categorySlug }: ServiceVideoProps) {
 
   const isPedicure = categorySlug.includes("pied") || serviceName.toLowerCase().includes("pedi");
 
-  // Premium stock video loops for nails & spa
-  const videoUrl = isPedicure
-    ? "https://player.vimeo.com/external/435674703.sd.mp4?s=7fdf1eb047249db2554db22f254f67c2ee1e2632&profile_id=165&oauth2_token_id=57447761"
-    : "https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c02cba73f3ec0b07f87df60738e4a905&profile_id=165&oauth2_token_id=57447761";
+  const { data: videos } = useQuery({
+    queryKey: ["videos"],
+    queryFn: () => listActiveVideos(),
+  });
+
+  // Pick a video that matches the category if possible
+  const categoryMatchedVideo = videos?.find(
+    (v) =>
+      categorySlug.toLowerCase().includes(v.category.toLowerCase()) ||
+      v.category.toLowerCase().includes(categorySlug.toLowerCase()),
+  );
+
+  // Premium stock video loops for nails & spa - fallback
+  const fallbackUrl = isPedicure ? "/placeholder-pedicure.html" : "/placeholder-manicure.html";
+
+  const rawUrl = categoryMatchedVideo?.url || fallbackUrl;
+  const videoUrl = resolveAssetUrl(rawUrl);
 
   const handlePlayPause = () => {
     if (!videoRef.current) return;
@@ -97,72 +113,94 @@ export function ServiceVideo({ serviceName, categorySlug }: ServiceVideoProps) {
 
           {/* Video Player Container */}
           <div className="md:col-span-8 relative rounded-3xl overflow-hidden shadow-2xl bg-black border border-white/10 aspect-[16/9]">
-            <video
-              ref={videoRef}
-              src={videoUrl}
-              loop
-              playsInline
-              muted={isMuted}
-              onTimeUpdate={handleTimeUpdate}
-              onClick={handlePlayPause}
-              className="w-full h-full object-cover cursor-pointer opacity-85 hover:opacity-100 transition-opacity duration-300"
-            />
-
-            {/* Custom elegant player controls overlays */}
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-5 flex flex-col gap-3">
-              {/* Progress Bar */}
-              <div
-                onClick={handleProgressBarClick}
-                className="h-1 w-full bg-white/20 rounded-full overflow-hidden cursor-pointer relative hover:h-1.5 transition-all"
-              >
-                <div
-                  className="h-full bg-gold transition-all duration-100"
-                  style={{ width: `${progress}%` }}
+            {videoUrl.endsWith(".html") ? (
+              <>
+                <iframe
+                  src={videoUrl}
+                  className="w-full h-full border-0 object-cover opacity-90 hover:opacity-100 transition-opacity duration-300"
+                  title={serviceName}
+                  sandbox="allow-scripts allow-same-origin"
                 />
-              </div>
+                {/* Minimal elegant overlay for iframe placeholder */}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent p-5 flex items-center justify-between text-white pointer-events-none">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-gold">
+                    Présentation de l'Atelier
+                  </span>
+                  <span className="text-[9px] uppercase tracking-widest text-white/50">
+                    {serviceName} · Yaoundé
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <video
+                  ref={videoRef}
+                  src={videoUrl}
+                  loop
+                  playsInline
+                  muted={isMuted}
+                  onTimeUpdate={handleTimeUpdate}
+                  onClick={handlePlayPause}
+                  className="w-full h-full object-cover cursor-pointer opacity-85 hover:opacity-100 transition-opacity duration-300"
+                />
 
-              {/* Bottom controls */}
-              <div className="flex items-center justify-between text-white">
-                <div className="flex items-center gap-3">
-                  <button
+                {/* Custom elegant player controls overlays */}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-5 flex flex-col gap-3">
+                  {/* Progress Bar */}
+                  <div
+                    onClick={handleProgressBarClick}
+                    className="h-1 w-full bg-white/20 rounded-full overflow-hidden cursor-pointer relative hover:h-1.5 transition-all"
+                  >
+                    <div
+                      className="h-full bg-gold transition-all duration-100"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+
+                  {/* Bottom controls */}
+                  <div className="flex items-center justify-between text-white">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handlePlayPause}
+                        className="p-2 hover:text-gold transition cursor-pointer"
+                        aria-label={isPlaying ? "Pause" : "Lecture"}
+                      >
+                        {isPlaying ? (
+                          <Pause className="h-4.5 w-4.5" />
+                        ) : (
+                          <Play className="h-4.5 w-4.5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={handleMuteToggle}
+                        className="p-2 hover:text-gold transition cursor-pointer"
+                        aria-label={isMuted ? "Activer le son" : "Désactiver le son"}
+                      >
+                        {isMuted ? (
+                          <VolumeX className="h-4.5 w-4.5" />
+                        ) : (
+                          <Volume2 className="h-4.5 w-4.5" />
+                        )}
+                      </button>
+                    </div>
+                    <span className="text-[9px] uppercase tracking-widest text-white/50">
+                      {serviceName} · Yaoundé
+                    </span>
+                  </div>
+                </div>
+
+                {/* Large Glowing Center Play Button overlay when paused */}
+                {!isPlaying && (
+                  <div
                     onClick={handlePlayPause}
-                    className="p-2 hover:text-gold transition cursor-pointer"
-                    aria-label={isPlaying ? "Pause" : "Lecture"}
+                    className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer transition-colors duration-300"
                   >
-                    {isPlaying ? (
-                      <Pause className="h-4.5 w-4.5" />
-                    ) : (
-                      <Play className="h-4.5 w-4.5" />
-                    )}
-                  </button>
-                  <button
-                    onClick={handleMuteToggle}
-                    className="p-2 hover:text-gold transition cursor-pointer"
-                    aria-label={isMuted ? "Activer le son" : "Désactiver le son"}
-                  >
-                    {isMuted ? (
-                      <VolumeX className="h-4.5 w-4.5" />
-                    ) : (
-                      <Volume2 className="h-4.5 w-4.5" />
-                    )}
-                  </button>
-                </div>
-                <span className="text-[9px] uppercase tracking-widest text-white/50">
-                  {serviceName} · Yaoundé
-                </span>
-              </div>
-            </div>
-
-            {/* Large Glowing Center Play Button overlay when paused */}
-            {!isPlaying && (
-              <div
-                onClick={handlePlayPause}
-                className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer transition-colors duration-300"
-              >
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gold/90 text-white shadow-xl hover:scale-105 transition-transform duration-300 animate-pulse">
-                  <Play className="h-6 w-6 fill-white ml-1" />
-                </div>
-              </div>
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gold/90 text-white shadow-xl hover:scale-105 transition-transform duration-300 animate-pulse">
+                      <Play className="h-6 w-6 fill-white ml-1" />
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

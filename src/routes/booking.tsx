@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import {
@@ -24,21 +24,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { createBooking, listServices } from "@/lib/booking.functions";
+import {
+  createBooking,
+  listServices,
+  validatePromo,
+  getAvailableTimeSlots,
+} from "@/lib/booking.functions";
+import { getUserProfile } from "@/lib/portal.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { ASSETS } from "@/lib/assets";
+import { MockProfile } from "@/lib/mock-db";
 import { useI18n } from "@/hooks/use-i18n";
 import { SoftImage } from "@/components/ui/soft-image";
 
 const opts = queryOptions({ queryKey: ["services"], queryFn: () => listServices() });
-
-const TIME_SLOTS: string[] = (() => {
-  const out: string[] = [];
-  for (let h = 9; h < 19; h++)
-    for (const m of [0, 30]) {
-      out.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-    }
-  return out;
-})();
 
 export const Route = createFileRoute("/booking")({
   validateSearch: (s: Record<string, unknown>) =>
@@ -73,10 +72,14 @@ function BookingPage() {
   const { language, t, translateService } = useI18n();
   const { data: rawServices } = useSuspenseQuery(opts);
   const submit = useServerFn(createBooking);
+  const getAvailableTimeSlotsFn = useServerFn(getAvailableTimeSlots);
   const { service: preselectId, services: preselectIdsStr } = Route.useSearch();
 
   // Translate services data
-  const services = (rawServices || []).map((s) => translateService(s));
+  const services = (rawServices || [])
+    .filter((s) => s.is_active !== false)
+    .sort((a, b) => (a.sort || 0) - (b.sort || 0))
+    .map((s) => translateService(s));
 
   const initialIds = (() => {
     if (preselectIdsStr)
@@ -96,9 +99,79 @@ function BookingPage() {
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [userProfile, setUserProfile] = useState<MockProfile | null>(null);
+  const [useProfilePreferences, setUseProfilePreferences] = useState(true);
+
+  // Promo states
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    discount_percent: number;
+    description?: string | null;
+  } | null>(null);
+  const [validatingPromo, setValidatingPromo] = useState(false);
+
+  const getActiveServicePrice = (s: {
+    price_fcfa: number;
+    seasonal_price_fcfa?: number | null;
+    seasonal_price_start?: string | null;
+    seasonal_price_end?: string | null;
+  }): number => {
+    if (
+      s.seasonal_price_fcfa !== undefined &&
+      s.seasonal_price_fcfa !== null &&
+      s.seasonal_price_start &&
+      s.seasonal_price_end
+    ) {
+      const now = new Date();
+      const start = new Date(s.seasonal_price_start);
+      const end = new Date(s.seasonal_price_end);
+      if (now >= start && now <= end) {
+        return s.seasonal_price_fcfa;
+      }
+    }
+    return s.price_fcfa;
+  };
+
+  const qc = useQueryClient();
+  const getProfileFn = useServerFn(getUserProfile);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      const usr = data.session?.user ?? null;
+      if (usr) {
+        setEmail(usr.email || "");
+        getProfileFn().then((prof) => {
+          if (prof) {
+            setName(prof.name || "");
+            setPhone(prof.phone || "");
+            setUserProfile(prof);
+          }
+        });
+      }
+    });
+  }, [getProfileFn]);
 
   const selectedServices = services.filter((s) => selectedIds.includes(s.id));
-  const totalPrice = selectedServices.reduce((sum, s) => sum + s.price_fcfa, 0);
+  const totalPrice = selectedServices.reduce((sum, s) => sum + getActiveServicePrice(s), 0);
+  const totalDurationMins = selectedServices.reduce((sum, s) => sum + (s.duration_mins || 60), 0);
+  const discountAmount = appliedPromo
+    ? Math.round(totalPrice * (appliedPromo.discount_percent / 100))
+    : 0;
+  const finalPrice = totalPrice - discountAmount;
+
+  const timeSlotsQuery = useQuery({
+    queryKey: ["timeSlots", date?.toISOString(), totalDurationMins],
+    queryFn: async () => {
+      if (!date) return [];
+      const slots = await getAvailableTimeSlotsFn({
+        data: { dateISO: date.toISOString(), durationMins: totalDurationMins },
+      });
+      return slots;
+    },
+    enabled: !!date,
+  });
+  const availableTimeSlots = timeSlotsQuery.data || [];
 
   const grouped = services.reduce<Record<string, typeof services>>((acc, s) => {
     (acc[s.category] ??= []).push(s);
@@ -107,7 +180,7 @@ function BookingPage() {
 
   // Validation per step
   const canProceed = {
-    1: selectedIds.length > 0,
+    1: selectedIds.length > 0 && selectedServices.some((s) => !s.is_addon),
     2: !!date && !!time,
     3: name.trim().length >= 2 && phone.trim().length >= 6 && email.includes("@"),
   };
@@ -120,6 +193,8 @@ function BookingPage() {
     { id: 3, label: t("booking_step_3").replace(/^\d+\.\s*/, ""), icon: User },
   ];
 
+  const validatePromoFn = useServerFn(validatePromo);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canProceed[3]) return;
@@ -127,6 +202,38 @@ function BookingPage() {
     const scheduled = new Date(date!);
     scheduled.setHours(hh, mm, 0, 0);
     setLoading(true);
+    const finalNotesParts: string[] = [];
+    if (useProfilePreferences && userProfile) {
+      const prefParts: string[] = [];
+      if (userProfile.preferred_length && userProfile.preferred_length !== "none") {
+        prefParts.push(`Length: ${userProfile.preferred_length}`);
+      }
+      if (userProfile.preferred_shape && userProfile.preferred_shape !== "none") {
+        prefParts.push(`Shape: ${userProfile.preferred_shape}`);
+      }
+      if (userProfile.preferred_style && userProfile.preferred_style !== "none") {
+        prefParts.push(`Style: ${userProfile.preferred_style}`);
+      }
+      if (userProfile.preferred_stylist) {
+        prefParts.push(`Stylist: ${userProfile.preferred_stylist}`);
+      }
+      if (userProfile.allergies_contraindications) {
+        prefParts.push(`Allergies/Sensitivities: ${userProfile.allergies_contraindications}`);
+      }
+      if (prefParts.length > 0) {
+        finalNotesParts.push(`[Profile Preferences] ${prefParts.join(", ")}`);
+      }
+    }
+    if (appliedPromo) {
+      finalNotesParts.push(
+        `[Promo Code] Code: ${appliedPromo.code} (-${appliedPromo.discount_percent}%)`,
+      );
+    }
+    if (notes.trim()) {
+      finalNotesParts.push(notes.trim());
+    }
+    const finalNotes = finalNotesParts.join("\n");
+
     try {
       await submit({
         data: {
@@ -138,10 +245,12 @@ function BookingPage() {
           service_ids: selectedServices.map((s) => s.id),
           service_names: selectedServices.map((s) => s.name),
           scheduled_at: scheduled.toISOString(),
-          notes: notes || null,
+          notes: finalNotes || null,
         },
       });
       setDone(true);
+      qc.invalidateQueries({ queryKey: ["portal", "bookings"] });
+      qc.invalidateQueries({ queryKey: ["portal", "notifications"] });
       toast.success(
         language === "en"
           ? "Your appointment request has been successfully sent."
@@ -214,20 +323,54 @@ function BookingPage() {
             <p className="mb-3 text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-semibold">
               {t("booking_summary_title")}
             </p>
-            {selectedServices.map((s) => (
-              <div
-                key={s.id}
-                className="flex justify-between py-2 text-sm border-b border-muted/50 last:border-none"
-              >
-                <span className="font-serif text-primary font-medium">{s.name}</span>
-                <span className="text-gold font-semibold">
-                  {s.price_fcfa.toLocaleString("fr-FR")} F
+            {selectedServices.map((s) => {
+              const sPrice = getActiveServicePrice(s);
+              return (
+                <div
+                  key={s.id}
+                  className="flex justify-between py-2 text-sm border-b border-muted/50 last:border-none"
+                >
+                  <span className="font-serif text-primary font-medium">{s.name}</span>
+                  <div className="flex flex-col items-end">
+                    <span className="text-gold font-semibold">
+                      {sPrice.toLocaleString("fr-FR")} F
+                    </span>
+                    {sPrice !== s.price_fcfa && (
+                      <span className="text-[10px] text-muted-foreground line-through">
+                        {s.price_fcfa.toLocaleString("fr-FR")} F
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            <div className="mt-4 flex flex-col gap-1.5 border-t border-gold/15 pt-3.5">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{language === "en" ? "Duration" : "Durée"}</span>
+                <span>
+                  {Math.floor(totalDurationMins / 60) > 0 &&
+                    `${Math.floor(totalDurationMins / 60)}h`}
+                  {totalDurationMins % 60 > 0 && `${totalDurationMins % 60}m`}
                 </span>
               </div>
-            ))}
-            <div className="mt-4 flex justify-between border-t border-gold/15 pt-3.5 font-serif text-base font-semibold text-primary">
-              <span>{t("cart_total_prefix")}</span>
-              <span className="text-gold font-bold">{totalPrice.toLocaleString("fr-FR")} FCFA</span>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{language === "en" ? "Subtotal" : "Sous-total"}</span>
+                <span>{totalPrice.toLocaleString("fr-FR")} F</span>
+              </div>
+              {appliedPromo && (
+                <div className="flex justify-between text-xs text-emerald-500 font-semibold">
+                  <span>
+                    Promo ({appliedPromo.code}): -{appliedPromo.discount_percent}%
+                  </span>
+                  <span>-{discountAmount.toLocaleString("fr-FR")} F</span>
+                </div>
+              )}
+              <div className="flex justify-between font-serif text-base font-semibold text-primary pt-2 border-t border-dashed border-gold/10">
+                <span>{t("cart_total_prefix")}</span>
+                <span className="text-gold font-bold">
+                  {finalPrice.toLocaleString("fr-FR")} FCFA
+                </span>
+              </div>
             </div>
           </div>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -366,6 +509,13 @@ function BookingPage() {
                               )}
                             >
                               <div className="flex items-center gap-3 min-w-0">
+                                {s.image_url && (
+                                  <img
+                                    src={s.image_url}
+                                    alt=""
+                                    className="h-10 w-10 shrink-0 rounded object-cover border border-border/50"
+                                  />
+                                )}
                                 <span
                                   className={cn(
                                     "grid h-5 w-5 shrink-0 place-items-center rounded border transition-all duration-200",
@@ -376,13 +526,27 @@ function BookingPage() {
                                 >
                                   {selected && <Check className="h-3 w-3" />}
                                 </span>
-                                <span className="font-serif text-sm text-primary font-medium truncate">
-                                  {s.name}
-                                </span>
+                                <div className="flex flex-col">
+                                  <span className="font-serif text-sm text-primary font-medium truncate">
+                                    {s.name}
+                                  </span>
+                                  {s.is_addon && (
+                                    <span className="text-[9px] text-muted-foreground uppercase tracking-wider">
+                                      Supplément
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                              <span className="ml-3 shrink-0 font-serif text-sm text-gold font-bold">
-                                {s.price_fcfa.toLocaleString("fr-FR")} F
-                              </span>
+                              <div className="flex flex-col items-end">
+                                <span className="ml-3 shrink-0 font-serif text-sm text-gold font-bold">
+                                  {getActiveServicePrice(s).toLocaleString("fr-FR")} F
+                                </span>
+                                {getActiveServicePrice(s) !== s.price_fcfa && (
+                                  <span className="text-[10px] text-muted-foreground line-through">
+                                    {s.price_fcfa.toLocaleString("fr-FR")} F
+                                  </span>
+                                )}
+                              </div>
                             </button>
                           );
                         })}
@@ -391,7 +555,14 @@ function BookingPage() {
                   ))}
                 </div>
 
-                <div className="mt-8 flex justify-end">
+                <div className="mt-8 flex flex-col sm:flex-row items-center justify-end gap-4">
+                  {selectedIds.length > 0 && !canProceed[1] && (
+                    <span className="text-xs text-amber-600 font-semibold text-right max-w-xs animate-in slide-in-from-right-4">
+                      {language === "en"
+                        ? "Please select at least one primary service. Add-ons cannot be booked alone."
+                        : "Veuillez sélectionner au moins une prestation principale. Un supplément ne peut être réservé seul."}
+                    </span>
+                  )}
                   <Button
                     onClick={() => setStep(2)}
                     disabled={!canProceed[1]}
@@ -466,22 +637,36 @@ function BookingPage() {
                       {language === "en" ? "Time" : "Heure"}
                     </Label>
                     <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
-                      {TIME_SLOTS.map((t) => (
-                        <button
-                          key={t}
-                          type="button"
-                          onClick={() => setTime(t)}
-                          className={cn(
-                            "flex cursor-pointer items-center justify-center rounded-lg border py-2 text-xs font-semibold tracking-wider transition-all duration-200 hover:scale-[1.03]",
-                            time === t
-                              ? "border-gold bg-[#6D5337] text-white dark:bg-gold dark:text-ink shadow-md"
-                              : "border-border hover:border-gold/40 hover:bg-muted/50 text-primary",
-                          )}
-                        >
-                          <Clock className="mr-1 h-3 w-3 opacity-50 shrink-0" />
-                          {t}
-                        </button>
-                      ))}
+                      {timeSlotsQuery.isLoading ? (
+                        <div className="col-span-full py-6 text-center text-sm text-muted-foreground">
+                          {language === "en"
+                            ? "Checking availability..."
+                            : "Vérification des disponibilités..."}
+                        </div>
+                      ) : availableTimeSlots.length === 0 && date ? (
+                        <div className="col-span-full py-6 text-center text-sm text-muted-foreground">
+                          {language === "en"
+                            ? "No available slots for this duration."
+                            : "Aucun créneau disponible pour cette durée."}
+                        </div>
+                      ) : (
+                        availableTimeSlots.map((t) => (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => setTime(t)}
+                            className={cn(
+                              "flex cursor-pointer items-center justify-center rounded-lg border py-2 text-xs font-semibold tracking-wider transition-all duration-200 hover:scale-[1.03]",
+                              time === t
+                                ? "border-gold bg-[#6D5337] text-white dark:bg-gold dark:text-ink shadow-md"
+                                : "border-border hover:border-gold/40 hover:bg-muted/50 text-primary",
+                            )}
+                          >
+                            <Clock className="mr-1 h-3 w-3 opacity-50 shrink-0" />
+                            {t}
+                          </button>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
@@ -576,6 +761,78 @@ function BookingPage() {
                     />
                   </div>
 
+                  {/* Preferences Card */}
+                  {userProfile && (
+                    <div className="rounded-xl border border-gold/15 bg-gold/5 p-4 space-y-2.5 animate-in fade-in duration-300">
+                      <div className="flex items-center justify-between">
+                        <Label
+                          className="text-xs font-bold uppercase tracking-wider text-gold flex items-center gap-1.5 cursor-pointer"
+                          htmlFor="use-pref"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                          {language === "en"
+                            ? "Apply Saved Profile Preferences?"
+                            : "Appliquer vos préférences de profil ?"}
+                        </Label>
+                        <input
+                          type="checkbox"
+                          id="use-pref"
+                          checked={useProfilePreferences}
+                          onChange={(e) => setUseProfilePreferences(e.target.checked)}
+                          className="rounded text-gold focus:ring-gold/30 h-4.5 w-4.5 accent-gold cursor-pointer"
+                        />
+                      </div>
+
+                      {useProfilePreferences && (
+                        <div className="text-[11px] grid grid-cols-2 gap-2 text-muted-foreground pt-1 border-t border-gold/10">
+                          {userProfile.preferred_length &&
+                            userProfile.preferred_length !== "none" && (
+                              <p>
+                                • {language === "en" ? "Length:" : "Longueur :"}{" "}
+                                <span className="text-foreground font-medium capitalize">
+                                  {userProfile.preferred_length}
+                                </span>
+                              </p>
+                            )}
+                          {userProfile.preferred_shape &&
+                            userProfile.preferred_shape !== "none" && (
+                              <p>
+                                • {language === "en" ? "Shape:" : "Forme :"}{" "}
+                                <span className="text-foreground font-medium capitalize">
+                                  {userProfile.preferred_shape}
+                                </span>
+                              </p>
+                            )}
+                          {userProfile.preferred_style &&
+                            userProfile.preferred_style !== "none" && (
+                              <p>
+                                • {language === "en" ? "Style:" : "Style :"}{" "}
+                                <span className="text-foreground font-medium capitalize">
+                                  {userProfile.preferred_style}
+                                </span>
+                              </p>
+                            )}
+                          {userProfile.preferred_stylist && (
+                            <p>
+                              • {language === "en" ? "Stylist:" : "Styliste :"}{" "}
+                              <span className="text-foreground font-medium capitalize">
+                                {userProfile.preferred_stylist}
+                              </span>
+                            </p>
+                          )}
+                          {userProfile.allergies_contraindications && (
+                            <p className="col-span-2 text-amber-500 font-medium">
+                              ⚠️ {language === "en" ? "Allergies:" : "Allergies :"}{" "}
+                              <span className="italic">
+                                {userProfile.allergies_contraindications}
+                              </span>
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="space-y-1.5">
                     <Label
                       htmlFor="notes"
@@ -591,6 +848,81 @@ function BookingPage() {
                       placeholder={t("booking_notes_placeholder")}
                       className="rounded-xl border-border focus-visible:ring-gold resize-none"
                     />
+                  </div>
+
+                  {/* Code Promo */}
+                  <div className="space-y-1.5 pt-4 border-t border-border/50">
+                    <Label
+                      htmlFor="promo"
+                      className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold"
+                    >
+                      {language === "en" ? "Promo Code" : "Code Promo"}
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="promo"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
+                        disabled={!!appliedPromo || validatingPromo}
+                        placeholder={language === "en" ? "E.g., SUMMER20" : "Ex: SUMMER20"}
+                        className="rounded-xl border-border focus-visible:ring-gold uppercase"
+                      />
+                      {appliedPromo ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setAppliedPromo(null);
+                            setPromoCode("");
+                          }}
+                          className="rounded-xl border-destructive/30 text-destructive hover:bg-destructive/5 hover:border-destructive"
+                        >
+                          {language === "en" ? "Remove" : "Retirer"}
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          disabled={!promoCode.trim() || validatingPromo}
+                          onClick={async () => {
+                            setValidatingPromo(true);
+                            try {
+                              const res = await validatePromoFn({
+                                code: promoCode.trim().toUpperCase(),
+                                serviceId: selectedIds[0] || null,
+                              });
+                              setAppliedPromo(res);
+                              toast.success(
+                                language === "en"
+                                  ? `Promo applied: -${res.discount_percent}%!`
+                                  : `Code promo appliqué : -${res.discount_percent}% !`,
+                              );
+                            } catch (err: unknown) {
+                              const errMsg =
+                                err instanceof Error ? err.message : "Code promo invalide";
+                              toast.error(errMsg);
+                            } finally {
+                              setValidatingPromo(false);
+                            }
+                          }}
+                          className="rounded-xl bg-gold hover:bg-gold/90 text-white dark:text-ink font-medium"
+                        >
+                          {validatingPromo
+                            ? language === "en"
+                              ? "Validating..."
+                              : "Validation..."
+                            : language === "en"
+                              ? "Apply"
+                              : "Appliquer"}
+                        </Button>
+                      )}
+                    </div>
+                    {appliedPromo && (
+                      <p className="text-xs text-emerald-500 font-medium">
+                        ✓{" "}
+                        {appliedPromo.description ||
+                          (language === "en" ? "Promotion applied!" : "Promotion appliquée !")}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -663,9 +995,16 @@ function BookingPage() {
                           </p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
-                          <span className="font-serif text-sm text-gold font-bold">
-                            {s.price_fcfa.toLocaleString("fr-FR")} F
-                          </span>
+                          <div className="flex flex-col items-end">
+                            <span className="font-serif text-sm text-gold font-bold">
+                              {getActiveServicePrice(s).toLocaleString("fr-FR")} F
+                            </span>
+                            {getActiveServicePrice(s) !== s.price_fcfa && (
+                              <span className="text-[10px] text-muted-foreground line-through">
+                                {s.price_fcfa.toLocaleString("fr-FR")} F
+                              </span>
+                            )}
+                          </div>
                           {step === 1 && (
                             <button
                               type="button"
@@ -682,11 +1021,25 @@ function BookingPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="mt-1 flex justify-between border-t border-border pt-3 font-serif text-base font-semibold text-primary">
-                    <span>{t("cart_total_prefix")}</span>
-                    <span className="text-gold font-bold">
-                      {totalPrice.toLocaleString("fr-FR")} FCFA
-                    </span>
+                  <div className="mt-1 flex flex-col gap-2 border-t border-border pt-3">
+                    <div className="flex justify-between font-serif text-sm font-medium text-muted-foreground">
+                      <span>{language === "en" ? "Subtotal" : "Sous-total"}</span>
+                      <span>{totalPrice.toLocaleString("fr-FR")} F</span>
+                    </div>
+                    {appliedPromo && (
+                      <div className="flex justify-between text-xs text-emerald-500 font-semibold animate-in fade-in duration-200">
+                        <span>
+                          Promo ({appliedPromo.code}): -{appliedPromo.discount_percent}%
+                        </span>
+                        <span>-{discountAmount.toLocaleString("fr-FR")} F</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-serif text-base font-semibold text-primary pt-1 border-t border-dashed border-border/50">
+                      <span>{t("cart_total_prefix")}</span>
+                      <span className="text-gold font-bold">
+                        {finalPrice.toLocaleString("fr-FR")} FCFA
+                      </span>
+                    </div>
                   </div>
                 </>
               )}
@@ -718,7 +1071,7 @@ function BookingPage() {
               <SoftImage
                 src={ASSETS.polkaDotNails}
                 alt="NailHouse Boutique"
-                aspectRatio="portrait"
+                aspect="aspect-[3/4]"
                 className="rounded-2xl shadow-sm border border-gold/10"
               />
             </div>

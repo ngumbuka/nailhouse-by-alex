@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import servicesJson from "@/data/services.json";
 import { ASSETS } from "@/lib/assets";
+import * as db from "./db";
 
 const MOCK_GALLERY = [
   {
@@ -109,7 +110,7 @@ const reviewSchema = z.object({
 });
 
 export const listServices = createServerFn({ method: "GET" }).handler(async () => {
-  return servicesJson;
+  return db.listServices();
 });
 
 export const listGalleryImages = createServerFn({ method: "GET" }).handler(async () => {
@@ -145,184 +146,172 @@ export const listGalleryImages = createServerFn({ method: "GET" }).handler(async
 export const createBooking = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => bookingSchema.parse(input))
   .handler(async ({ data }) => {
+    const booking = await db.createBooking({
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+      service_id: data.service_id ?? null,
+      service_name: data.service_name,
+      service_ids: data.service_ids ?? (data.service_id ? [data.service_id] : null),
+      service_names: data.service_names ?? (data.service_name ? [data.service_name] : null),
+      scheduled_at: data.scheduled_at,
+      notes: data.notes ?? null,
+    });
+
     try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: booking, error } = await supabaseAdmin
-        .from("bookings")
-        .insert({
-          name: data.name,
-          phone: data.phone,
-          email: data.email,
-          service_id: data.service_id ?? null,
-          service_name: data.service_name,
-          scheduled_at: data.scheduled_at,
-          notes: data.notes ?? null,
-          status: "pending",
-          service_ids: data.service_ids ?? (data.service_id ? [data.service_id] : null),
-          service_names: data.service_names ?? (data.service_name ? [data.service_name] : null),
-        })
-        .select("id, scheduled_at, service_name")
-        .single();
-      if (error) throw new Error(error.message);
-
-      // Optional: Google Calendar (skips silently when unconfigured).
-      try {
-        const { addBookingToCalendar } = await import("@/lib/calendar.server");
-        const eventId = await addBookingToCalendar({
-          summary: `NailHouse — ${data.service_name} — ${data.name}`,
-          description: `Téléphone: ${data.phone}\nEmail: ${data.email}\nNotes: ${data.notes ?? "—"}\nPrestations: ${data.service_names?.join(", ") ?? data.service_name}`,
-          startISO: data.scheduled_at,
-        });
-        if (eventId) {
-          await supabaseAdmin
-            .from("bookings")
-            .update({ calendar_event_id: eventId })
-            .eq("id", booking.id);
-        }
-      } catch (err) {
-        console.error("[calendar] add event failed", err);
+      const { addBookingToCalendar } = await import("@/lib/calendar.server");
+      const eventId = await addBookingToCalendar({
+        summary: `NailHouse — ${data.service_name} — ${data.name}`,
+        description: `Téléphone: ${data.phone}\nEmail: ${data.email}\nNotes: ${data.notes ?? "—"}\nPrestations: ${data.service_names?.join(", ") ?? data.service_name}`,
+        startISO: data.scheduled_at,
+      });
+      if (eventId && !db.USE_MOCK_DB) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        await supabaseAdmin
+          .from("bookings")
+          .update({ calendar_event_id: eventId })
+          .eq("id", booking.id);
       }
-
-      return { id: booking.id };
     } catch (err) {
-      console.warn("[createBooking] mock booking creation due to database error", err);
-      return { id: "mock-booking-id-" + Math.random().toString(36).substr(2, 9) };
+      console.error("[calendar] add event failed", err);
     }
+
+    return { id: booking.id };
   });
 
 export const subscribeNewsletter = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ email: z.string().email() }).parse(input))
   .handler(async ({ data }) => {
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { error } = await supabaseAdmin
-        .from("newsletter_emails")
-        .upsert(
-          { email: data.email.toLowerCase() },
-          { onConflict: "email", ignoreDuplicates: true },
-        );
-      if (error && !`${error.message}`.includes("duplicate")) throw new Error(error.message);
-      return { ok: true };
-    } catch (err) {
-      console.warn("[subscribeNewsletter] mock newsletter subscription due to database error", err);
-      return { ok: true };
-    }
+    await db.subscribeNewsletter(data.email);
+    return { ok: true };
   });
-
-// ============================
-// REVIEWS & RATINGS MOCK STORE & FUNCTIONS
-// ============================
-interface Review {
-  id: string;
-  service_id: string;
-  client_name: string;
-  rating: number;
-  comment: string | null;
-  created_at: string;
-}
-
-const mockReviews: Review[] = [
-  {
-    id: "rev-1",
-    service_id: "7c9a4192-b430-4e33-8a39-ebde89bb12e7", // Manucure classique
-    client_name: "Sophie Laurent",
-    rating: 5,
-    comment:
-      "Une expérience merveilleuse ! Les gestes sont d'une précision rare, le salon est magnifique et l'accueil chaleureux. Mes mains sont sublimes.",
-    created_at: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
-  },
-  {
-    id: "rev-2",
-    service_id: "7c9a4192-b430-4e33-8a39-ebde89bb12e7", // Manucure classique
-    client_name: "Camille Dubois",
-    rating: 4,
-    comment:
-      "Très satisfaite de ma manucure classique. Le soin des cuticules est très doux. Je reviendrai sans hésiter.",
-    created_at: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(),
-  },
-  {
-    id: "rev-3",
-    service_id: "de03195b-0be1-432d-8386-77891ef9f12d", // Manucure spa
-    client_name: "Hélène Martin",
-    rating: 5,
-    comment:
-      "Le gommage et le massage à l'huile chaude sont incroyables. Un vrai moment de détente de luxe.",
-    created_at: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
-  },
-  {
-    id: "rev-4",
-    service_id: "09c69341-382a-4f51-b844-48f8cbf5e9d9", // Pédicure classique
-    client_name: "Aline Ndzana",
-    rating: 5,
-    comment:
-      "Excellente pédicure. Salon très propre, respect total des règles d'hygiène avec outils stérilisés. Très rassurant !",
-    created_at: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
-  },
-  {
-    id: "rev-5",
-    service_id: "b8cbb81e-624b-4f0f-863a-7d2fb709cc8e", // Gainage BIAB naturel
-    client_name: "Marie-Thérèse O.",
-    rating: 5,
-    comment:
-      "Le BIAB est fantastique, mes ongles ne se cassent plus du tout et le fini nude est parfait pour le bureau.",
-    created_at: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
-  },
-];
 
 export const listReviewsForService = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => z.object({ service_id: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: reviews, error } = await supabaseAdmin
-        .from("service_reviews")
-        .select("id, service_id, client_name, rating, comment, created_at")
-        .eq("service_id", data.service_id)
-        .order("created_at", { ascending: false });
-      if (error) throw new Error(error.message);
-
-      const realReviews = reviews ?? [];
-      const matchingMock = mockReviews.filter((r) => r.service_id === data.service_id);
-      return [...realReviews, ...matchingMock].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      );
-    } catch (err) {
-      console.warn("[listReviewsForService] fallback to mock reviews", err);
-      return mockReviews
-        .filter((r) => r.service_id === data.service_id)
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    }
+    return db.listReviewsForService(data.service_id);
   });
 
 export const createReview = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => reviewSchema.parse(input))
   .handler(async ({ data }) => {
-    const newReview = {
-      id: "rev-" + Math.random().toString(36).substr(2, 9),
+    return db.createReview({
       service_id: data.service_id,
       client_name: data.client_name,
       rating: data.rating,
       comment: data.comment ?? null,
-      created_at: new Date().toISOString(),
-    };
-
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: inserted, error } = await supabaseAdmin
-        .from("service_reviews")
-        .insert({
-          service_id: data.service_id,
-          client_name: data.client_name,
-          rating: data.rating,
-          comment: data.comment ?? null,
-        })
-        .select()
-        .single();
-      if (error) throw new Error(error.message);
-      return inserted;
-    } catch (err) {
-      console.warn("[createReview] fallback to mock review memory insertion", err);
-      mockReviews.unshift(newReview);
-      return newReview;
-    }
+    });
   });
+
+export const validatePromo = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ code: z.string(), serviceId: z.string().optional().nullable() }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const promo = await db.getPromotionByCode(data.code);
+    if (!promo) {
+      throw new Error("Code promo invalide ou expiré");
+    }
+
+    const now = new Date();
+    if (promo.start_date && new Date(promo.start_date) > now) {
+      throw new Error("Ce code promo n'est pas encore actif");
+    }
+    if (promo.end_date && new Date(promo.end_date) < now) {
+      throw new Error("Ce code promo a expiré");
+    }
+
+    if (promo.service_id && data.serviceId && promo.service_id !== data.serviceId) {
+      throw new Error("Ce code promo ne s'applique pas à cette prestation");
+    }
+
+    return {
+      code: promo.code,
+      discount_percent: promo.discount_percent,
+      description: promo.description,
+    };
+  });
+
+export const getAvailableTimeSlots = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ dateISO: z.string(), durationMins: z.number() }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const settings = await db.getSettings();
+    const targetDate = new Date(data.dateISO);
+    const targetDateStr = data.dateISO.split("T")[0];
+
+    if (settings.closed_days.includes(targetDate.getDay())) return [];
+    if (settings.blocked_dates.includes(targetDateStr)) return [];
+
+    const allBookings = await db.listBookings();
+
+    const allServices = await db.listServices();
+
+    const dayBookings = allBookings.filter((b) => {
+      if (b.status === "cancelled") return false;
+      const bDateStr = new Date(b.scheduled_at).toISOString().split("T")[0];
+      return bDateStr === targetDateStr;
+    });
+
+    const occupiedIntervals = dayBookings.map((b) => {
+      const start = new Date(b.scheduled_at).getTime();
+      let totalDuration = 0;
+      if (b.service_ids && b.service_ids.length > 0) {
+        for (const sid of b.service_ids) {
+          const svc = allServices.find((s) => s.id === sid);
+          if (svc) totalDuration += svc.duration_mins;
+        }
+      } else if (b.service_id) {
+        const svc = allServices.find((s) => s.id === b.service_id);
+        if (svc) totalDuration += svc.duration_mins;
+      }
+      if (totalDuration === 0) totalDuration = 60;
+      totalDuration += settings.buffer_time_mins;
+
+      return {
+        start,
+        end: start + totalDuration * 60 * 1000,
+      };
+    });
+
+    const slots: string[] = [];
+    const [openH, openM] = settings.opening_time.split(":").map(Number);
+    const [closeH, closeM] = settings.closing_time.split(":").map(Number);
+
+    const openingTime = new Date(data.dateISO);
+    openingTime.setHours(openH, openM, 0, 0);
+
+    const closingTime = new Date(data.dateISO);
+    closingTime.setHours(closeH, closeM, 0, 0);
+
+    for (let h = openH; h <= closeH; h++) {
+      for (const m of [0, 30]) {
+        const slotStart = new Date(data.dateISO);
+        slotStart.setHours(h, m, 0, 0);
+
+        if (slotStart.getTime() < openingTime.getTime()) continue;
+
+        const slotEnd = new Date(slotStart.getTime() + data.durationMins * 60 * 1000);
+
+        if (slotEnd.getTime() > closingTime.getTime()) {
+          continue;
+        }
+
+        const isOverlap = occupiedIntervals.some((interval) => {
+          return slotStart.getTime() < interval.end && slotEnd.getTime() > interval.start;
+        });
+
+        if (!isOverlap) {
+          slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+        }
+      }
+    }
+
+    return slots;
+  });
+
+export const listActiveVideos = createServerFn({ method: "GET" }).handler(async () => {
+  const videos = await db.listVideos();
+  return videos.filter((v) => v.active).sort((a, b) => a.sort - b.sort);
+});
