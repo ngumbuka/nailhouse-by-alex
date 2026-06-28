@@ -1,111 +1,69 @@
-## Goal
+## Polish pass for NailHouse
 
-Restructure `/services` into an **e-commerce catalog → product detail** flow. Today, `/services` shows 7 category cards, clicking one opens `/services/$slug` which dumps every service for that category. The user wants to land directly on a service detail page (PDP), not a category listing.
-
----
-
-## Information architecture (after)
-
-```
-/services                       Catalog grid of ALL individual services (products)
-                                Filter bar: All · Mains · Pieds · BIAB · Capsules · …
-                                Each card = 1 service → links straight to its PDP
-
-/services/$slug/$service        Product detail page (already shipped, kept as-is +
-                                small additions)
-
-/services/$slug                 Repurposed as a "collection" page (optional filter
-                                landing) — keeps hero + ritual + FAQ, drops the
-                                duplicate service-cards section since cards now live
-                                on /services
-```
+Three-part refinement: disable signup email verification, weave AI-generated video into key surfaces, and tighten visual design across home / service detail / gallery / global chrome. **All people depicted (hands, feet, models, ambient shots) are Black women with associated skin tones — deep ebony, rich brown, warm caramel, golden bronze. No other skin tones appear in any new or regenerated asset.**
 
 ---
 
-## 1. Catalog (`/services`)
+### 1. Auth — remove signup email confirmation
 
-Replace the category-card grid with a product-style catalog:
+- Call `configure_auth` to turn off email confirmation so admin signup logs in immediately.
+- Remove the "check your inbox" branch from `/auth` and route straight to `/admin` on success.
 
-- **Hero** — current hero kept, simplified (title + one-line intro + CTA "Réserver").
-- **Filter bar** (sticky on scroll, horizontal scroll on mobile):
-  `Tout · Mains · Pieds · Naturels renforcés · BIAB · Capsules · Suppléments · Dépose`
-  Driven by `?cat=<slug>` search param so the filter is shareable and back-button friendly.
-- **Sort** (lightweight): `Populaire · Prix ↑ · Prix ↓ · Durée`.
-- **Product grid** — 2 cols mobile / 3 cols tablet / 4 cols desktop. Each card:
-  - service image (per-category hero fallback)
-  - category eyebrow (e.g. "Soins des mains")
-  - service name
-  - price in FCFA + duration
-  - small "Voir le détail →" affordance
-  - whole card is the `<Link>` to `/services/$slug/$service`
-- **Empty state** when a filter returns nothing.
-- **Tarifs CTA** kept at the bottom.
-
-Data: `listServices()` already returns all services with `category` + `price_fcfa` + `duration_minutes`; group/filter on the client.
+No change to booking notifications or other email behavior.
 
 ---
 
-## 2. Detail page (`/services/$slug/$service`) — small e-commerce upgrades
+### 2. Video content (AI-generated, looping, muted, ambient)
 
-The page already has hero, description, ritual, price + booking, aftercare, FAQ, gallery, related strip. Add:
+Generate three short clips (5–10s, 1080p, silent). **Every clip features Black women only**, prompted explicitly with deep/rich/warm Black skin tones, natural lighting that flatters melanin-rich skin, and burgundy/gold brand palette.
 
-- **Sticky purchase bar** on scroll (mobile + desktop):
-  service name · price · "Réserver ce soin" button. Mirrors PDP add-to-cart bars.
-- **Trust row** under the hero: `Outils stérilisés · Produits pro · Réservation en ligne · Conseil sur-mesure` — small icon strip.
-- **"Souvent réservé avec"** section (cross-sell) above the existing related strip: 3 hand-picked complementary services from _other_ categories (e.g. Manucure + Pédicure + Dépose). Picked via a small rule: same category siblings already shown below, so this pulls the 3 nearest by category affinity.
-- **"Autres prestations"** strip: kept, restyled as horizontal product cards (image + name + price) instead of text-only cards.
-- **Breadcrumb** kept; gains a "Back to catalog" link on mobile.
+| Clip | Subject | Where it plays |
+|---|---|---|
+| `hero-loop.mp4` | Slow cinematic close-up of a Black woman's hand with glossy burgundy nails drifting through warm golden light | Home hero (video layer behind gradient + title); existing image as `poster` |
+| `atelier-loop.mp4` | Overhead pan across workstation — polish bottles, candle, a Black woman's hand resting on marble | Home "Philosophie" band + About atmosphere section |
+| `gesture-loop.mp4` | Macro shot of a precise nail-art brush stroke on the styled hand of a Black woman | Gallery featured tile + service-detail hero of the lead service per category |
 
-No changes to booking, pricing, or copy logic.
-
----
-
-## 3. Category page (`/services/$slug`) — repurposed as collection
-
-Keep it useful but stop duplicating the catalog:
-
-- Hero + "Pour qui" + Ritual + FAQ + CTA — **kept**.
-- The big "Carte des prestations" service-card grid in the middle — **removed**. Replaced by a single CTA: "Voir les {N} prestations {category} →" that deep-links to `/services?cat=<slug>` (the new filtered catalog).
-- Gallery — **kept**.
-
-This makes the category page an editorial landing, while the actual shopping happens at `/services` and PDPs.
+Implementation:
+- Upload each MP4 via `lovable-assets`, add entries to `src/lib/assets.ts`.
+- New `<AmbientVideo>` component: autoPlay, muted, loop, playsInline, `poster` fallback, respects `prefers-reduced-motion`, lazy-loaded below the fold.
+- Gallery: insert one video tile into the masonry every ~6 items; image-only items unchanged.
+- Service detail hero swaps still for video for the lead service of each category, image as poster.
 
 ---
 
-## 4. Navigation touch-ups
+### 3. Design refinement (keep burgundy/gold luxury identity)
 
-- Header "Prestations" link still points to `/services`.
-- The home page service teasers (if any) link straight to `/services/$slug/$service` for the headline service of each category, not to `/services/$slug`.
-- Update internal links pointing to `/services/$slug` from copy/CTAs only where it makes sense; category-page links from the catalog filter use the new `?cat=` pattern.
+Tightening, not redesign:
+
+- **Typography rhythm** — larger Cormorant display sizes, tighter tracking, consistent gold uppercase eyebrow style, smaller Manrope body with more line-height.
+- **Spacing system** — standardize section padding (mobile 64 / desktop 128), unify container widths, remove ad-hoc paddings across `index.tsx`, `services.tsx`, `services.$slug.$service.tsx`, `gallery.tsx`, `about.tsx`.
+- **Header** — thinner, more transparent at top, subtle backdrop on scroll, gold underline on active link, refined mobile drawer.
+- **Footer** — 3-column editorial layout: logo + tagline, contact, hours; finer divider; small Instagram CTA.
+- **Cards & images** — unify `rounded-2xl`, softer shadow token, slow ken-burns on service-card hover, fade-in on image load.
+- **Gallery** — true asymmetric masonry, refined lightbox (darker scrim, arrow nav, caption typography).
+- **Service detail** — tighter hero ratio, frosted-glass sticky purchase bar, calmer cross-sell with horizontal scroll-snap.
+- **Home** — re-pace sections (hero → signature → philosophie video → atmosphere → CTA), thin gold rule motif as section divider.
+- **Loader & route transitions** — refine `PageLoader` curve, subtle fade-in on route change.
+
+**Imagery rule applied to any regenerated still as part of this polish**: only Black women / Black skin tones are depicted. If any existing image showing other skin tones is touched during the pass, it is regenerated to comply.
 
 ---
 
-## 5. Files
-
-**Rewritten**
-
-- `src/routes/services.tsx` — catalog grid + filter + sort.
-- `src/routes/services.$slug.tsx` — drop the service-cards section, add the deep-link CTA.
-- `src/routes/services.$slug.$service.tsx` — add sticky purchase bar, trust row, "Souvent réservé avec" cross-sell, restyle related strip as product cards.
+### Files touched
 
 **New**
+- `src/components/ui/ambient-video.tsx`
+- 3 video asset pointers in `src/assets/*.mp4.asset.json` + entries in `src/lib/assets.ts`
 
-- `src/components/catalog/service-card.tsx` — shared product card (used by catalog + related strip + cross-sell).
-- `src/components/catalog/catalog-filters.tsx` — filter chips + sort dropdown, URL-state driven.
-- `src/components/services/sticky-purchase-bar.tsx` — appears after hero scrolls off.
+**Edited**
+- `src/routes/auth.tsx` (remove email-confirm UX path)
+- `src/routes/index.tsx`, `about.tsx`, `gallery.tsx`, `services.$slug.$service.tsx` (video + spacing)
+- `src/components/site/site-header.tsx`, `site-footer.tsx`
+- `src/styles.css` (spacing tokens, type scale, refined shadows)
+- `src/components/page-loader.tsx`
+- `src/components/services/sticky-purchase-bar.tsx`
 
 **Untouched**
+Booking flow, admin dashboard, calendar integration, Supabase schema, RLS, server functions.
 
-- `service-categories.ts`, `service-copy.ts`, `booking.functions.ts`, `service-gallery.functions.ts`, booking flow, admin, calendar.
-
----
-
-- Real product imagery per individual service (we keep per-category hero/flat images as fallbacks).  
-  Permit a user to pick and schedule multipl services at once in one flow
-
-6. Out of scope (this round)
-
-- Wishlist / favorites, comparison, reviews, variants, real cart. Booking remains a single-service flow.
-- Anything backend.
-
-Confirm and I'll start with the catalog rewrite at `/services`.
+Execution order: auth toggle → video generation & wiring → design polish.

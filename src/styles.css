@@ -238,4 +238,24 @@
   text-transform: uppercase;
   font-size: 0.68rem;
   color: var(--color-gold);
+  font-weight: 600;
 }
+
+/* Thin gold divider used between editorial sections */
+@utility section-divider {
+  display: block;
+  height: 1px;
+  width: 64px;
+  background-image: linear-gradient(90deg, transparent, var(--color-gold) 50%, transparent);
+  margin: 0 auto;
+  opacity: 0.6;
+}
+
+/* Hover treatment: slow, cinematic zoom for image cards */
+@utility hover-ken-burns {
+  transition: transform 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.group:hover .hover-ken-burns {
+  transform: scale(1.06);
+}
+
