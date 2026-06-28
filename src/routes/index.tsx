@@ -5,6 +5,7 @@ import { ArrowRight, Clock, Star, Play, ChevronLeft, ChevronRight, Check } from 
 import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
 import { SoftImage } from "@/components/ui/soft-image";
+import { AmbientVideo } from "@/components/ui/ambient-video";
 import { ASSETS } from "@/lib/assets";
 import { listServices, listGalleryImages, listActiveVideos } from "@/lib/booking.functions";
 import { CATEGORIES } from "@/lib/service-categories";
@@ -183,12 +184,18 @@ function HomePage() {
       {/* ── 1. HERO SECTION — Dark, immersive, rounded container ── */}
       <section className="px-5 py-6 md:py-10 bg-background">
         <div className="relative mx-auto max-w-6xl w-full overflow-hidden rounded-[2.5rem] bg-zinc-950 text-white min-h-[550px] md:min-h-[650px] flex flex-col justify-between p-8 md:p-14">
-          {/* Volumetric background shading */}
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-luminosity filter contrast-125 pointer-events-none"
-            style={{ backgroundImage: `url(${ASSETS.heroServices})` }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+          {/* Ambient video background — only the salon's craft, in motion */}
+          <div className="absolute inset-0 opacity-55 mix-blend-luminosity">
+            <AmbientVideo
+              src={ASSETS.heroLoopVideo}
+              poster={ASSETS.heroServices}
+              alt="NailHouse manucure couture"
+              className="h-full w-full"
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-transparent to-transparent" />
+
 
           {/* Top Floating Nav details */}
           <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0 text-xs tracking-widest text-zinc-300 text-center sm:text-left">
