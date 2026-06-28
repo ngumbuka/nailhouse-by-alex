@@ -15,4 +15,6 @@ export const ASSETS = {
   heroTarifs: "/__l5e/assets-v1/fec912ad-06b3-404a-9159-fcd786992662/hero-tarifs.jpg",
   heroAbout: "/__l5e/assets-v1/73b1ff93-2185-452b-b181-051ff22204af/hero-about.jpg",
   heroContact: "/__l5e/assets-v1/8d0554a7-e12a-4457-8aeb-3bbe3f77b5cc/hero-contact.jpg",
+  heroLoopVideo: "/__l5e/assets-v1/c08eae8b-8f34-49ce-ae27-8c2dc97c6d79/hero-loop.mp4",
+  gestureLoopVideo: "/__l5e/assets-v1/88fbe7f7-033e-47ea-9567-200f89955f33/gesture-loop.mp4",
 } as const;
