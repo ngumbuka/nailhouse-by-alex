@@ -69,19 +69,23 @@ function AuthPage() {
   async function signUp(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/auth` },
+    });
+    if (error) {
+      setLoading(false);
+      return toast.error(error.message);
+    }
+    // Auto-confirm is enabled — sign the user in immediately so they
+    // never wait on an email link.
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
-
-    if (data?.session) {
-      toast.success("Compte créé et connecté avec succès !");
-    } else {
-      toast.success("Compte créé ! Connexion automatique en cours...");
-    }
+    if (signInError) return toast.error(signInError.message);
+    toast.success("Compte créé. Bienvenue chez NailHouse.");
   }
 
   async function signInWithGoogle() {
