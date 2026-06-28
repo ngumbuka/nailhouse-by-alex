@@ -36,6 +36,7 @@ import { StickyPurchaseBar } from "@/components/services/sticky-purchase-bar";
 import { useServiceSelection } from "@/hooks/use-service-selection";
 import { ShareButton } from "@/components/services/share-button";
 import { ASSETS } from "@/lib/assets";
+import { AmbientVideo } from "@/components/ui/ambient-video";
 import { useI18n } from "@/hooks/use-i18n";
 import { cn } from "@/lib/utils";
 
@@ -258,16 +259,25 @@ function ServiceDetailPage() {
 
         {/* ── 1. TOP IMAGE GRID (Bento Aesthetic) ── */}
         <div className="grid gap-4 md:grid-cols-3 mb-10 overflow-hidden rounded-[2rem]">
-          {/* Main big image */}
-          <div className="md:col-span-2 aspect-[16/10] md:aspect-auto md:h-[450px]">
-            <SoftImage
-              src={mainImage}
-              alt={service.name}
-              aspect="aspect-full"
-              className="w-full h-full object-cover rounded-none"
-              size="lg"
-              loading="eager"
-            />
+          {/* Main big image — first service in each category gets the ambient video */}
+          <div className="md:col-span-2 aspect-[16/10] md:aspect-auto md:h-[450px] relative overflow-hidden">
+            {categoryServices[0]?.id === service.id ? (
+              <AmbientVideo
+                src={ASSETS.gestureLoopVideo}
+                poster={mainImage}
+                alt={service.name}
+                className="h-full w-full"
+              />
+            ) : (
+              <SoftImage
+                src={mainImage}
+                alt={service.name}
+                aspect="aspect-full"
+                className="w-full h-full object-cover rounded-none"
+                size="lg"
+                loading="eager"
+              />
+            )}
           </div>
           {/* Side stacked images */}
           <div className="hidden md:flex flex-col gap-4 h-[450px]">
