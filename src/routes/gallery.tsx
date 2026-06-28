@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowRight, Sparkles, SlidersHorizontal, Eye } from "lucide-react";
+import { ArrowRight, Sparkles, SlidersHorizontal, Eye, Play } from "lucide-react";
 import { SiteLayout } from "@/components/site/site-layout";
+import { AmbientVideo } from "@/components/ui/ambient-video";
 import { listGalleryImages } from "@/lib/booking.functions";
 import { ASSETS } from "@/lib/assets";
 import { useI18n } from "@/hooks/use-i18n";
@@ -174,6 +175,33 @@ function GalleryPage() {
                 {cat.label}
               </button>
             ))}
+          </div>
+
+          {/* Featured ambient video — the salon's craft in motion */}
+          <div className="relative mt-10 overflow-hidden rounded-[2rem] border border-border/40 shadow-sm">
+            <AmbientVideo
+              src={ASSETS.gestureLoopVideo}
+              poster={ASSETS.burgundyManicure}
+              alt={language === "en" ? "Brush stroke on a single nail" : "Geste de précision en gros plan"}
+              className="aspect-[21/9] w-full"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-6 bottom-6 flex items-end justify-between gap-4 text-white md:inset-x-10 md:bottom-8">
+              <div>
+                <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.28em] text-gold-soft">
+                  <Play className="h-3 w-3 fill-current" />
+                  {language === "en" ? "In motion" : "En mouvement"}
+                </p>
+                <h2 className="mt-2 font-serif text-2xl leading-tight md:text-3xl">
+                  {language === "en"
+                    ? "The precision of a single brush stroke."
+                    : "La précision d'un seul geste."}
+                </h2>
+              </div>
+              <span className="hidden text-[10px] uppercase tracking-[0.28em] text-white/70 sm:block">
+                {language === "en" ? "NailHouse · Atelier" : "NailHouse · Atelier"}
+              </span>
+            </div>
           </div>
 
           {/* Asymmetric Bento-style Grid Layout */}
