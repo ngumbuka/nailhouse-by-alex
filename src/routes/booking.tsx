@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
-import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
@@ -37,6 +37,7 @@ import { ASSETS } from "@/lib/assets";
 import { MockProfile } from "@/lib/mock-db";
 import { useI18n } from "@/hooks/use-i18n";
 import { SoftImage } from "@/components/ui/soft-image";
+import { validateWhatsAppNumber } from "@/lib/phone-validation";
 
 const opts = queryOptions({ queryKey: ["services"], queryFn: () => listServices() });
 
@@ -97,6 +98,9 @@ function BookingPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [followupPreference, setFollowupPreference] = useState<"call" | "messages" | "email">(
+    "messages",
+  );
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -146,6 +150,9 @@ function BookingPage() {
           if (prof) {
             setName(prof.name || "");
             setPhone(prof.phone || "");
+            if (prof.followup_preference) {
+              setFollowupPreference(prof.followup_preference);
+            }
             setUserProfile(prof);
           }
         });
@@ -199,6 +206,16 @@ function BookingPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canProceed[3]) return;
+
+    const validation = validateWhatsAppNumber(phone, language === "en");
+    if (!validation.isValid) {
+      toast.warning(
+        language === "en"
+          ? `Warning: ${validation.warning} (You may still proceed, but you will not receive WhatsApp updates)`
+          : `Attention : ${validation.warning} (Vous pouvez continuer, mais vous ne recevrez pas les suivis WhatsApp)`,
+      );
+    }
+
     const [hh, mm] = time.split(":").map(Number);
     const scheduled = new Date(date!);
     scheduled.setHours(hh, mm, 0, 0);
@@ -247,6 +264,7 @@ function BookingPage() {
           service_names: selectedServices.map((s) => s.name),
           scheduled_at: scheduled.toISOString(),
           notes: finalNotes || null,
+          followup_preference: followupPreference,
         },
       });
       setDone(true);
@@ -738,9 +756,27 @@ function BookingPage() {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         required
-                        placeholder="6XX XXX XXX"
-                        className="rounded-xl border-border focus-visible:ring-gold"
+                        placeholder="+237 6XX XXX XXX"
+                        className={`rounded-xl border-border focus-visible:ring-gold ${
+                          phone.trim() !== "" &&
+                          !validateWhatsAppNumber(phone, language === "en").isValid
+                            ? "border-amber-500/60 focus-visible:ring-amber-500/30"
+                            : ""
+                        }`}
                       />
+                      {phone.trim() !== "" &&
+                        !validateWhatsAppNumber(phone, language === "en").isValid && (
+                          <div className="mt-1.5 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[11px] leading-relaxed space-y-1">
+                            <p className="font-semibold">
+                              ⚠️ {validateWhatsAppNumber(phone, language === "en").warning}
+                            </p>
+                            <p className="text-[10px] text-amber-500/80">
+                              {language === "en"
+                                ? "💡 We strongly encourage using a valid WhatsApp number so you can receive instant confirmations and reminders directly to your phone."
+                                : "💡 Nous vous encourageons à utiliser un numéro WhatsApp valide afin de recevoir vos confirmations et rappels instantanés directement sur votre téléphone."}
+                            </p>
+                          </div>
+                        )}
                     </div>
                   </div>
 
@@ -760,6 +796,61 @@ function BookingPage() {
                       placeholder="vous@exemple.com"
                       className="rounded-xl border-border focus-visible:ring-gold"
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
+                      {language === "en"
+                        ? "Preferred Follow-up Method"
+                        : "Méthode de suivi préférée"}{" "}
+                      *
+                    </Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFollowupPreference("messages")}
+                        className={`py-2.5 px-2 text-[11px] rounded-xl border font-medium transition-all duration-200 flex flex-col items-center justify-center gap-0.5 ${
+                          followupPreference === "messages"
+                            ? "bg-gold/10 border-gold text-gold"
+                            : "bg-background/40 border-border text-muted-foreground hover:bg-background/60"
+                        }`}
+                      >
+                        <span className="font-bold">WhatsApp</span>
+                        <span className="text-[8px] opacity-75">
+                          {language === "en" ? "Messages" : "Messages"}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFollowupPreference("email")}
+                        className={`py-2.5 px-2 text-[11px] rounded-xl border font-medium transition-all duration-200 flex flex-col items-center justify-center gap-0.5 ${
+                          followupPreference === "email"
+                            ? "bg-gold/10 border-gold text-gold"
+                            : "bg-background/40 border-border text-muted-foreground hover:bg-background/60"
+                        }`}
+                      >
+                        <span className="font-bold">Email</span>
+                        <span className="text-[8px] opacity-75">
+                          {language === "en" ? "Reminders" : "Rappels"}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFollowupPreference("call")}
+                        className={`py-2.5 px-2 text-[11px] rounded-xl border font-medium transition-all duration-200 flex flex-col items-center justify-center gap-0.5 ${
+                          followupPreference === "call"
+                            ? "bg-gold/10 border-gold text-gold"
+                            : "bg-background/40 border-border text-muted-foreground hover:bg-background/60"
+                        }`}
+                      >
+                        <span className="font-bold">
+                          {language === "en" ? "Phone Call" : "Appel"}
+                        </span>
+                        <span className="text-[8px] opacity-75">
+                          {language === "en" ? "Direct" : "Direct"}
+                        </span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Preferences Card */}

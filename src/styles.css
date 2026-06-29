@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 @import "react-big-calendar/lib/css/react-big-calendar.css";
 
 @custom-variant dark (&:is(.dark *));
@@ -259,3 +260,41 @@
   transform: scale(1.06);
 }
 
+/* ── React Quill Overrides ────────────────────────── */
+.quill {
+  font-family: var(--font-sans) !important;
+}
+.ql-toolbar {
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+  border-color: var(--color-border) !important;
+  background-color: var(--color-muted) !important;
+}
+.ql-container {
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+  border-color: var(--color-border) !important;
+  min-height: 120px;
+}
+.ql-editor {
+  font-family: var(--font-sans) !important;
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.5;
+  color: var(--color-foreground);
+}
+.dark .ql-editor {
+  color: var(--color-foreground);
+}
+.ql-editor.ql-blank::before {
+  color: var(--color-muted-foreground) !important;
+  font-style: italic;
+}
+.ql-snow .ql-stroke {
+  stroke: var(--color-foreground) !important;
+}
+.ql-snow .ql-fill {
+  fill: var(--color-foreground) !important;
+}
+.ql-snow .ql-picker {
+  color: var(--color-foreground) !important;
+}

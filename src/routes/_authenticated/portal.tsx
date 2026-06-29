@@ -28,6 +28,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
+import { validateWhatsAppNumber } from "@/lib/phone-validation";
 import {
   CalendarDays,
   CalendarIcon,
@@ -96,6 +97,9 @@ function ClientPortalPage() {
   const [activeTab, setActiveTab] = useState("bookings");
   const [profileName, setProfileName] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
+  const [followupPreference, setFollowupPreference] = useState<"call" | "messages" | "email">(
+    "messages",
+  );
   const [chatMessage, setChatMessage] = useState("");
   const [newsletterSub, setNewsletterSub] = useState(true);
   const [birthday, setBirthday] = useState("");
@@ -150,6 +154,11 @@ function ClientPortalPage() {
           | "none",
       );
       setAllergies(profileQuery.data.allergies_contraindications || "");
+      if (profileQuery.data.followup_preference) {
+        setFollowupPreference(
+          profileQuery.data.followup_preference as "call" | "messages" | "email",
+        );
+      }
     }
   }, [profileQuery.data]);
 
@@ -165,6 +174,7 @@ function ClientPortalPage() {
       preferred_shape?: "round" | "square" | "oval" | "almond" | "coffin" | "stiletto" | "none";
       preferred_style?: "natural" | "classic" | "french" | "nail_art" | "biab" | "none";
       allergies_contraindications?: string;
+      followup_preference?: "call" | "messages" | "email";
     }) => updateProfileFn({ data }),
     onSuccess: () => {
       toast.success(
@@ -592,6 +602,12 @@ function ClientPortalPage() {
                                             year: "numeric",
                                             month: "long",
                                             day: "numeric",
+                                          },
+                                        )}{" "}
+                                        {language === "en" ? "at" : "à"}{" "}
+                                        {new Date(b.proposed_scheduled_at).toLocaleTimeString(
+                                          language === "en" ? "en-US" : "fr-FR",
+                                          {
                                             hour: "2-digit",
                                             minute: "2-digit",
                                           },
@@ -706,9 +722,10 @@ function ClientPortalPage() {
                           <Trash2 className="h-4.5 w-4.5" />
                         </button>
                       </div>
-                      <CardDescription className="text-xs leading-relaxed text-muted-foreground line-clamp-2 mt-1">
-                        {fav.description}
-                      </CardDescription>
+                      <CardDescription
+                        className="text-xs leading-relaxed text-muted-foreground line-clamp-2 mt-1 block"
+                        dangerouslySetInnerHTML={{ __html: fav.description || "" }}
+                      />
                     </CardHeader>
                     <CardContent className="pb-4 pt-0 mt-auto flex items-center justify-between border-t border-muted/60 pt-3">
                       <span className="font-serif text-base text-gold font-bold">
@@ -824,6 +841,14 @@ function ClientPortalPage() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
+                    const validation = validateWhatsAppNumber(profilePhone, language === "en");
+                    if (!validation.isValid) {
+                      toast.warning(
+                        language === "en"
+                          ? `Warning: ${validation.warning} (You may still proceed, but you will not receive WhatsApp updates)`
+                          : `Attention : ${validation.warning} (Vous pouvez continuer, mais vous ne recevrez pas les suivis WhatsApp)`,
+                      );
+                    }
                     updateProfileMut.mutate({
                       name: profileName,
                       phone: profilePhone,
@@ -834,6 +859,7 @@ function ClientPortalPage() {
                       preferred_shape: preferredShape,
                       preferred_style: preferredStyle,
                       allergies_contraindications: allergies,
+                      followup_preference: followupPreference,
                     });
                   }}
                   className="space-y-8"
@@ -876,8 +902,26 @@ function ClientPortalPage() {
                           onChange={(e) => setProfilePhone(e.target.value)}
                           required
                           placeholder="6XX XXX XXX"
-                          className="rounded-xl border-border/80 focus-visible:ring-gold/30 bg-background/50 h-10.5"
+                          className={`rounded-xl border-border/80 focus-visible:ring-gold/30 bg-background/50 h-10.5 ${
+                            profilePhone.trim() !== "" &&
+                            !validateWhatsAppNumber(profilePhone, language === "en").isValid
+                              ? "border-amber-500/60 focus-visible:ring-amber-500/30"
+                              : ""
+                          }`}
                         />
+                        {profilePhone.trim() !== "" &&
+                          !validateWhatsAppNumber(profilePhone, language === "en").isValid && (
+                            <div className="mt-1.5 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[11px] leading-relaxed space-y-1">
+                              <p className="font-semibold">
+                                ⚠️ {validateWhatsAppNumber(profilePhone, language === "en").warning}
+                              </p>
+                              <p className="text-[10px] text-amber-500/80">
+                                {language === "en"
+                                  ? "💡 We strongly encourage using a valid WhatsApp number so you can receive instant confirmations and reminders directly to your phone."
+                                  : "💡 Nous vous encourageons à utiliser un numéro WhatsApp valide afin de recevoir vos confirmations et rappels instantanés directement sur votre téléphone."}
+                              </p>
+                            </div>
+                          )}
                       </div>
 
                       <div className="space-y-1.5 opacity-70">
@@ -893,6 +937,61 @@ function ClientPortalPage() {
                           disabled
                           className="rounded-xl border-border bg-muted cursor-not-allowed h-10.5"
                         />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                          {language === "en"
+                            ? "Preferred Follow-up Method"
+                            : "Méthode de suivi préférée"}{" "}
+                          *
+                        </Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setFollowupPreference("messages")}
+                            className={`py-2 px-1 text-[11px] rounded-lg border font-medium transition-all duration-200 flex flex-col items-center justify-center gap-0.5 ${
+                              followupPreference === "messages"
+                                ? "bg-gold/10 border-gold text-gold"
+                                : "bg-background/40 border-border/80 text-muted-foreground hover:bg-background/60"
+                            }`}
+                          >
+                            <span className="font-bold">WhatsApp</span>
+                            <span className="text-[8px] opacity-75">
+                              {language === "en" ? "Messages" : "Messages"}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setFollowupPreference("email")}
+                            className={`py-2 px-1 text-[11px] rounded-lg border font-medium transition-all duration-200 flex flex-col items-center justify-center gap-0.5 ${
+                              followupPreference === "email"
+                                ? "bg-gold/10 border-gold text-gold"
+                                : "bg-background/40 border-border/80 text-muted-foreground hover:bg-background/60"
+                            }`}
+                          >
+                            <span className="font-bold">Email</span>
+                            <span className="text-[8px] opacity-75">
+                              {language === "en" ? "Reminders" : "Rappels"}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setFollowupPreference("call")}
+                            className={`py-2 px-1 text-[11px] rounded-lg border font-medium transition-all duration-200 flex flex-col items-center justify-center gap-0.5 ${
+                              followupPreference === "call"
+                                ? "bg-gold/10 border-gold text-gold"
+                                : "bg-background/40 border-border/80 text-muted-foreground hover:bg-background/60"
+                            }`}
+                          >
+                            <span className="font-bold">
+                              {language === "en" ? "Phone Call" : "Appel"}
+                            </span>
+                            <span className="text-[8px] opacity-75">
+                              {language === "en" ? "Direct" : "Direct"}
+                            </span>
+                          </button>
+                        </div>
                       </div>
 
                       <div className="space-y-1.5">
@@ -1175,7 +1274,12 @@ function ClientPortalPage() {
                         <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
                         <span className="text-[9px] text-muted-foreground mt-1 block">
                           {new Date(n.created_at).toLocaleDateString(
-                            language === "en" ? "en" : "fr",
+                            language === "en" ? "en-US" : "fr-FR",
+                            { day: "numeric", month: "long", year: "numeric" },
+                          )}{" "}
+                          {new Date(n.created_at).toLocaleTimeString(
+                            language === "en" ? "en-US" : "fr-FR",
+                            { hour: "2-digit", minute: "2-digit" },
                           )}
                         </span>
                       </div>

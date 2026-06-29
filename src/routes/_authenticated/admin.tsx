@@ -1,5 +1,6 @@
 // @ts-nocheck
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef, Fragment } from "react";
 import { toast } from "sonner";
@@ -7,7 +8,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { SiteLayout } from "@/components/site/site-layout";
 import { Calendar as BigCalendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
-import { fr } from "date-fns/locale/fr";
+import { fr } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +31,18 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAssetUrl } from "@/lib/resolver";
+import { cn } from "@/lib/utils";
 import { CATEGORIES } from "@/lib/service-categories";
+import { AnalyticsSection } from "@/components/admin/analytics-section";
+import { BookingModal } from "@/components/admin/booking-modal";
+import { ServiceModal } from "@/components/admin/service-modal";
+import { ServicePreviewModal } from "@/components/admin/service-preview-modal";
+import { PromoModal } from "@/components/admin/promo-modal";
+import { VideoModal } from "@/components/admin/video-modal";
+import { GalleryModal } from "@/components/admin/gallery-modal";
+import { CategoryModal } from "@/components/admin/category-modal";
+import { Badge } from "@/components/ui/badge";
+import { validateWhatsAppNumber } from "@/lib/phone-validation";
 import {
   isCurrentUserAdmin,
   adminListBookings,
@@ -57,6 +69,10 @@ import {
   adminAddVideo,
   adminUpdateVideo,
   adminDeleteVideo,
+  adminListCategories,
+  adminAddCategory,
+  adminUpdateCategory,
+  adminDeleteCategory,
 } from "@/lib/admin.functions";
 import {
   Users,
@@ -76,6 +92,8 @@ import {
   CalendarDays,
   BarChart,
   Settings as SettingsIcon,
+  Eye,
+  Layers,
 } from "lucide-react";
 
 const locales = {
@@ -91,6 +109,13 @@ const localizer = dateFnsLocalizer({
 });
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  beforeLoad: async () => {
+    const res = await isCurrentUserAdmin();
+    if (!res.isAdmin) {
+      // Redirect unauthorized users to the standard client portal
+      throw redirect({ to: "/portal" });
+    }
+  },
   component: AdminPage,
 });
 
@@ -126,6 +151,11 @@ function AdminPage() {
   const updateVideoFn = useServerFn(adminUpdateVideo);
   const deleteVideoFn = useServerFn(adminDeleteVideo);
 
+  const listCategoriesFn = useServerFn(adminListCategories);
+  const addCategoryFn = useServerFn(adminAddCategory);
+  const updateCategoryFn = useServerFn(adminUpdateCategory);
+  const deleteCategoryFn = useServerFn(adminDeleteCategory);
+
   // Queries
   const admin = useQuery({ queryKey: ["isAdmin"], queryFn: () => checkAdmin() });
   const bookings = useQuery({
@@ -141,6 +171,11 @@ function AdminPage() {
   const services = useQuery({
     queryKey: ["admin", "services"],
     queryFn: () => listServicesFn(),
+    enabled: !!admin.data?.isAdmin,
+  });
+  const categories = useQuery({
+    queryKey: ["admin", "categories"],
+    queryFn: () => listCategoriesFn(),
     enabled: !!admin.data?.isAdmin,
   });
   const gallery = useQuery({
@@ -272,6 +307,41 @@ function AdminPage() {
     onError: (err: { message?: string }) => toast.error(err.message || "Erreur de suppression"),
   });
 
+  const addCategoryMut = useMutation({
+    mutationFn: (v: any) => addCategoryFn({ data: v }),
+    onSuccess: () => {
+      toast.success("Catégorie créée !");
+      categories.refetch();
+      setCategoryModalOpen(false);
+      setEditingCategory(null);
+    },
+    onError: (err: { message?: string }) => toast.error(err.message || "Erreur de création"),
+  });
+
+  const updateCategoryMut = useMutation({
+    mutationFn: (v: any) => updateCategoryFn({ data: v }),
+    onSuccess: () => {
+      toast.success("Catégorie modifiée !");
+      categories.refetch();
+      setCategoryModalOpen(false);
+      setEditingCategory(null);
+    },
+    onError: (err: { message?: string }) => toast.error(err.message || "Erreur de mise à jour"),
+  });
+
+  const deleteCategoryMut = useMutation({
+    mutationFn: (slug: string) => deleteCategoryFn({ data: { slug } }),
+    onSuccess: () => {
+      toast.success("Catégorie supprimée !");
+      categories.refetch();
+    },
+    onError: (err: { message?: string }) => toast.error(err.message || "Erreur de suppression"),
+  });
+
+  // Category form state
+  const [editingCategory, setEditingCategory] = useState<Record<string, any> | null>(null);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+
   // Booking form state
   const [showAddBooking, setShowAddBooking] = useState(false);
   const [newBName, setNewBName] = useState("");
@@ -282,6 +352,9 @@ function AdminPage() {
   const [newBNotes, setNewBNotes] = useState("");
 
   // Services form state
+  const [editingService, setEditingService] = useState<Record<string, unknown> | null>(null);
+  const [previewService, setPreviewService] = useState<Record<string, unknown> | null>(null);
+  const [serviceModalOpen, setServiceModalOpen] = useState(false);
   const [editingSvcId, setEditingSvcId] = useState<string | null>(null);
   const [svcName, setSvcName] = useState("");
   const [svcCategory, setSvcCategory] = useState("mains");
@@ -298,6 +371,12 @@ function AdminPage() {
   const [svcImageUrl, setSvcImageUrl] = useState<string>("");
 
   // Promotions form state
+
+  const [promoModalOpen, setPromoModalOpen] = useState(false);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [editingVideo, setEditingVideo] = useState<Record<string, unknown> | null>(null);
+  const [galleryModalOpen, setGalleryModalOpen] = useState(false);
+
   const [promoCodeState, setPromoCodeState] = useState("");
   const [promoPercent, setPromoPercent] = useState<number>(10);
   const [promoDesc, setPromoDesc] = useState("");
@@ -618,76 +697,83 @@ function AdminPage() {
         </div>
 
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="flex flex-wrap h-auto bg-transparent border-b border-border p-0 gap-6 rounded-none">
+          <TabsList className="flex flex-nowrap overflow-x-auto w-full justify-start h-auto bg-transparent border-b border-border p-0 gap-2 lg:gap-4 xl:gap-6 rounded-none">
             <TabsTrigger
               value="bookings"
-              className="flex items-center gap-2 px-1 pb-4 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+              className="flex items-center gap-1.5 lg:gap-2 px-1 pb-4 whitespace-nowrap shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             >
               <Calendar className="h-4.5 w-4.5" />
               Réservations
             </TabsTrigger>
             <TabsTrigger
               value="clients"
-              className="flex items-center gap-2 px-1 pb-4 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+              className="flex items-center gap-1.5 lg:gap-2 px-1 pb-4 whitespace-nowrap shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             >
               <Users className="h-4.5 w-4.5" />
               Clients
             </TabsTrigger>
             <TabsTrigger
               value="services"
-              className="flex items-center gap-2 px-1 pb-4 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+              className="flex items-center gap-1.5 lg:gap-2 px-1 pb-4 whitespace-nowrap shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             >
               <Grid className="h-4.5 w-4.5" />
               Prestations
             </TabsTrigger>
             <TabsTrigger
               value="gallery"
-              className="flex items-center gap-2 px-1 pb-4 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+              className="flex items-center gap-1.5 lg:gap-2 px-1 pb-4 whitespace-nowrap shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             >
               <ImageIcon className="h-4.5 w-4.5" />
               Galerie
             </TabsTrigger>
             <TabsTrigger
               value="inbox"
-              className="flex items-center gap-2 px-1 pb-4 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+              className="flex items-center gap-1.5 lg:gap-2 px-1 pb-4 whitespace-nowrap shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             >
               <MessageSquare className="h-4.5 w-4.5" />
               Messagerie
             </TabsTrigger>
             <TabsTrigger
               value="newsletter"
-              className="flex items-center gap-2 px-1 pb-4 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+              className="flex items-center gap-1.5 lg:gap-2 px-1 pb-4 whitespace-nowrap shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             >
               <Mail className="h-4.5 w-4.5" />
               Newsletter
             </TabsTrigger>
             <TabsTrigger
               value="promotions"
-              className="flex items-center gap-2 px-1 pb-4 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+              className="flex items-center gap-1.5 lg:gap-2 px-1 pb-4 whitespace-nowrap shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             >
               <Tag className="h-4.5 w-4.5" />
               Promotions
             </TabsTrigger>
             <TabsTrigger
               value="calendar"
-              className="flex items-center gap-2 px-1 pb-4 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+              className="flex items-center gap-1.5 lg:gap-2 px-1 pb-4 whitespace-nowrap shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             >
               <CalendarDays className="h-4.5 w-4.5" />
               Calendrier
             </TabsTrigger>
             <TabsTrigger
               value="analytics"
-              className="flex items-center gap-2 px-1 pb-4 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+              className="flex items-center gap-1.5 lg:gap-2 px-1 pb-4 whitespace-nowrap shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             >
               <BarChart className="h-4.5 w-4.5" />
               Analytique
             </TabsTrigger>
             <TabsTrigger
               value="videos"
-              className="flex items-center gap-2 px-1 pb-4 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+              className="flex items-center gap-1.5 lg:gap-2 px-1 pb-4 whitespace-nowrap shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             >
               <Video className="h-4.5 w-4.5" />
               Vidéos
+            </TabsTrigger>
+            <TabsTrigger
+              value="categories"
+              className="flex items-center gap-1.5 lg:gap-2 px-1 pb-4 whitespace-nowrap shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:text-gold bg-transparent font-medium text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+            >
+              <Layers className="h-4.5 w-4.5" />
+              Catégories
             </TabsTrigger>
           </TabsList>
 
@@ -720,51 +806,12 @@ function AdminPage() {
 
           {/* ─── TAB: ANALYTICS ─────────────────────────────────────────────────── */}
           <TabsContent value="analytics" className="space-y-6 outline-none mt-6">
-            <div className="flex justify-between items-center">
-              <h2 className="font-serif text-xl text-primary font-semibold">
-                Analytique & Exports
-              </h2>
-              <Button
-                onClick={() => {
-                  const csvContent =
-                    "data:text/csv;charset=utf-8," +
-                    "Nom,Email,Téléphone,Role,Date de Création\n" +
-                    (clients.data ?? [])
-                      .map((c) => `${c.name},${c.email},${c.phone},${c.role},${c.created_at}`)
-                      .join("\n");
-                  const encodedUri = encodeURI(csvContent);
-                  const link = document.createElement("a");
-                  link.setAttribute("href", encodedUri);
-                  link.setAttribute("download", "clients_nailhouse.csv");
-                  document.body.appendChild(link);
-                  link.click();
-                }}
-                className="rounded-full bg-gold text-white dark:text-ink hover:bg-gold/90 font-semibold"
-              >
-                Exporter Clients (CSV)
-              </Button>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-3">
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                <p className="text-sm font-medium text-muted-foreground">Total Clients</p>
-                <h3 className="font-serif text-3xl font-bold text-primary mt-2">
-                  {(clients.data ?? []).length}
-                </h3>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                <p className="text-sm font-medium text-muted-foreground">Total Réservations</p>
-                <h3 className="font-serif text-3xl font-bold text-primary mt-2">
-                  {(bookings.data ?? []).length}
-                </h3>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                <p className="text-sm font-medium text-muted-foreground">Prestations Actives</p>
-                <h3 className="font-serif text-3xl font-bold text-primary mt-2">
-                  {(services.data ?? []).length}
-                </h3>
-              </div>
-            </div>
+            <AnalyticsSection
+              bookings={bookings.data ?? []}
+              services={services.data ?? []}
+              promotions={promotionsQuery.data ?? []}
+              clients={clients.data ?? []}
+            />
           </TabsContent>
 
           {/* ─── TAB: BOOKINGS ─────────────────────────────────────────────────── */}
@@ -780,96 +827,6 @@ function AdminPage() {
                 <Plus className="h-4 w-4 mr-1.5" /> Nouvelle réservation
               </Button>
             </div>
-
-            {showAddBooking && (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  addBookingMut.mutate({
-                    name: newBName,
-                    phone: newBPhone,
-                    email: newBEmail,
-                    service_name: newBService,
-                    scheduled_at: new Date(newBDate).toISOString(),
-                    notes: newBNotes || null,
-                  });
-                }}
-                className="grid gap-4 rounded-2xl border border-border bg-card p-6 max-w-2xl"
-              >
-                <h3 className="font-serif text-base text-primary font-bold">
-                  Ajouter un rendez-vous manuel
-                </h3>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label>Nom client</Label>
-                    <Input
-                      value={newBName}
-                      onChange={(e) => setNewBName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Téléphone</Label>
-                    <Input
-                      value={newBPhone}
-                      onChange={(e) => setNewBPhone(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Email</Label>
-                    <Input
-                      type="email"
-                      value={newBEmail}
-                      onChange={(e) => setNewBEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Soin</Label>
-                    <Input
-                      value={newBService}
-                      onChange={(e) => setNewBService(e.target.value)}
-                      placeholder="Ex: Manucure Classique"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label>Date & Heure</Label>
-                    <Input
-                      type="datetime-local"
-                      value={newBDate}
-                      onChange={(e) => setNewBDate(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label>Notes</Label>
-                    <Textarea
-                      value={newBNotes}
-                      onChange={(e) => setNewBNotes(e.target.value)}
-                      rows={2}
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="rounded-full"
-                    onClick={() => setShowAddBooking(false)}
-                  >
-                    Annuler
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="rounded-full bg-gold text-white dark:text-ink hover:bg-gold/90 font-semibold"
-                  >
-                    Créer
-                  </Button>
-                </div>
-              </form>
-            )}
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <Table>
@@ -892,15 +849,70 @@ function AdminPage() {
                           onClick={() => setExpandedBookingId(isExpanded ? null : b.id)}
                         >
                           <TableCell className="whitespace-nowrap font-medium">
-                            {new Date(b.scheduled_at).toLocaleString("fr-FR")}
+                            <div className="font-serif text-foreground">
+                              {new Date(b.scheduled_at).toLocaleDateString("fr-FR", {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              })}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-0.5 font-sans flex items-center gap-1">
+                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-gold"></span>
+                              {new Date(b.scheduled_at).toLocaleTimeString("fr-FR", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </div>
                             {b.proposed_scheduled_at && (
-                              <div className="text-[10px] text-amber-500 font-medium mt-0.5">
-                                Proposé: {new Date(b.proposed_scheduled_at).toLocaleString("fr-FR")}
+                              <div className="text-[10px] text-amber-500 font-medium mt-1 bg-amber-500/5 px-2 py-0.5 rounded border border-amber-500/10 inline-flex items-center gap-1">
+                                <span>Proposé :</span>
+                                <strong>
+                                  {new Date(b.proposed_scheduled_at).toLocaleDateString("fr-FR", {
+                                    day: "numeric",
+                                    month: "short",
+                                  })}{" "}
+                                  à{" "}
+                                  {new Date(b.proposed_scheduled_at).toLocaleTimeString("fr-FR", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </strong>
                               </div>
                             )}
                           </TableCell>
                           <TableCell className="font-serif text-primary font-semibold">
-                            {b.name}
+                            <div className="flex flex-col gap-1.5">
+                              <span>{b.name}</span>
+                              <div className="flex flex-wrap gap-1">
+                                {(() => {
+                                  const validation = validateWhatsAppNumber(b.phone || "", false);
+                                  return validation.isValid ? (
+                                    <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/15 border-emerald-500/20 w-fit text-[9px] font-semibold py-0.5 px-2 rounded-full uppercase tracking-wider flex items-center gap-1">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                                      WhatsApp
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/15 border-amber-500/20 w-fit text-[9px] font-semibold py-0.5 px-2 rounded-full uppercase tracking-wider flex items-center gap-1">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                                      No WhatsApp
+                                    </Badge>
+                                  );
+                                })()}
+                                {b.followup_preference && (
+                                  <Badge
+                                    className={`w-fit text-[9px] font-semibold py-0.5 px-2 rounded-full uppercase tracking-wider flex items-center gap-1 border ${
+                                      b.followup_preference === "messages"
+                                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/15"
+                                        : b.followup_preference === "email"
+                                          ? "bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/15"
+                                          : "bg-indigo-500/10 text-indigo-600 border-indigo-500/20 hover:bg-indigo-500/15"
+                                    }`}
+                                  >
+                                    Pref: {b.followup_preference}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
                           </TableCell>
                           <TableCell className="text-xs">
                             <div>{b.phone}</div>
@@ -930,63 +942,68 @@ function AdminPage() {
                           </TableCell>
                         </TableRow>
                         {isExpanded && (
-                          <TableRow className="bg-muted/5 hover:bg-muted/5 border-t-0">
-                            <TableCell colSpan={5} className="p-4">
-                              <div className="grid gap-6 md:grid-cols-2 bg-card border border-gold/15 p-5 rounded-xl animate-in slide-in-from-top-2 duration-200">
+                          <TableRow className="bg-muted/5 hover:bg-muted/5 border-t-0 shadow-inner">
+                            <TableCell colSpan={5} className="p-0">
+                              <div className="grid gap-8 md:grid-cols-2 p-6 lg:p-8 animate-in slide-in-from-top-2 duration-200">
                                 {/* Left column: Notes and Admin Comments */}
-                                <div className="space-y-4">
+                                <div className="space-y-6">
                                   {(() => {
                                     const clientProf = (clients.data ?? []).find(
                                       (c) => c.email.toLowerCase() === b.email.toLowerCase(),
                                     );
-                                    if (
-                                      clientProf &&
-                                      (clientProf.preferred_shape !== "none" ||
-                                        clientProf.preferred_style !== "none" ||
-                                        clientProf.preferred_length !== "none" ||
-                                        clientProf.allergies_contraindications)
-                                    ) {
+
+                                    const hasLength =
+                                      clientProf?.preferred_length &&
+                                      clientProf.preferred_length !== "none";
+                                    const hasShape =
+                                      clientProf?.preferred_shape &&
+                                      clientProf.preferred_shape !== "none";
+                                    const hasStyle =
+                                      clientProf?.preferred_style &&
+                                      clientProf.preferred_style !== "none";
+                                    const hasAllergies =
+                                      clientProf?.allergies_contraindications &&
+                                      clientProf.allergies_contraindications.trim() !== "";
+
+                                    if (hasLength || hasShape || hasStyle || hasAllergies) {
                                       return (
-                                        <div className="bg-gold/5 border border-gold/20 rounded-lg p-3 shadow-sm">
-                                          <h4 className="text-[10px] uppercase tracking-wider text-gold font-bold mb-2 flex items-center gap-1.5">
-                                            <Sparkles className="h-3 w-3" /> Profil Beauté
+                                        <div className="bg-gold/5 border border-gold/20 rounded-xl p-4 shadow-sm">
+                                          <h4 className="text-[11px] uppercase tracking-widest text-gold font-bold mb-3 flex items-center gap-2">
+                                            <Sparkles className="h-4 w-4" /> Profil Beauté
                                           </h4>
-                                          <div className="grid grid-cols-2 gap-2 text-xs">
-                                            {clientProf.preferred_length &&
-                                              clientProf.preferred_length !== "none" && (
-                                                <p>
-                                                  <span className="text-muted-foreground">
-                                                    Longueur:
-                                                  </span>{" "}
-                                                  <span className="font-semibold capitalize text-foreground">
-                                                    {clientProf.preferred_length}
-                                                  </span>
-                                                </p>
-                                              )}
-                                            {clientProf.preferred_shape &&
-                                              clientProf.preferred_shape !== "none" && (
-                                                <p>
-                                                  <span className="text-muted-foreground">
-                                                    Forme:
-                                                  </span>{" "}
-                                                  <span className="font-semibold capitalize text-foreground">
-                                                    {clientProf.preferred_shape}
-                                                  </span>
-                                                </p>
-                                              )}
-                                            {clientProf.preferred_style &&
-                                              clientProf.preferred_style !== "none" && (
-                                                <p>
-                                                  <span className="text-muted-foreground">
-                                                    Style:
-                                                  </span>{" "}
-                                                  <span className="font-semibold capitalize text-foreground">
-                                                    {clientProf.preferred_style}
-                                                  </span>
-                                                </p>
-                                              )}
-                                            {clientProf.allergies_contraindications && (
-                                              <p className="col-span-2 text-amber-500 font-medium mt-1">
+                                          <div className="grid grid-cols-2 gap-3 text-sm">
+                                            {hasLength && (
+                                              <p>
+                                                <span className="text-muted-foreground text-xs block mb-0.5">
+                                                  Longueur
+                                                </span>
+                                                <span className="font-semibold capitalize text-foreground">
+                                                  {clientProf.preferred_length}
+                                                </span>
+                                              </p>
+                                            )}
+                                            {hasShape && (
+                                              <p>
+                                                <span className="text-muted-foreground text-xs block mb-0.5">
+                                                  Forme
+                                                </span>
+                                                <span className="font-semibold capitalize text-foreground">
+                                                  {clientProf.preferred_shape}
+                                                </span>
+                                              </p>
+                                            )}
+                                            {hasStyle && (
+                                              <p>
+                                                <span className="text-muted-foreground text-xs block mb-0.5">
+                                                  Style
+                                                </span>
+                                                <span className="font-semibold capitalize text-foreground">
+                                                  {clientProf.preferred_style}
+                                                </span>
+                                              </p>
+                                            )}
+                                            {hasAllergies && (
+                                              <p className="col-span-2 text-amber-600 bg-amber-100/50 p-2 rounded-md font-medium mt-1 text-xs">
                                                 ⚠️ Allergies:{" "}
                                                 {clientProf.allergies_contraindications}
                                               </p>
@@ -997,29 +1014,35 @@ function AdminPage() {
                                     }
                                     return null;
                                   })()}
-                                  <div>
-                                    <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">
+
+                                  <div className="space-y-2">
+                                    <h4 className="text-[11px] uppercase tracking-widest text-muted-foreground font-bold">
                                       Notes de la cliente
                                     </h4>
-                                    <p className="text-xs text-foreground bg-muted/20 p-2.5 rounded-lg border border-border">
-                                      {b.notes || "—"}
-                                    </p>
+                                    <div className="text-sm text-foreground bg-background p-3.5 rounded-xl border border-border/60 shadow-sm min-h-[60px]">
+                                      {b.notes ? (
+                                        <span className="italic">{b.notes}</span>
+                                      ) : (
+                                        <span className="text-muted-foreground italic">
+                                          Aucune note
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
 
-                                  <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
-                                    <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
-                                      Commentaire de l'Atelier (envoyé au client)
+                                  <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+                                    <h4 className="text-[11px] uppercase tracking-widest text-muted-foreground font-bold">
+                                      Commentaire de l'Atelier (Interne / Suivi)
                                     </h4>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-3">
                                       <Input
                                         placeholder="Ajouter une note..."
                                         defaultValue={b.admin_comment || ""}
                                         id={`comment-${b.id}`}
-                                        className="text-xs h-8.5 rounded-lg border-border focus-visible:ring-gold"
+                                        className="h-10 rounded-xl border-border focus-visible:ring-gold"
                                       />
                                       <Button
-                                        size="sm"
-                                        className="rounded-lg bg-gold text-white dark:text-ink font-semibold h-8.5 px-3 text-xs"
+                                        className="rounded-xl bg-gold text-white hover:bg-gold/90 font-semibold h-10 px-5"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           const val = (
@@ -1037,12 +1060,15 @@ function AdminPage() {
                                 </div>
 
                                 {/* Right column: Rescheduling */}
-                                <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
-                                  <div className="space-y-1.5">
-                                    <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
+                                <div
+                                  className="space-y-6 flex flex-col justify-between"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="space-y-3 bg-background p-5 rounded-xl border border-border/60 shadow-sm">
+                                    <h4 className="text-[11px] uppercase tracking-widest text-muted-foreground font-bold mb-1">
                                       Proposer un report de rendez-vous
                                     </h4>
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                                       <Input
                                         type="datetime-local"
                                         id={`resched-${b.id}`}
@@ -1053,12 +1079,11 @@ function AdminPage() {
                                                 .slice(0, 16)
                                             : ""
                                         }
-                                        className="text-xs h-8.5 rounded-lg border-border focus-visible:ring-gold flex-1"
+                                        className="h-10 rounded-xl border-border focus-visible:ring-gold flex-1 text-sm"
                                       />
                                       <Button
-                                        size="sm"
                                         variant="outline"
-                                        className="rounded-lg border-gold/25 text-gold hover:bg-gold/5 font-semibold h-8.5 px-3 text-xs shrink-0"
+                                        className="rounded-xl border-gold/30 text-gold hover:bg-gold/10 font-semibold h-10 px-5 shrink-0"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           const val = (
@@ -1080,23 +1105,47 @@ function AdminPage() {
                                       </Button>
                                     </div>
                                     {b.proposed_scheduled_at && (
-                                      <p className="text-[11px] text-amber-500 font-medium">
-                                        ⚠️ Proposition envoyée :{" "}
-                                        {new Date(b.proposed_scheduled_at).toLocaleString("fr-FR")}{" "}
-                                        (En attente du client)
-                                      </p>
+                                      <div className="mt-3 text-xs bg-amber-500/10 text-amber-600 p-2.5 rounded-lg font-medium flex items-start gap-2">
+                                        <span>⚠️</span>
+                                        <span>
+                                          Proposition envoyée pour le{" "}
+                                          <strong>
+                                            {new Date(b.proposed_scheduled_at).toLocaleDateString(
+                                              "fr-FR",
+                                              { day: "numeric", month: "long", year: "numeric" },
+                                            )}{" "}
+                                            à{" "}
+                                            {new Date(b.proposed_scheduled_at).toLocaleTimeString(
+                                              "fr-FR",
+                                              { hour: "2-digit", minute: "2-digit" },
+                                            )}
+                                          </strong>
+                                          .<br />
+                                          En attente de validation par le client.
+                                        </span>
+                                      </div>
                                     )}
                                   </div>
 
-                                  <div className="pt-2 border-t border-border/40 flex justify-between items-center text-xs">
-                                    <span className="text-muted-foreground">
-                                      Créé le : {new Date(b.created_at).toLocaleString("fr-FR")}
-                                    </span>
-                                    <div className="flex gap-2">
+                                  <div className="pt-4 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mt-auto">
+                                    <div className="text-xs text-muted-foreground/80">
+                                      Créé le{" "}
+                                      {new Date(b.created_at).toLocaleDateString("fr-FR", {
+                                        day: "numeric",
+                                        month: "long",
+                                        year: "numeric",
+                                      })}{" "}
+                                      à{" "}
+                                      {new Date(b.created_at).toLocaleTimeString("fr-FR", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 sm:gap-3">
                                       <Button
-                                        size="xs"
+                                        size="sm"
                                         variant="ghost"
-                                        className="text-destructive font-bold"
+                                        className="text-destructive font-semibold hover:bg-destructive/10 hover:text-destructive rounded-lg px-4"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           if (confirm("Annuler définitivement ce rendez-vous ?")) {
@@ -1111,8 +1160,8 @@ function AdminPage() {
                                         Annuler / Rejeter
                                       </Button>
                                       <Button
-                                        size="xs"
-                                        className="bg-gold text-white dark:text-ink font-bold"
+                                        size="sm"
+                                        className="bg-gold text-white hover:bg-gold/90 font-semibold rounded-lg px-6 shadow-sm"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           saveDetailsMut.mutate({ id: b.id, status: "confirmed" });
@@ -1179,199 +1228,18 @@ function AdminPage() {
 
           {/* ─── TAB: SERVICES ─────────────────────────────────────────────────── */}
           <TabsContent value="services" className="space-y-6 outline-none">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-6">
               <h2 className="font-serif text-xl text-primary font-semibold">
                 Gestion du Catalogue
               </h2>
-              {editingSvcId && (
-                <Button variant="ghost" className="rounded-full" onClick={resetSvcForm}>
-                  Nouvelle prestation
-                </Button>
-              )}
+              <Button
+                onClick={() => setServiceModalOpen(true)}
+                className="rounded-full bg-gold text-white hover:bg-gold/90"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nouvelle prestation
+              </Button>
             </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const payload = {
-                  name: svcName,
-                  category: svcCategory,
-                  price_fcfa: Number(svcPrice),
-                  duration_mins: Number(svcDuration),
-                  description: svcDesc,
-                  slug: svcSlug,
-                  seasonal_price_fcfa: svcSeasonalPrice !== "" ? Number(svcSeasonalPrice) : null,
-                  seasonal_price_start: svcSeasonalStart
-                    ? new Date(svcSeasonalStart).toISOString()
-                    : null,
-                  seasonal_price_end: svcSeasonalEnd
-                    ? new Date(svcSeasonalEnd).toISOString()
-                    : null,
-                };
-                if (editingSvcId) {
-                  updateSvcMut.mutate({ id: editingSvcId, ...payload });
-                } else {
-                  addSvcMut.mutate(payload);
-                }
-              }}
-              className="grid gap-4 rounded-2xl border border-border bg-card p-6 max-w-3xl"
-            >
-              <h3 className="font-serif text-base text-primary font-bold">
-                {editingSvcId ? "Modifier la prestation" : "Ajouter une prestation"}
-              </h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label>Nom du soin</Label>
-                  <Input value={svcName} onChange={(e) => setSvcName(e.target.value)} required />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Catégorie (Universe)</Label>
-                  <Select value={svcCategory} onValueChange={setSvcCategory}>
-                    <SelectTrigger className="h-10 rounded-xl">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mains">Mains (Manucure)</SelectItem>
-                      <SelectItem value="pieds">Pieds (Pédicure)</SelectItem>
-                      <SelectItem value="extensions">Extensions</SelectItem>
-                      <SelectItem value="nailart">Nail Art</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Tarif (FCFA)</Label>
-                  <Input
-                    type="number"
-                    value={svcPrice}
-                    onChange={(e) => setSvcPrice(Number(e.target.value))}
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Durée (minutes)</Label>
-                  <Input
-                    type="number"
-                    value={svcDuration}
-                    onChange={(e) => setSvcDuration(Number(e.target.value))}
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Identifiant Slug (URL)</Label>
-                  <Input
-                    value={svcSlug}
-                    onChange={(e) => setSvcSlug(e.target.value)}
-                    placeholder="ex: manucure-signature"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label>Description</Label>
-                  <Textarea
-                    value={svcDesc}
-                    onChange={(e) => setSvcDesc(e.target.value)}
-                    rows={3}
-                    required
-                  />
-                </div>
-                <div className="border-t border-border/50 pt-4 sm:col-span-2 space-y-4">
-                  <h4 className="text-xs uppercase tracking-wider text-gold font-bold">
-                    Tarification Saisonnière / Promotionnelle (Optionnel)
-                  </h4>
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="svcSeasonalPrice">Tarif Promotionnel (FCFA)</Label>
-                      <Input
-                        id="svcSeasonalPrice"
-                        type="number"
-                        value={svcSeasonalPrice}
-                        onChange={(e) =>
-                          setSvcSeasonalPrice(e.target.value === "" ? "" : Number(e.target.value))
-                        }
-                        placeholder="Ex: 12000"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="svcSeasonalStart">Date de Début</Label>
-                      <Input
-                        id="svcSeasonalStart"
-                        type="datetime-local"
-                        value={svcSeasonalStart}
-                        onChange={(e) => setSvcSeasonalStart(e.target.value)}
-                        className="text-xs"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="svcSeasonalEnd">Date de Fin</Label>
-                      <Input
-                        id="svcSeasonalEnd"
-                        type="datetime-local"
-                        value={svcSeasonalEnd}
-                        onChange={(e) => setSvcSeasonalEnd(e.target.value)}
-                        className="text-xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="border-t border-border/50 pt-4 sm:col-span-2 space-y-4">
-                  <h4 className="text-xs uppercase tracking-wider text-gold font-bold">
-                    Options Avancées
-                  </h4>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="svcImageUrl">Lien de l'image (URL)</Label>
-                      <Input
-                        id="svcImageUrl"
-                        value={svcImageUrl}
-                        onChange={(e) => setSvcImageUrl(e.target.value)}
-                        placeholder="https://..."
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="svcSort">Ordre d'affichage</Label>
-                      <Input
-                        id="svcSort"
-                        type="number"
-                        value={svcSort}
-                        onChange={(e) => setSvcSort(e.target.value)}
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="svcIsActive"
-                        checked={svcIsActive}
-                        onChange={(e) => setSvcIsActive(e.target.checked)}
-                        className="h-4 w-4 rounded border-border text-gold focus:ring-gold"
-                      />
-                      <Label htmlFor="svcIsActive" className="cursor-pointer">
-                        Service Actif (Visible)
-                      </Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="svcIsAddon"
-                        checked={svcIsAddon}
-                        onChange={(e) => setSvcIsAddon(e.target.checked)}
-                        className="h-4 w-4 rounded border-border text-gold focus:ring-gold"
-                      />
-                      <Label htmlFor="svcIsAddon" className="cursor-pointer">
-                        Ceci est un Supplément (Add-on)
-                      </Label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button
-                  type="submit"
-                  className="rounded-full bg-gold text-white dark:text-ink hover:bg-gold/90 font-semibold px-6"
-                >
-                  {editingSvcId ? "Modifier" : "Ajouter"}
-                </Button>
-              </div>
-            </form>
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <Table>
@@ -1387,108 +1255,243 @@ function AdminPage() {
                 <TableBody>
                   {((services.data ?? []) as import("@/lib/mock-db").MockService[])
                     .sort((a, b) => (a.sort || 0) - (b.sort || 0))
-                    .map((s) => (
-                      <TableRow key={s.id}>
-                        <TableCell className="font-serif text-primary font-semibold">
-                          <div className="flex items-center gap-3">
-                            {s.image_url ? (
-                              <img
-                                src={s.image_url}
-                                alt=""
-                                className="w-10 h-10 rounded-md object-cover border border-border"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-md bg-muted/50 border border-border flex items-center justify-center text-[10px] text-muted-foreground">
-                                Img
-                              </div>
-                            )}
-                            <div className="flex flex-col">
-                              <span>{s.name}</span>
-                              <div className="flex gap-1 mt-0.5">
-                                {s.is_active === false && (
-                                  <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                                    Inactif
-                                  </span>
-                                )}
-                                {s.is_addon && (
-                                  <span className="text-[9px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                                    Supplément
-                                  </span>
-                                )}
+                    .map((s) => {
+                      const category = CATEGORIES.find((c) => c.category === s.category);
+                      const displayImage = s.image_url || category?.image;
+                      const displayDuration = s.duration_mins
+                        ? `${s.duration_mins} min`
+                        : category?.duration || "45 min";
+
+                      return (
+                        <TableRow key={s.id}>
+                          <TableCell className="font-serif text-primary font-semibold">
+                            <div className="flex items-center gap-3">
+                              {displayImage ? (
+                                <img
+                                  src={resolveAssetUrl(displayImage)}
+                                  alt=""
+                                  className="w-10 h-10 rounded-md object-cover border border-border"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-md bg-muted/50 border border-border flex items-center justify-center text-[10px] text-muted-foreground">
+                                  Img
+                                </div>
+                              )}
+                              <div className="flex flex-col">
+                                <span>{s.name}</span>
+                                <div className="flex gap-1 mt-0.5">
+                                  {s.is_active === false && (
+                                    <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                                      Inactif
+                                    </span>
+                                  )}
+                                  {s.is_addon && (
+                                    <span className="text-[9px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                                      Supplément
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="capitalize text-xs font-medium text-gold">
-                          {s.category}
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-bold">{s.price_fcfa.toLocaleString("fr-FR")} F</div>
-                          {s.seasonal_price_fcfa !== undefined &&
-                            s.seasonal_price_fcfa !== null && (
-                              <div className="text-[10px] text-emerald-500 font-semibold mt-0.5">
-                                Promo: {s.seasonal_price_fcfa.toLocaleString("fr-FR")} F
-                              </div>
-                            )}
-                        </TableCell>
-                        <TableCell>{s.duration_mins} min</TableCell>
-                        <TableCell className="text-right space-x-2">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="rounded-full text-muted-foreground hover:text-gold"
-                            onClick={() => editSvc(s)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="rounded-full text-destructive hover:text-destructive/80"
-                            onClick={() => {
-                              if (confirm("Supprimer ce soin ?")) deleteSvcMut.mutate(s.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell className="capitalize text-xs font-medium text-gold">
+                            {s.category}
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-bold">
+                              {s.price_fcfa.toLocaleString("fr-FR")} F
+                            </div>
+                            {s.seasonal_price_fcfa !== undefined &&
+                              s.seasonal_price_fcfa !== null && (
+                                <div className="text-[10px] text-emerald-500 font-semibold mt-0.5">
+                                  Promo: {s.seasonal_price_fcfa.toLocaleString("fr-FR")} F
+                                </div>
+                              )}
+                          </TableCell>
+                          <TableCell>{displayDuration}</TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="rounded-full text-muted-foreground hover:text-primary"
+                              title="Aperçu du catalogue"
+                              onClick={() => setPreviewService(s)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="rounded-full text-muted-foreground hover:text-gold"
+                              onClick={() => {
+                                setEditingService(s);
+                                setServiceModalOpen(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="rounded-full text-destructive hover:text-destructive/80"
+                              onClick={() => {
+                                if (confirm("Supprimer ce soin ?")) deleteSvcMut.mutate(s.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                 </TableBody>
               </Table>
             </div>
           </TabsContent>
 
+          {/* ─── TAB: CATEGORIES ───────────────────────────────────────────────── */}
+          <TabsContent value="categories" className="space-y-6 outline-none">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="font-serif text-xl text-primary font-semibold">
+                  Gestion des catégories
+                </h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Gérez les univers de prestations affichés sur le site et la page tarifs.
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  setEditingCategory(null);
+                  setCategoryModalOpen(true);
+                }}
+                className="rounded-full bg-gold text-white hover:bg-gold/90"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nouvelle catégorie
+              </Button>
+            </div>
+
+            {categories.isLoading ? (
+              <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
+                Chargement des catégories…
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {((categories.data ?? []) as any[]).map((cat) => (
+                  <div
+                    key={cat.slug}
+                    className="group rounded-2xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+                  >
+                    {/* Cover image */}
+                    <div className="relative h-28 overflow-hidden bg-muted/40">
+                      {cat.image ? (
+                        <img
+                          src={resolveAssetUrl(cat.image)}
+                          alt={cat.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <Layers className="h-8 w-8 opacity-30" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <div className="absolute bottom-3 left-4 z-10">
+                        <span className="text-[10px] text-gold font-bold uppercase tracking-widest">
+                          {cat.tagline}
+                        </span>
+                        <h3 className="text-white font-serif font-semibold text-sm leading-tight">
+                          {cat.title}
+                        </h3>
+                      </div>
+                      {/* Sort badge */}
+                      <div className="absolute top-2 right-2 z-10">
+                        <span className="text-[9px] bg-black/60 text-white px-2 py-0.5 rounded-full font-bold">
+                          #{cat.sort || 0}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Body */}
+                    <div className="p-4 space-y-2">
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        {cat.intro}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <Clock className="h-3 w-3" /> {cat.duration}
+                        </span>
+                        {(cat.highlights || []).slice(0, 2).map((h: string, i: number) => (
+                          <span
+                            key={i}
+                            className="text-[10px] bg-gold/10 text-gold px-2 py-0.5 rounded-full"
+                          >
+                            {h}
+                          </span>
+                        ))}
+                        {(cat.highlights || []).length > 2 && (
+                          <span className="text-[10px] text-muted-foreground px-1">
+                            +{(cat.highlights || []).length - 2}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-end gap-2 px-4 pb-3 pt-0 border-t border-border/50">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="rounded-full h-8 w-8 text-muted-foreground hover:text-gold"
+                        title="Modifier"
+                        onClick={() => {
+                          setEditingCategory(cat);
+                          setCategoryModalOpen(true);
+                        }}
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="rounded-full h-8 w-8 text-muted-foreground hover:text-destructive"
+                        title="Supprimer"
+                        onClick={() => {
+                          if (
+                            confirm(
+                              `Supprimer la catégorie "${cat.title}" ? Cette action est irréversible.`,
+                            )
+                          )
+                            deleteCategoryMut.mutate(cat.slug);
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                {(categories.data ?? []).length === 0 && (
+                  <div className="col-span-3 text-center py-16 text-muted-foreground text-sm">
+                    Aucune catégorie. Cliquez sur « Nouvelle catégorie » pour commencer.
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+
           {/* ─── TAB: GALLERY ──────────────────────────────────────────────────── */}
           <TabsContent value="gallery" className="space-y-6 outline-none">
             <h2 className="font-serif text-xl text-primary font-semibold">Galerie photos</h2>
-            <form
-              className="grid gap-3 rounded-2xl border border-border bg-card p-5 md:grid-cols-[2fr_2fr_auto] md:items-end"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (imgUrl) addGalleryMut.mutate({ url: imgUrl, caption: imgCaption || undefined });
-              }}
-            >
-              <div className="space-y-2">
-                <Label>URL de l'image</Label>
-                <Input
-                  value={imgUrl}
-                  onChange={(e) => setImgUrl(e.target.value)}
-                  placeholder="https://…"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Légende (optionnel)</Label>
-                <Input value={imgCaption} onChange={(e) => setImgCaption(e.target.value)} />
-              </div>
+            <div className="flex gap-2 mb-6">
               <Button
-                type="submit"
-                className="rounded-full bg-gold text-white dark:text-ink hover:bg-gold/90 font-semibold px-6"
+                onClick={() => setGalleryModalOpen(true)}
+                className="rounded-full bg-gold text-white hover:bg-gold/90"
               >
-                Ajouter
+                <Plus className="w-4 h-4 mr-2" />
+                Ajouter une photo
               </Button>
-            </form>
+            </div>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {(gallery.data ?? []).map((img) => (
                 <div
@@ -1496,7 +1499,7 @@ function AdminPage() {
                   className="group relative overflow-hidden rounded-2xl border border-border shadow-sm"
                 >
                   <img
-                    src={img.url}
+                    src={resolveAssetUrl(img.url)}
                     alt={img.caption ?? ""}
                     className="aspect-square w-full object-cover"
                   />
@@ -1645,7 +1648,11 @@ function AdminPage() {
                     <TableRow key={s.id}>
                       <TableCell className="font-medium">{s.email}</TableCell>
                       <TableCell className="text-muted-foreground">
-                        {new Date(s.created_at).toLocaleDateString("fr-FR")}
+                        {new Date(s.created_at).toLocaleDateString("fr-FR", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1709,7 +1716,10 @@ function AdminPage() {
                             </span>
                           </TableCell>
                           <TableCell className="text-sm max-w-[200px] truncate">
-                            <div className="font-medium text-foreground">{promo.description}</div>
+                            <div
+                              className="font-medium text-foreground [&>p]:inline line-clamp-2"
+                              dangerouslySetInnerHTML={{ __html: promo.description || "" }}
+                            />
                             {svc && (
                               <div className="text-[10px] text-gold uppercase tracking-wider font-semibold mt-0.5">
                                 Cible: {svc.name}
@@ -1720,11 +1730,19 @@ function AdminPage() {
                             {promo.start_date || promo.end_date ? (
                               <>
                                 {promo.start_date
-                                  ? new Date(promo.start_date).toLocaleDateString("fr-FR")
+                                  ? new Date(promo.start_date).toLocaleDateString("fr-FR", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    })
                                   : "Début"}
                                 {" - "}
                                 {promo.end_date
-                                  ? new Date(promo.end_date).toLocaleDateString("fr-FR")
+                                  ? new Date(promo.end_date).toLocaleDateString("fr-FR", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    })
                                   : "Fin"}
                               </>
                             ) : (
@@ -1759,122 +1777,15 @@ function AdminPage() {
                 </Table>
               </div>
 
-              {/* Form to create promo code */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  createPromoMut.mutate({
-                    code: promoCodeState.trim().toUpperCase(),
-                    discount_percent: Number(promoPercent),
-                    description: promoDesc.trim(),
-                    active: promoActive,
-                    service_id: promoServiceId === "all" ? null : promoServiceId,
-                    start_date: promoStart ? new Date(promoStart).toISOString() : null,
-                    end_date: promoEnd ? new Date(promoEnd).toISOString() : null,
-                  });
-                }}
-                className="grid gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm"
-              >
-                <h3 className="font-serif text-base text-primary font-bold">Créer un code promo</h3>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="promoCode">Code de réduction</Label>
-                  <Input
-                    id="promoCode"
-                    value={promoCodeState}
-                    onChange={(e) => setPromoCodeState(e.target.value)}
-                    placeholder="Ex: SUMMER20"
-                    required
-                    className="uppercase tracking-wider font-semibold"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="promoPercent">Pourcentage de rabais (%)</Label>
-                  <Input
-                    id="promoPercent"
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={promoPercent}
-                    onChange={(e) => setPromoPercent(Number(e.target.value))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="promoDesc">Description / Conditions</Label>
-                  <Textarea
-                    id="promoDesc"
-                    value={promoDesc}
-                    onChange={(e) => setPromoDesc(e.target.value)}
-                    placeholder="Ex: 20% de rabais sur tout le site"
-                    required
-                    rows={2}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label>Prestation ciblée (Optionnel)</Label>
-                  <Select value={promoServiceId} onValueChange={setPromoServiceId}>
-                    <SelectTrigger className="h-10 rounded-xl">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes les prestations</SelectItem>
-                      {(services.data ?? []).map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2 grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="promoStart">Début de validité</Label>
-                    <Input
-                      id="promoStart"
-                      type="datetime-local"
-                      value={promoStart}
-                      onChange={(e) => setPromoStart(e.target.value)}
-                      className="text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="promoEnd">Fin de validité</Label>
-                    <Input
-                      id="promoEnd"
-                      type="datetime-local"
-                      value={promoEnd}
-                      onChange={(e) => setPromoEnd(e.target.value)}
-                      className="text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2 pt-2">
-                  <input
-                    type="checkbox"
-                    id="promoActive"
-                    checked={promoActive}
-                    onChange={(e) => setPromoActive(e.checked ?? e.target.checked)}
-                    className="rounded text-gold focus:ring-gold/30 h-4 w-4 accent-gold cursor-pointer"
-                  />
-                  <Label htmlFor="promoActive" className="cursor-pointer">
-                    Code actif immédiatement
-                  </Label>
-                </div>
-
+              <div className="flex gap-2">
                 <Button
-                  type="submit"
-                  disabled={createPromoMut.isPending}
-                  className="w-full rounded-full bg-gold text-white dark:text-ink hover:bg-gold/90 font-semibold mt-2"
+                  onClick={() => setPromoModalOpen(true)}
+                  className="rounded-full bg-gold text-white hover:bg-gold/90"
                 >
-                  {createPromoMut.isPending ? "Création..." : "Générer le code"}
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nouveau code promo
                 </Button>
-              </form>
+              </div>
             </div>
           </TabsContent>
 
@@ -1993,7 +1904,11 @@ function AdminPage() {
                           key={d}
                           className="flex items-center gap-1.5 bg-red-50 text-red-700 px-2.5 py-1 rounded-md text-xs font-semibold border border-red-100"
                         >
-                          {new Date(d).toLocaleDateString("fr-FR")}
+                          {new Date(d).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
                           <button
                             type="button"
                             onClick={() => setCfgBlocked(cfgBlocked.filter((x) => x !== d))}
@@ -2055,9 +1970,10 @@ function AdminPage() {
                           </div>
                           <div>
                             <h4 className="font-medium">{vid.title}</h4>
-                            <p className="text-xs text-muted-foreground truncate max-w-sm">
-                              {vid.description}
-                            </p>
+                            <div
+                              className="text-xs text-muted-foreground truncate max-w-sm [&>p]:inline"
+                              dangerouslySetInnerHTML={{ __html: vid.description || "" }}
+                            />
                             <div className="flex gap-2 mt-1">
                               <span className="text-[10px] font-bold bg-muted px-2 py-0.5 rounded-sm">
                                 {vid.category}
@@ -2075,13 +1991,8 @@ function AdminPage() {
                             variant="outline"
                             size="icon"
                             onClick={() => {
-                              setEditingVidId(vid.id);
-                              setVidUrl(vid.url);
-                              setVidTitle(vid.title);
-                              setVidDesc(vid.description);
-                              setVidCat(vid.category);
-                              setVidActive(vid.active);
-                              setVidSort(String(vid.sort));
+                              setEditingVideo(vid);
+                              setVideoModalOpen(true);
                             }}
                           >
                             <Edit className="w-4 h-4" />
@@ -2104,122 +2015,118 @@ function AdminPage() {
                 )}
               </div>
 
-              {/* VIDEO FORM */}
-              <div className="lg:col-span-4 bg-muted/30 rounded-2xl border border-border/40 p-6">
-                <h3 className="font-serif text-xl text-primary mb-4">
-                  {editingVidId ? "Modifier la vidéo" : "Ajouter une vidéo"}
-                </h3>
-                <form
-                  className="space-y-4"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (!vidUrl || !vidTitle) return;
-                    if (editingVidId) {
-                      updateVideoMut.mutate({
-                        id: editingVidId,
-                        url: vidUrl,
-                        title: vidTitle,
-                        description: vidDesc,
-                        category: vidCat,
-                        active: vidActive,
-                        sort: parseInt(vidSort) || 0,
-                      });
-                    } else {
-                      addVideoMut.mutate({
-                        url: vidUrl,
-                        title: vidTitle,
-                        description: vidDesc,
-                        category: vidCat,
-                        active: vidActive,
-                        sort: parseInt(vidSort) || 0,
-                      });
-                    }
-                  }}
+              <div className="lg:col-span-4 bg-muted/30 rounded-2xl border border-border/40 p-6 flex flex-col justify-center items-center text-center">
+                <div className="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mb-4">
+                  <Plus className="w-8 h-8 text-gold" />
+                </div>
+                <h3 className="font-serif text-xl text-primary mb-2">Ajouter une vidéo</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Mettez en avant vos plus belles réalisations en vidéo.
+                </p>
+                <Button
+                  onClick={() => setVideoModalOpen(true)}
+                  className="rounded-full bg-gold text-white hover:bg-gold/90 font-semibold w-full"
                 >
-                  <div className="space-y-2">
-                    <Label>URL de la vidéo (MP4/WebM)</Label>
-                    <Input
-                      value={vidUrl}
-                      onChange={(e) => setVidUrl(e.target.value)}
-                      placeholder="https://...mp4"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Titre</Label>
-                    <Input
-                      value={vidTitle}
-                      onChange={(e) => setVidTitle(e.target.value)}
-                      placeholder="Nom de la réalisation"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Catégorie</Label>
-                    <Input
-                      value={vidCat}
-                      onChange={(e) => setVidCat(e.target.value)}
-                      placeholder="e.g. mains, pieds"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Description</Label>
-                    <Textarea
-                      value={vidDesc}
-                      onChange={(e) => setVidDesc(e.target.value)}
-                      placeholder="Brève description..."
-                      rows={3}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Ordre (Tri)</Label>
-                      <Input
-                        type="number"
-                        value={vidSort}
-                        onChange={(e) => setVidSort(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2 flex flex-col justify-center pt-6">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={vidActive}
-                          onChange={(e) => setVidActive(e.target.checked)}
-                          className="h-4 w-4"
-                        />
-                        <span className="text-sm font-medium">Visible</span>
-                      </label>
-                    </div>
-                  </div>
-                  <div className="pt-2 flex gap-2">
-                    <Button
-                      type="submit"
-                      disabled={addVideoMut.isPending || updateVideoMut.isPending}
-                      className="flex-1 bg-gold hover:bg-gold/90 text-white"
-                    >
-                      {editingVidId ? "Mettre à jour" : "Ajouter"}
-                    </Button>
-                    {editingVidId && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setEditingVidId(null);
-                          setVidUrl("");
-                          setVidTitle("");
-                          setVidDesc("");
-                        }}
-                      >
-                        Annuler
-                      </Button>
-                    )}
-                  </div>
-                </form>
+                  Ouvrir l'éditeur
+                </Button>
               </div>
             </div>
           </TabsContent>
         </Tabs>
+
+        <ServiceModal
+          open={serviceModalOpen}
+          onClose={() => {
+            setServiceModalOpen(false);
+            setEditingService(null);
+          }}
+          initial={editingService}
+          isPending={addSvcMut.isPending || updateSvcMut.isPending}
+          onSubmit={(data) => {
+            if (editingService) {
+              updateSvcMut.mutate(data);
+            } else {
+              addSvcMut.mutate(data);
+            }
+            setServiceModalOpen(false);
+            setEditingService(null);
+          }}
+        />
+
+        <PromoModal
+          open={promoModalOpen}
+          onClose={() => setPromoModalOpen(false)}
+          services={services.data ?? []}
+          isPending={createPromoMut.isPending}
+          onSubmit={(data) => {
+            createPromoMut.mutate(data);
+            setPromoModalOpen(false);
+          }}
+        />
+
+        <VideoModal
+          open={videoModalOpen}
+          onClose={() => {
+            setVideoModalOpen(false);
+            setEditingVideo(null);
+          }}
+          initial={editingVideo}
+          isPending={addVideoMut.isPending || updateVideoMut.isPending}
+          onSubmit={(data) => {
+            if (editingVideo) updateVideoMut.mutate(data);
+            else addVideoMut.mutate(data);
+            setVideoModalOpen(false);
+            setEditingVideo(null);
+          }}
+        />
+
+        <GalleryModal
+          open={galleryModalOpen}
+          onClose={() => setGalleryModalOpen(false)}
+          isPending={addGalleryMut.isPending}
+          onSubmit={(data) => {
+            addGalleryMut.mutate(data);
+            setGalleryModalOpen(false);
+          }}
+        />
+
+        <BookingModal
+          open={showAddBooking}
+          onClose={() => setShowAddBooking(false)}
+          services={services.data ?? []}
+          isPending={addBookingMut.isPending}
+          onSubmit={(data) => {
+            addBookingMut.mutate(data);
+            setShowAddBooking(false);
+          }}
+        />
+
+        <ServicePreviewModal
+          open={!!previewService}
+          onClose={() => setPreviewService(null)}
+          service={previewService}
+          onEdit={(service) => {
+            setEditingService(service);
+            setServiceModalOpen(true);
+          }}
+          onDelete={(id) => {
+            deleteSvcMut.mutate(id);
+          }}
+        />
+
+        <CategoryModal
+          open={categoryModalOpen}
+          onClose={() => {
+            setCategoryModalOpen(false);
+            setEditingCategory(null);
+          }}
+          initial={editingCategory}
+          isPending={addCategoryMut.isPending || updateCategoryMut.isPending}
+          onSubmit={(data) => {
+            if (editingCategory) updateCategoryMut.mutate(data);
+            else addCategoryMut.mutate(data);
+          }}
+        />
       </section>
     </SiteLayout>
   );

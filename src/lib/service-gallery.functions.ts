@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { type SupabaseClient } from "@supabase/supabase-js";
 import { type Database } from "@/integrations/supabase/types";
 
-const BUCKET = "service-gallery";
+const BUCKET = "storage-nail-house";
 const SIGN_TTL = 60 * 60 * 24 * 365; // 1 year
 
 async function signMany(client: SupabaseClient<Database>, paths: string[]) {

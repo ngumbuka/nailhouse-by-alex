@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import servicesJson from "@/data/services.json";
 import { ASSETS } from "@/lib/assets";
+import { CATEGORIES, type CategoryInfo } from "./service-categories";
 
 const DB_PATH = path.join(process.cwd(), "src/data/mock-db.json");
 
@@ -21,6 +22,7 @@ export interface MockProfile {
   preferred_shape?: "round" | "square" | "oval" | "almond" | "coffin" | "stiletto" | "none";
   preferred_style?: "natural" | "classic" | "french" | "nail_art" | "biab" | "none";
   allergies_contraindications?: string;
+  followup_preference?: "call" | "messages" | "email";
 }
 
 export interface MockBooking {
@@ -38,6 +40,7 @@ export interface MockBooking {
   created_at: string;
   admin_comment?: string | null;
   proposed_scheduled_at?: string | null;
+  followup_preference?: "call" | "messages" | "email";
 }
 
 export interface MockGalleryImage {
@@ -96,10 +99,12 @@ export interface MockVideo {
 export interface MockService {
   id: string;
   name: string;
+  name_en?: string;
   category: string;
   price_fcfa: number;
   duration_mins: number;
   description: string;
+  description_en?: string;
   slug: string;
   seasonal_price_fcfa?: number | null;
   seasonal_price_start?: string | null;
@@ -115,6 +120,7 @@ export interface MockPromotion {
   code: string;
   discount_percent: number;
   description: string;
+  description_en?: string;
   active: boolean;
   service_id: string | null;
   start_date: string | null;
@@ -144,6 +150,7 @@ export interface MockDatabaseSchema {
   promotions: MockPromotion[];
   videos: MockVideo[];
   settings: MockSettings;
+  categories: CategoryInfo[];
 }
 
 export interface MockSettings {
@@ -165,6 +172,7 @@ const INITIAL_DB: MockDatabaseSchema = {
       role: "admin",
       created_at: new Date().toISOString(),
       newsletter: true,
+      followup_preference: "messages",
     },
     {
       id: "mock-client-id-123",
@@ -174,6 +182,7 @@ const INITIAL_DB: MockDatabaseSchema = {
       role: "client",
       created_at: new Date().toISOString(),
       newsletter: true,
+      followup_preference: "messages",
     },
   ],
   bookings: [
@@ -190,6 +199,7 @@ const INITIAL_DB: MockDatabaseSchema = {
       notes: "Soin des cuticules de préférence.",
       status: "confirmed",
       created_at: new Date().toISOString(),
+      followup_preference: "messages",
     },
   ],
   services: servicesJson,
@@ -323,6 +333,7 @@ const INITIAL_DB: MockDatabaseSchema = {
     blocked_dates: [],
     buffer_time_mins: 0,
   },
+  categories: CATEGORIES,
 };
 
 // Reads the DB from disk, initializing if not present.
@@ -341,6 +352,7 @@ export function readMockDB(): MockDatabaseSchema {
     const data = JSON.parse(raw);
     if (!data.promotions) data.promotions = [];
     if (!data.videos) data.videos = INITIAL_DB.videos;
+    if (!data.categories) data.categories = INITIAL_DB.categories;
     return data;
   } catch (err) {
     console.error("[readMockDB] failed, fallback to INITIAL_DB", err);

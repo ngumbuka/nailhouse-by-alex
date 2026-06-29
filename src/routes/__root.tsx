@@ -25,12 +25,12 @@ function NotFoundComponent() {
           Cette page n'existe pas ou a été déplacée.
         </p>
         <div className="mt-6">
-          <Link
-            to="/"
+          <a
+            href="/"
             className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             Retour à l'accueil
-          </Link>
+          </a>
         </div>
       </div>
     </div>
@@ -39,7 +39,6 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
-  const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
@@ -54,8 +53,14 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
-              router.invalidate();
-              reset();
+              try {
+                reset();
+              } catch (e) {
+                // Fallback to full page reload if router state reset fails
+                if (typeof window !== "undefined") {
+                  window.location.reload();
+                }
+              }
             }}
             className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >

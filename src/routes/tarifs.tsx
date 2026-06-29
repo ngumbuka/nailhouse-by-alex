@@ -193,9 +193,10 @@ function TarifsPage() {
                             <h3 className="font-serif text-sm md:text-base text-primary font-semibold group-hover:text-gold transition-colors truncate">
                               {s.name}
                             </h3>
-                            <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1 leading-relaxed max-w-xl hidden sm:block">
-                              {s.description || cat.intro}
-                            </p>
+                            <span
+                              className="mt-0.5 text-xs text-muted-foreground line-clamp-1 leading-relaxed max-w-xl hidden sm:block"
+                              dangerouslySetInnerHTML={{ __html: s.description || cat.intro || "" }}
+                            />
                             <div className="mt-1 flex items-center gap-2">
                               <span className="text-xs text-muted-foreground flex items-center">
                                 <Clock className="w-3.5 h-3.5 mr-1 text-gold/60" />{" "}

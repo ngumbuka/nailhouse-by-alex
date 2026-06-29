@@ -16,9 +16,10 @@ import {
   MockVideo,
 } from "./mock-db";
 import { supabase } from "@/integrations/supabase/client";
+import { CategoryInfo } from "./service-categories";
 
 // Set to false to mutate entirely to real Supabase
-export const USE_MOCK_DB = true;
+export const USE_MOCK_DB = false;
 
 // Helper to check role
 export function getMockUserRole(userId: string, email?: string): "admin" | "client" {
@@ -50,6 +51,7 @@ export async function getProfile(userId: string, email?: string): Promise<MockPr
         preferred_shape: "none",
         preferred_style: "none",
         allergies_contraindications: "",
+        followup_preference: "messages",
       };
       db.profiles.push(prof);
       writeMockDB(db);
@@ -88,6 +90,7 @@ export async function getProfile(userId: string, email?: string): Promise<MockPr
         preferred_shape: "none",
         preferred_style: "none",
         allergies_contraindications: "",
+        followup_preference: "messages",
       };
     }
     return {
@@ -118,6 +121,10 @@ export async function getProfile(userId: string, email?: string): Promise<MockPr
         | "biab"
         | "none",
       allergies_contraindications: data.allergies_contraindications || "",
+      followup_preference: (data.followup_preference || "messages") as
+        | "call"
+        | "messages"
+        | "email",
     };
   }
 }
@@ -147,6 +154,7 @@ export async function updateProfile(
         preferred_shape: data.preferred_shape,
         preferred_style: data.preferred_style,
         allergies_contraindications: data.allergies_contraindications,
+        followup_preference: data.followup_preference,
       })
       .eq("id", userId)
       .select()
@@ -184,6 +192,10 @@ export async function updateProfile(
         | "biab"
         | "none",
       allergies_contraindications: updated.allergies_contraindications || "",
+      followup_preference: (updated.followup_preference || "messages") as
+        | "call"
+        | "messages"
+        | "email",
     };
   }
 }
@@ -222,6 +234,7 @@ export async function listProfiles(): Promise<MockProfile[]> {
         | "biab"
         | "none",
       allergies_contraindications: p.allergies_contraindications || "",
+      followup_preference: (p.followup_preference || "messages") as "call" | "messages" | "email",
     }));
   }
 }
@@ -458,6 +471,136 @@ export async function deleteService(id: string) {
     return true;
   } else {
     const { error } = await supabase.from("services").delete().eq("id", id);
+    if (error) throw error;
+    return true;
+  }
+}
+
+// ─── SERVICE CATEGORIES ──────────────────────────────────────────────────────
+export async function listServiceCategories(): Promise<CategoryInfo[]> {
+  if (USE_MOCK_DB) {
+    const db = readMockDB();
+    return (db.categories || []).sort((a, b) => (a.sort || 0) - (b.sort || 0));
+  } else {
+    const { data, error } = await supabase
+      .from("service_categories")
+      .select("*")
+      .order("sort", { ascending: true });
+    if (error) throw error;
+
+    return (data || []).map((cat) => ({
+      slug: cat.slug,
+      category: cat.category,
+      title: cat.title,
+      tagline: cat.tagline,
+      intro: cat.intro,
+      duration: cat.duration,
+      image: cat.image,
+      flat: cat.flat,
+      highlights: cat.highlights || [],
+      care: cat.care || [],
+      steps: cat.steps || [],
+      whyUs: cat.why_us || [],
+      gallery: cat.gallery || [],
+      faq: cat.faq || [],
+      bestFor: cat.best_for,
+      sort: cat.sort || 0,
+    }));
+  }
+}
+
+export async function addServiceCategory(category: CategoryInfo): Promise<CategoryInfo> {
+  if (USE_MOCK_DB) {
+    const db = readMockDB();
+    if (!db.categories) db.categories = [];
+    db.categories.push(category);
+    writeMockDB(db);
+    return category;
+  } else {
+    const pgCategory = {
+      slug: category.slug,
+      category: category.category,
+      title: category.title,
+      tagline: category.tagline,
+      intro: category.intro,
+      duration: category.duration,
+      image: category.image || null,
+      flat: category.flat || null,
+      highlights: category.highlights || [],
+      care: category.care || [],
+      steps: category.steps || [],
+      why_us: category.whyUs || [],
+      gallery: category.gallery || [],
+      faq: category.faq || [],
+      best_for: category.bestFor,
+      sort: category.sort || 0,
+    };
+    const { data, error } = await supabase
+      .from("service_categories")
+      .insert(pgCategory)
+      .select()
+      .single();
+    if (error) throw error;
+    return {
+      ...data,
+      whyUs: data.why_us,
+      bestFor: data.best_for,
+    };
+  }
+}
+
+export async function updateServiceCategory(
+  slug: string,
+  updates: Partial<CategoryInfo>,
+): Promise<CategoryInfo | null> {
+  if (USE_MOCK_DB) {
+    const db = readMockDB();
+    const idx = db.categories.findIndex((c) => c.slug === slug);
+    if (idx === -1) return null;
+    db.categories[idx] = { ...db.categories[idx], ...updates };
+    writeMockDB(db);
+    return db.categories[idx];
+  } else {
+    const pgUpdates: Record<string, unknown> = {};
+    if (updates.category !== undefined) pgUpdates.category = updates.category;
+    if (updates.title !== undefined) pgUpdates.title = updates.title;
+    if (updates.tagline !== undefined) pgUpdates.tagline = updates.tagline;
+    if (updates.intro !== undefined) pgUpdates.intro = updates.intro;
+    if (updates.duration !== undefined) pgUpdates.duration = updates.duration;
+    if (updates.image !== undefined) pgUpdates.image = updates.image;
+    if (updates.flat !== undefined) pgUpdates.flat = updates.flat;
+    if (updates.highlights !== undefined) pgUpdates.highlights = updates.highlights;
+    if (updates.care !== undefined) pgUpdates.care = updates.care;
+    if (updates.steps !== undefined) pgUpdates.steps = updates.steps;
+    if (updates.whyUs !== undefined) pgUpdates.why_us = updates.whyUs;
+    if (updates.gallery !== undefined) pgUpdates.gallery = updates.gallery;
+    if (updates.faq !== undefined) pgUpdates.faq = updates.faq;
+    if (updates.bestFor !== undefined) pgUpdates.best_for = updates.bestFor;
+    if (updates.sort !== undefined) pgUpdates.sort = updates.sort;
+
+    const { data, error } = await supabase
+      .from("service_categories")
+      .update(pgUpdates)
+      .eq("slug", slug)
+      .select()
+      .single();
+    if (error) throw error;
+    return {
+      ...data,
+      whyUs: data.why_us,
+      bestFor: data.best_for,
+    };
+  }
+}
+
+export async function deleteServiceCategory(slug: string): Promise<boolean> {
+  if (USE_MOCK_DB) {
+    const db = readMockDB();
+    db.categories = db.categories.filter((c) => c.slug !== slug);
+    writeMockDB(db);
+    return true;
+  } else {
+    const { error } = await supabase.from("service_categories").delete().eq("slug", slug);
     if (error) throw error;
     return true;
   }

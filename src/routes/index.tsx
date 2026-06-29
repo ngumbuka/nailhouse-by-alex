@@ -196,7 +196,6 @@ function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/30" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-transparent to-transparent" />
 
-
           {/* Top Floating Nav details */}
           <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0 text-xs tracking-widest text-zinc-300 text-center sm:text-left">
             <span>YAOUNDÉ · EKOUMDOUM</span>
@@ -559,7 +558,10 @@ function HomePage() {
                     <h3 className="text-white font-serif text-xl mt-3 leading-snug">
                       {video.title}
                     </h3>
-                    <p className="text-zinc-300 text-xs mt-2 line-clamp-2">{video.description}</p>
+                    <span
+                      className="text-zinc-300 text-xs mt-2 line-clamp-2 block"
+                      dangerouslySetInnerHTML={{ __html: video.description || "" }}
+                    />
                   </div>
                 </div>
               );

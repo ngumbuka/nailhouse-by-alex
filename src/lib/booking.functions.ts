@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import servicesJson from "@/data/services.json";
+
 import { ASSETS } from "@/lib/assets";
 import * as db from "./db";
 
@@ -101,6 +101,7 @@ const bookingSchema = z.object({
   notes: z.string().max(1000).optional().nullable(),
   service_ids: z.array(z.string().uuid()).optional().nullable(),
   service_names: z.array(z.string()).optional().nullable(),
+  followup_preference: z.enum(["call", "messages", "email"]).optional(),
 });
 
 const reviewSchema = z.object({
@@ -112,6 +113,10 @@ const reviewSchema = z.object({
 
 export const listServices = createServerFn({ method: "GET" }).handler(async () => {
   return db.listServices();
+});
+
+export const listCategories = createServerFn({ method: "GET" }).handler(async () => {
+  return db.listServiceCategories();
 });
 
 export const listGalleryImages = createServerFn({ method: "GET" }).handler(async () => {
@@ -157,8 +162,40 @@ export const createBooking = createServerFn({ method: "POST" })
       service_names: data.service_names ?? (data.service_name ? [data.service_name] : null),
       scheduled_at: data.scheduled_at,
       notes: data.notes ?? null,
+      followup_preference: data.followup_preference ?? "messages",
     });
 
+    // 1. Send Notification (Non-blocking based on preference)
+    try {
+      const pref = data.followup_preference ?? "messages";
+      if (pref === "email") {
+        const { sendBookingEmailNotification } = await import("@/lib/resend");
+        await sendBookingEmailNotification({
+          to: data.email,
+          name: data.name,
+          serviceName: data.service_name,
+          scheduledAt: data.scheduled_at,
+          type: "pending",
+        });
+      } else if (pref === "messages") {
+        const { sendWhatsAppNotification } = await import("@/lib/whatsapp");
+        await sendWhatsAppNotification({
+          to: data.phone,
+          name: data.name,
+          serviceName: data.service_name,
+          scheduledAt: data.scheduled_at,
+          type: "pending",
+        });
+      } else {
+        console.log(
+          `[Notification] Client chose followup by phone call. No auto-notification sent.`,
+        );
+      }
+    } catch (notifErr) {
+      console.error("[notification] failed to send booking request notification", notifErr);
+    }
+
+    // 2. Add to Google Calendar
     try {
       const { addBookingToCalendar } = await import("@/lib/calendar.server");
       const eventId = await addBookingToCalendar({

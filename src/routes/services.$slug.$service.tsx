@@ -355,9 +355,10 @@ function ServiceDetailPage() {
               </h2>
               <div className="mt-4 h-px w-10 bg-gold" />
               <div className="mt-6 space-y-4 text-sm sm:text-base leading-relaxed text-muted-foreground font-sans">
-                <p className="font-serif italic text-primary/95 text-lg leading-relaxed">
-                  « {copy.whatItIs} »
-                </p>
+                <div
+                  className="font-serif italic text-primary/95 text-lg leading-relaxed ql-editor px-0 py-0"
+                  dangerouslySetInnerHTML={{ __html: copy.whatItIs }}
+                />
                 {copy.forWhom && (
                   <p className="pt-2">
                     <strong className="text-primary font-medium">
@@ -854,9 +855,10 @@ function ServiceDetailPage() {
                       <h3 className="font-serif text-base text-primary font-semibold mt-1 group-hover:text-gold transition-colors truncate">
                         {s.name}
                       </h3>
-                      <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed font-sans">
-                        {s.description || info.intro}
-                      </p>
+                      <span
+                        className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed font-sans block"
+                        dangerouslySetInnerHTML={{ __html: s.description || info.intro || "" }}
+                      />
                     </Link>
 
                     <div className="mt-4 flex items-center justify-between pt-3 border-t border-border/40 gap-4 w-full">

@@ -274,9 +274,10 @@ function ServiceCategoryPage() {
                       <h3 className="font-serif text-xl pr-10 text-primary transition-colors duration-300 group-hover:text-gold">
                         {s.name}
                       </h3>
-                      <p className="mt-2 text-xs leading-relaxed text-muted-foreground line-clamp-2">
-                        {s.description}
-                      </p>
+                      <div
+                        className="mt-2 text-xs leading-relaxed text-muted-foreground line-clamp-2 [&>p]:inline"
+                        dangerouslySetInnerHTML={{ __html: s.description || "" }}
+                      />
                     </div>
                     <div className="mt-6 flex items-center justify-between">
                       <div className="flex flex-col">

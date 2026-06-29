@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Mail, Lock, Sparkles, Loader2, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Sparkles, Loader2, Eye, EyeOff, User, Phone } from "lucide-react";
 import { SiteLayout } from "@/components/site/site-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { isCurrentUserAdmin } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { ASSETS } from "@/lib/assets";
+import { validateWhatsAppNumber } from "@/lib/phone-validation";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Connexion — NailHouse" }] }),
@@ -20,6 +21,11 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [followupPreference, setFollowupPreference] = useState<"call" | "messages" | "email">(
+    "messages",
+  );
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -68,10 +74,29 @@ function AuthPage() {
 
   async function signUp(e: React.FormEvent) {
     e.preventDefault();
+    if (!name.trim()) {
+      return toast.error("Le nom est requis.");
+    }
+    if (!phone.trim()) {
+      return toast.error("Le numéro WhatsApp est requis.");
+    }
+
+    const validation = validateWhatsAppNumber(phone, false);
+    if (!validation.isValid) {
+      toast.warning(`Attention : ${validation.warning}`);
+    }
+
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          name: name.trim(),
+          phone: phone.trim(),
+          followup_preference: followupPreference,
+        },
+      },
     });
     if (error) {
       setLoading(false);
@@ -93,7 +118,7 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
     setLoading(false);
@@ -105,7 +130,7 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "apple",
       options: {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
     setLoading(false);
@@ -148,16 +173,16 @@ function AuthPage() {
             </p>
 
             <Tabs defaultValue="signin" className="mt-8">
-              <TabsList className="grid w-full grid-cols-2 p-1 bg-ink/10 rounded-xl border border-gold/10">
+              <TabsList className="grid w-full grid-cols-2 p-1.5 bg-ink/5 rounded-full border border-gold/10">
                 <TabsTrigger
                   value="signin"
-                  className="rounded-lg text-xs font-medium tracking-wider uppercase py-2 cursor-pointer transition-all duration-300 data-[state=active]:bg-gold data-[state=active]:text-ink"
+                  className="rounded-full text-xs font-medium tracking-wider uppercase py-2 cursor-pointer transition-all duration-300 data-[state=active]:bg-gold data-[state=active]:text-ink data-[state=active]:shadow-sm"
                 >
                   Connexion
                 </TabsTrigger>
                 <TabsTrigger
                   value="signup"
-                  className="rounded-lg text-xs font-medium tracking-wider uppercase py-2 cursor-pointer transition-all duration-300 data-[state=active]:bg-gold data-[state=active]:text-ink"
+                  className="rounded-full text-xs font-medium tracking-wider uppercase py-2 cursor-pointer transition-all duration-300 data-[state=active]:bg-gold data-[state=active]:text-ink data-[state=active]:shadow-sm"
                 >
                   S'inscrire
                 </TabsTrigger>
@@ -256,6 +281,61 @@ function AuthPage() {
                 <form onSubmit={signUp} className="space-y-4">
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Nom complet
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
+                      <Input
+                        type="text"
+                        required
+                        disabled={loading}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Amina Bello"
+                        className="pl-10 h-11 rounded-xl border-border/80 focus-visible:ring-gold/30 bg-background/40 transition-all duration-300"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Numéro WhatsApp (ex: +237...)
+                    </Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
+                      <Input
+                        type="tel"
+                        required
+                        disabled={loading}
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+237 6XX XXX XXX"
+                        className={`pl-10 h-11 rounded-xl border-border/80 focus-visible:ring-gold/30 bg-background/40 transition-all duration-300 ${
+                          phone.trim() !== "" && !validateWhatsAppNumber(phone, false).isValid
+                            ? "border-amber-500/60 focus-visible:ring-amber-500/30"
+                            : ""
+                        }`}
+                      />
+                    </div>
+                    {phone.trim() !== "" && !validateWhatsAppNumber(phone, false).isValid && (
+                      <div className="mt-1.5 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[11px] leading-relaxed space-y-1">
+                        <p className="font-semibold">
+                          ⚠️ {validateWhatsAppNumber(phone, false).warning}
+                        </p>
+                        <p className="text-[10px] text-amber-500/80">
+                          💡 (FR) Nous vous encourageons à utiliser un numéro WhatsApp pour recevoir
+                          vos confirmations et rappels instantanés.
+                        </p>
+                        <p className="text-[10px] text-amber-500/80">
+                          💡 (EN) We encourage using a WhatsApp number to receive instant
+                          confirmations and reminders.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       Adresse Email
                     </Label>
                     <div className="relative">
@@ -263,11 +343,56 @@ function AuthPage() {
                       <Input
                         type="email"
                         required
+                        disabled={loading}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="votre@email.com"
                         className="pl-10 h-11 rounded-xl border-border/80 focus-visible:ring-gold/30 bg-background/40 transition-all duration-300"
                       />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Suivi préféré / Preferred Follow-up
+                    </Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFollowupPreference("messages")}
+                        className={`py-2 px-1 text-[11px] rounded-lg border font-medium transition-all duration-200 flex flex-col items-center justify-center gap-0.5 ${
+                          followupPreference === "messages"
+                            ? "bg-gold/10 border-gold text-gold"
+                            : "bg-background/40 border-border/80 text-muted-foreground hover:bg-background/60"
+                        }`}
+                      >
+                        <span className="font-bold">WhatsApp</span>
+                        <span className="text-[8px] opacity-75">Messages</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFollowupPreference("email")}
+                        className={`py-2 px-1 text-[11px] rounded-lg border font-medium transition-all duration-200 flex flex-col items-center justify-center gap-0.5 ${
+                          followupPreference === "email"
+                            ? "bg-gold/10 border-gold text-gold"
+                            : "bg-background/40 border-border/80 text-muted-foreground hover:bg-background/60"
+                        }`}
+                      >
+                        <span className="font-bold">Email</span>
+                        <span className="text-[8px] opacity-75">Reminders</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFollowupPreference("call")}
+                        className={`py-2 px-1 text-[11px] rounded-lg border font-medium transition-all duration-200 flex flex-col items-center justify-center gap-0.5 ${
+                          followupPreference === "call"
+                            ? "bg-gold/10 border-gold text-gold"
+                            : "bg-background/40 border-border/80 text-muted-foreground hover:bg-background/60"
+                        }`}
+                      >
+                        <span className="font-bold">Appel / Call</span>
+                        <span className="text-[8px] opacity-75">Direct Phone</span>
+                      </button>
                     </div>
                   </div>
 

@@ -182,7 +182,11 @@ function GalleryPage() {
             <AmbientVideo
               src={ASSETS.gestureLoopVideo}
               poster={ASSETS.burgundyManicure}
-              alt={language === "en" ? "Brush stroke on a single nail" : "Geste de précision en gros plan"}
+              alt={
+                language === "en"
+                  ? "Brush stroke on a single nail"
+                  : "Geste de précision en gros plan"
+              }
               className="aspect-[21/9] w-full"
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />

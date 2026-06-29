@@ -17,13 +17,14 @@ No change to booking notifications or other email behavior.
 
 Generate three short clips (5–10s, 1080p, silent). **Every clip features Black women only**, prompted explicitly with deep/rich/warm Black skin tones, natural lighting that flatters melanin-rich skin, and burgundy/gold brand palette.
 
-| Clip | Subject | Where it plays |
-|---|---|---|
-| `hero-loop.mp4` | Slow cinematic close-up of a Black woman's hand with glossy burgundy nails drifting through warm golden light | Home hero (video layer behind gradient + title); existing image as `poster` |
-| `atelier-loop.mp4` | Overhead pan across workstation — polish bottles, candle, a Black woman's hand resting on marble | Home "Philosophie" band + About atmosphere section |
-| `gesture-loop.mp4` | Macro shot of a precise nail-art brush stroke on the styled hand of a Black woman | Gallery featured tile + service-detail hero of the lead service per category |
+| Clip               | Subject                                                                                                       | Where it plays                                                               |
+| ------------------ | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `hero-loop.mp4`    | Slow cinematic close-up of a Black woman's hand with glossy burgundy nails drifting through warm golden light | Home hero (video layer behind gradient + title); existing image as `poster`  |
+| `atelier-loop.mp4` | Overhead pan across workstation — polish bottles, candle, a Black woman's hand resting on marble              | Home "Philosophie" band + About atmosphere section                           |
+| `gesture-loop.mp4` | Macro shot of a precise nail-art brush stroke on the styled hand of a Black woman                             | Gallery featured tile + service-detail hero of the lead service per category |
 
 Implementation:
+
 - Upload each MP4 via `lovable-assets`, add entries to `src/lib/assets.ts`.
 - New `<AmbientVideo>` component: autoPlay, muted, loop, playsInline, `poster` fallback, respects `prefers-reduced-motion`, lazy-loaded below the fold.
 - Gallery: insert one video tile into the masonry every ~6 items; image-only items unchanged.
@@ -52,10 +53,12 @@ Tightening, not redesign:
 ### Files touched
 
 **New**
+
 - `src/components/ui/ambient-video.tsx`
 - 3 video asset pointers in `src/assets/*.mp4.asset.json` + entries in `src/lib/assets.ts`
 
 **Edited**
+
 - `src/routes/auth.tsx` (remove email-confirm UX path)
 - `src/routes/index.tsx`, `about.tsx`, `gallery.tsx`, `services.$slug.$service.tsx` (video + spacing)
 - `src/components/site/site-header.tsx`, `site-footer.tsx`

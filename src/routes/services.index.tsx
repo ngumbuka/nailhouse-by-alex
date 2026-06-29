@@ -316,9 +316,12 @@ function ServicesCatalog() {
                       <h3 className="font-serif text-base text-primary font-semibold mt-1 group-hover:text-gold transition-colors truncate pr-8">
                         {s.name}
                       </h3>
-                      <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                        {s.description || (catInfo && catInfo.intro)}
-                      </p>
+                      <span
+                        className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed block"
+                        dangerouslySetInnerHTML={{
+                          __html: s.description || (catInfo && catInfo.intro) || "",
+                        }}
+                      />
                     </Link>
 
                     {/* Bottom Line Specs & Actions */}
