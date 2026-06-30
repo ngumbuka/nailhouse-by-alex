@@ -8,6 +8,7 @@ import { isCurrentUserAdmin, adminListServices, adminCreateBooking } from "@/lib
 import { BookingModal } from "./booking-modal";
 import { toast } from "sonner";
 import { useNavigate, useLocation } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AdminFloatingAction() {
   const checkAdmin = useServerFn(isCurrentUserAdmin);
