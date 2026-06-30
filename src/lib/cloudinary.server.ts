@@ -13,7 +13,7 @@ cloudinary.config({
  */
 export async function processMediaUpload(
   mediaString: string | null | undefined,
-  folderName: string = "nailhouse"
+  folderName: string = "nailhouse",
 ): Promise<string | null | undefined> {
   if (!mediaString) return mediaString;
 
@@ -26,7 +26,7 @@ export async function processMediaUpload(
   // (which is bad, but prevents breaking the flow if keys are missing)
   if (!process.env.CLOUDINARY_CLOUD_NAME) {
     console.warn(
-      "[cloudinary] Cloudinary is not configured (missing CLOUDINARY_CLOUD_NAME). Saving base64 string directly to DB."
+      "[cloudinary] Cloudinary is not configured (missing CLOUDINARY_CLOUD_NAME). Saving base64 string directly to DB.",
     );
     return mediaString;
   }
@@ -49,12 +49,12 @@ export async function processMediaUpload(
  */
 export async function processMultipleMediaUploads(
   mediaArray: string[] | null | undefined,
-  folderName: string = "nailhouse"
+  folderName: string = "nailhouse",
 ): Promise<string[] | undefined> {
-  if (!mediaArray || mediaArray.length === 0) return mediaArray as any;
-  
+  if (!mediaArray || mediaArray.length === 0) return mediaArray || undefined;
+
   const uploadPromises = mediaArray.map((media) => processMediaUpload(media, folderName));
   const results = await Promise.all(uploadPromises);
-  
+
   return results.filter(Boolean) as string[];
 }

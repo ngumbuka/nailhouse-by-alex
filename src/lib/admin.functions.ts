@@ -105,7 +105,9 @@ export const adminUpdateBookingStatus = createServerFn({ method: "POST" })
 
       // Google Calendar sync
       try {
-        const calEventId = (booking as any).calendar_event_id as string | undefined;
+        const calEventId = (booking as Record<string, unknown>).calendar_event_id as
+          | string
+          | undefined;
         const { deleteCalendarEvent, updateCalendarEvent } = await import("@/lib/calendar.server");
         if (data.status === "cancelled" && calEventId) {
           // Remove the event from calendar when cancelled
@@ -460,7 +462,9 @@ export const adminUpdateBookingDetails = createServerFn({ method: "POST" })
         await sendBookingUpdateNotification(bookingForNotif, "rescheduled");
 
         try {
-          const calEventId = (booking as any).calendar_event_id as string | undefined;
+          const calEventId = (booking as Record<string, unknown>).calendar_event_id as
+            | string
+            | undefined;
           const { updateCalendarEvent } = await import("@/lib/calendar.server");
           if (calEventId) {
             await updateCalendarEvent({
