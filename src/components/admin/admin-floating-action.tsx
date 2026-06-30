@@ -8,6 +8,7 @@ import { isCurrentUserAdmin, adminListServices, adminCreateBooking } from "@/lib
 import { BookingModal } from "./booking-modal";
 import { toast } from "sonner";
 import { useNavigate, useLocation } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AdminFloatingAction() {
   const checkAdmin = useServerFn(isCurrentUserAdmin);
@@ -18,10 +19,18 @@ export function AdminFloatingAction() {
   const location = useLocation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setHasSession(!!data.session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setHasSession(!!s));
+    return () => subscription.unsubscribe();
+  }, []);
 
   const { data: adminData } = useQuery({
     queryKey: ["isAdmin"],
     queryFn: () => checkAdmin(),
+    enabled: hasSession,
     staleTime: 1000 * 60 * 5,
   });
 
