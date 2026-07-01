@@ -1,4 +1,5 @@
 import { ASSETS } from "@/lib/assets";
+import { resolveAssetUrl } from "@/lib/resolver";
 
 export function PageLoader() {
   return (
@@ -6,7 +7,7 @@ export function PageLoader() {
       <div className="flex flex-col items-center gap-7">
         <div className="relative h-20 w-20">
           <img
-            src={ASSETS.logo}
+            src={resolveAssetUrl(ASSETS.logo)}
             alt=""
             aria-hidden="true"
             className="absolute inset-2 h-16 w-16 rounded-full object-cover opacity-90 ring-1 ring-gold/30"

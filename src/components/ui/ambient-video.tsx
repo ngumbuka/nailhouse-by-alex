@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { resolveAssetUrl } from "@/lib/resolver";
 
 type Props = {
   src: string;
@@ -16,6 +17,8 @@ type Props = {
  * or until the video has actually started playing.
  */
 export function AmbientVideo({ src, poster, alt = "", className, enabled = true }: Props) {
+  const resolvedSrc = resolveAssetUrl(src);
+  const resolvedPoster = resolveAssetUrl(poster);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -34,7 +37,7 @@ export function AmbientVideo({ src, poster, alt = "", className, enabled = true 
   return (
     <div className={cn("relative overflow-hidden", className)}>
       <img
-        src={poster}
+        src={resolvedPoster}
         alt={alt}
         aria-hidden={shouldPlay && playing ? "true" : undefined}
         className={cn(
@@ -45,8 +48,8 @@ export function AmbientVideo({ src, poster, alt = "", className, enabled = true 
       {shouldPlay && (
         <video
           ref={videoRef}
-          src={src}
-          poster={poster}
+          src={resolvedSrc}
+          poster={resolvedPoster}
           autoPlay
           loop
           muted
