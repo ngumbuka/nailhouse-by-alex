@@ -22,13 +22,13 @@ export const ASSETS = {
   coffeeEasel:
     "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=800",
   heroServices:
-    "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=1200",
+    "/__l5e/assets-v1/a2331655-4115-43c0-aa91-bbd183cd515a/hero-services-v2.jpg",
   heroTarifs:
-    "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=80&w=1200",
+    "/__l5e/assets-v1/a2331655-4115-43c0-aa91-bbd183cd515a/hero-services-v2.jpg",
   heroAbout:
-    "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=1200",
+    "/__l5e/assets-v1/2d02b9be-784f-4795-baa1-7d1a6d8829c1/hero-about-v2.jpg",
   heroContact:
-    "https://images.unsplash.com/photo-1602928321679-560bb453f190?auto=format&fit=crop&q=80&w=1200",
+    "/__l5e/assets-v1/2d02b9be-784f-4795-baa1-7d1a6d8829c1/hero-about-v2.jpg",
   heroLoopVideo:
     "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
   gestureLoopVideo:

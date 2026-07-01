@@ -1,72 +1,49 @@
-## Polish pass for NailHouse
+## Goal
+Elevate every page hero with more captivating imagery or short ambient video that instantly communicates NailHouse's luxury value proposition.
 
-Three-part refinement: disable signup email verification, weave AI-generated video into key surfaces, and tighten visual design across home / service detail / gallery / global chrome. **All people depicted (hands, feet, models, ambient shots) are Black women with associated skin tones — deep ebony, rich brown, warm caramel, golden bronze. No other skin tones appear in any new or regenerated asset.**
+## Current state
+- Home hero already uses `hero-loop.mp4` (AmbientVideo) over a burgundy nails poster.
+- Services, Tarifs, About, Contact, Gallery, Booking heroes use static Unsplash images (`ASSETS.heroServices`, `heroTarifs`, etc.) — generic stock, not brand-aligned, no motion.
+- Category pages (`services/$slug`) use static hero images.
+- Only 2 videos exist: `hero-loop.mp4` (nails), `gesture-loop.mp4` (brush stroke).
 
----
+## Plan
 
-### 1. Auth — remove signup email confirmation
+### 1. Generate 4 new AI hero videos (Black women, burgundy/gold NailHouse identity, 5s loops, 16:9)
+- `services-loop.mp4` — close-up of a nail technician's precise brush stroke on a client's ebony hand, glossy burgundy polish, gold jewellery, moody warm light.
+- `pedicure-loop.mp4` — dark-skinned feet in an ornate marble basin with milk and rose petals, gold leaf floating, candlelight.
+- `about-loop.mp4` — slow cinematic pan across the atelier: candles, polish shelves, a Black woman's hands being manicured, warm burgundy tones.
+- `contact-loop.mp4` — welcoming shot of the salon entrance / reception detail with ambient candlelight.
 
-- Call `configure_auth` to turn off email confirmation so admin signup logs in immediately.
-- Remove the "check your inbox" branch from `/auth` and route straight to `/admin` on success.
+Plus regenerate 2 premium poster stills (fallbacks) to match each new video's first frame.
 
-No change to booking notifications or other email behavior.
+### 2. Wire videos into hero sections using existing `AmbientVideo` component
+| Page | New hero media |
+|---|---|
+| `/services` (services.index.tsx) | `services-loop.mp4` + poster |
+| `/tarifs` | reuse `services-loop.mp4` (or new pricing-focused still with gold-foil price card overlay) |
+| `/about` | `about-loop.mp4` + poster |
+| `/contact` | `contact-loop.mp4` + poster |
+| `/booking` | `gesture-loop.mp4` (already exists, reuse) |
+| `/gallery` | keep static (grid is the hero) but upgrade cover tile |
+| `/services/$slug` (per category) | map each category slug → best matching video (mains → hero-loop, pieds → pedicure-loop, others → gesture-loop / services-loop) |
 
----
+### 3. Polish hero layout & copy
+- Add a dark burgundy → transparent gradient overlay on all video heroes for text legibility.
+- Add a small "label-luxe" eyebrow line + refined H1 + one-line value proposition on each hero (e.g. Services: "L'art de l'ongle • Rituels signature pensés pour sublimer chaque main").
+- Ensure `prefers-reduced-motion` falls back to the poster (already handled by AmbientVideo).
+- Keep mobile performant: `preload="metadata"`, muted autoplay, `playsInline`.
 
-### 2. Video content (AI-generated, looping, muted, ambient)
+### 4. Update assets registry
+- Add new video/poster URLs to `src/lib/assets.ts`.
+- Upload via `lovable-assets create` and reference via `.asset.json` pointers.
 
-Generate three short clips (5–10s, 1080p, silent). **Every clip features Black women only**, prompted explicitly with deep/rich/warm Black skin tones, natural lighting that flatters melanin-rich skin, and burgundy/gold brand palette.
+## Technical notes
+- Videos generated with `videogen--generate_video` at 1080p, 5s, 16:9, `camera_fixed: false` for gentle motion. Prompts strictly specify "Black woman with ebony/rich brown skin".
+- No schema changes, no backend changes. Pure frontend + asset work.
+- Files touched: `src/lib/assets.ts`, `src/routes/services.index.tsx`, `src/routes/tarifs.tsx`, `src/routes/about.tsx`, `src/routes/contact.tsx`, `src/routes/booking.tsx`, `src/routes/services.$slug.tsx`.
 
-| Clip               | Subject                                                                                                       | Where it plays                                                               |
-| ------------------ | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `hero-loop.mp4`    | Slow cinematic close-up of a Black woman's hand with glossy burgundy nails drifting through warm golden light | Home hero (video layer behind gradient + title); existing image as `poster`  |
-| `atelier-loop.mp4` | Overhead pan across workstation — polish bottles, candle, a Black woman's hand resting on marble              | Home "Philosophie" band + About atmosphere section                           |
-| `gesture-loop.mp4` | Macro shot of a precise nail-art brush stroke on the styled hand of a Black woman                             | Gallery featured tile + service-detail hero of the lead service per category |
-
-Implementation:
-
-- Upload each MP4 via `lovable-assets`, add entries to `src/lib/assets.ts`.
-- New `<AmbientVideo>` component: autoPlay, muted, loop, playsInline, `poster` fallback, respects `prefers-reduced-motion`, lazy-loaded below the fold.
-- Gallery: insert one video tile into the masonry every ~6 items; image-only items unchanged.
-- Service detail hero swaps still for video for the lead service of each category, image as poster.
-
----
-
-### 3. Design refinement (keep burgundy/gold luxury identity)
-
-Tightening, not redesign:
-
-- **Typography rhythm** — larger Cormorant display sizes, tighter tracking, consistent gold uppercase eyebrow style, smaller Manrope body with more line-height.
-- **Spacing system** — standardize section padding (mobile 64 / desktop 128), unify container widths, remove ad-hoc paddings across `index.tsx`, `services.tsx`, `services.$slug.$service.tsx`, `gallery.tsx`, `about.tsx`.
-- **Header** — thinner, more transparent at top, subtle backdrop on scroll, gold underline on active link, refined mobile drawer.
-- **Footer** — 3-column editorial layout: logo + tagline, contact, hours; finer divider; small Instagram CTA.
-- **Cards & images** — unify `rounded-2xl`, softer shadow token, slow ken-burns on service-card hover, fade-in on image load.
-- **Gallery** — true asymmetric masonry, refined lightbox (darker scrim, arrow nav, caption typography).
-- **Service detail** — tighter hero ratio, frosted-glass sticky purchase bar, calmer cross-sell with horizontal scroll-snap.
-- **Home** — re-pace sections (hero → signature → philosophie video → atmosphere → CTA), thin gold rule motif as section divider.
-- **Loader & route transitions** — refine `PageLoader` curve, subtle fade-in on route change.
-
-**Imagery rule applied to any regenerated still as part of this polish**: only Black women / Black skin tones are depicted. If any existing image showing other skin tones is touched during the pass, it is regenerated to comply.
-
----
-
-### Files touched
-
-**New**
-
-- `src/components/ui/ambient-video.tsx`
-- 3 video asset pointers in `src/assets/*.mp4.asset.json` + entries in `src/lib/assets.ts`
-
-**Edited**
-
-- `src/routes/auth.tsx` (remove email-confirm UX path)
-- `src/routes/index.tsx`, `about.tsx`, `gallery.tsx`, `services.$slug.$service.tsx` (video + spacing)
-- `src/components/site/site-header.tsx`, `site-footer.tsx`
-- `src/styles.css` (spacing tokens, type scale, refined shadows)
-- `src/components/page-loader.tsx`
-- `src/components/services/sticky-purchase-bar.tsx`
-
-**Untouched**
-Booking flow, admin dashboard, calendar integration, Supabase schema, RLS, server functions.
-
-Execution order: auth toggle → video generation & wiring → design polish.
+## Out of scope
+- Homepage hero (already has video and was recently upgraded).
+- Admin video uploader (already exists — new videos can also be added there later).
+- Copy rewrites beyond hero eyebrow/subtitle lines.
