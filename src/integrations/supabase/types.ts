@@ -139,6 +139,44 @@ export type Database = {
         }
         Relationships: []
       }
+      service_reviews: {
+        Row: {
+          approved: boolean
+          client_name: string
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          service_id: string
+        }
+        Insert: {
+          approved?: boolean
+          client_name: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          service_id: string
+        }
+        Update: {
+          approved?: boolean
+          client_name?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_reviews_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           category: string
