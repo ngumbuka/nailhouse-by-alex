@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { resolveAssetUrl } from "@/lib/resolver";
 
 type SoftImageProps = {
   src: string;
@@ -28,6 +29,8 @@ export function SoftImage({
   loading = "lazy",
   children,
 }: SoftImageProps) {
+  const resolvedSrc = resolveAssetUrl(src);
+
   return (
     <figure
       className={cn(
@@ -38,7 +41,7 @@ export function SoftImage({
       )}
     >
       <img
-        src={src}
+        src={resolvedSrc}
         alt={alt}
         loading={loading}
         className={cn(

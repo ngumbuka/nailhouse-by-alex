@@ -6,6 +6,7 @@ import { ASSETS } from "@/lib/assets";
 import { Button } from "@/components/ui/button";
 import { SoftImage } from "@/components/ui/soft-image";
 import { useI18n } from "@/hooks/use-i18n";
+import { resolveAssetUrl } from "@/lib/resolver";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -79,7 +80,7 @@ function AboutPage() {
         <div className="relative mx-auto max-w-6xl w-full overflow-hidden rounded-[2.5rem] bg-zinc-950 text-white min-h-[500px] md:min-h-[580px] flex flex-col justify-between p-8 md:p-14">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-luminosity filter contrast-125 pointer-events-none"
-            style={{ backgroundImage: `url(${ASSETS.heroAbout})` }}
+            style={{ backgroundImage: `url(${resolveAssetUrl(ASSETS.heroAbout)})` }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
@@ -310,7 +311,7 @@ function AboutPage() {
         <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] bg-zinc-950 text-white py-20 px-8 text-center shadow-xl">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-25 mix-blend-luminosity"
-            style={{ backgroundImage: `url(${ASSETS.barShelf})` }}
+            style={{ backgroundImage: `url(${resolveAssetUrl(ASSETS.barShelf)})` }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/50" />
 

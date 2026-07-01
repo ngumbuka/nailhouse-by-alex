@@ -129,7 +129,8 @@ export function GalleryModal({ open, onClose, isPending, onSubmit }: GalleryModa
             <Button
               type="submit"
               disabled={isPending || (!url && !fileData)}
-              className="rounded-full bg-gold text-white hover:bg-gold/90 font-semibold"
+              className="rounded-full"
+              variant="gold"
             >
               {isPending ? "Ajout…" : "Ajouter"}
             </Button>

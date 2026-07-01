@@ -274,7 +274,7 @@ function HomePage() {
             {/* Floating Widget: Featured Service Preview */}
             <div className="bg-zinc-900/90 backdrop-blur-md border border-zinc-850 p-4 rounded-2xl flex items-center gap-4 max-w-xs shadow-xl self-end">
               <img
-                src={ASSETS.burgundyManicure}
+                src={resolveAssetUrl(ASSETS.burgundyManicure)}
                 alt="BIAB"
                 className="w-12 h-12 rounded-xl object-cover"
               />
@@ -349,7 +349,7 @@ function HomePage() {
                     className="group relative h-[380px] rounded-3xl overflow-hidden shadow-md transition-all duration-700 bg-zinc-900 text-white"
                   >
                     <img
-                      src={slide.image}
+                      src={resolveAssetUrl(slide.image)}
                       alt={slide.title}
                       className="absolute inset-0 w-full h-full object-cover opacity-60 filter saturate-[0.8] contrast-105 transition-transform duration-700 group-hover:scale-105"
                     />
@@ -369,7 +369,7 @@ function HomePage() {
                     </div>
 
                     {/* Volumetric step overlay */}
-                    <span className="absolute bottom-2 right-4 font-serif text-8xl text-white/5 pointer-events-none font-bold select-none">
+                    <span className="absolute bottom-2 right-4 font-serif text-8xl text-white/5 pointer-events-none font-bold select-none z-0">
                       {slide.num}
                     </span>
                   </div>
@@ -626,7 +626,7 @@ function HomePage() {
           <div className="lg:col-span-7 relative">
             <div className="overflow-hidden rounded-3xl aspect-[4/3] shadow-md border border-border/40 bg-zinc-100">
               <img
-                src={STUDIO_SLIDES[activeStudio].image}
+                src={resolveAssetUrl(STUDIO_SLIDES[activeStudio].image)}
                 alt={STUDIO_SLIDES[activeStudio].title}
                 className="w-full h-full object-cover transition-transform duration-700 hover:scale-102"
               />
@@ -647,7 +647,7 @@ function HomePage() {
         <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] bg-zinc-950 text-white py-20 px-8 text-center shadow-xl">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-25 mix-blend-luminosity"
-            style={{ backgroundImage: `url(${ASSETS.polishShelves})` }}
+            style={{ backgroundImage: `url(${resolveAssetUrl(ASSETS.polishShelves)})` }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/50" />
 
@@ -684,7 +684,7 @@ function HomePage() {
                 {[ASSETS.logo, ASSETS.burgundyManicure, ASSETS.polkaDotNails].map((imgSrc, i) => (
                   <img
                     key={i}
-                    src={imgSrc}
+                    src={resolveAssetUrl(imgSrc)}
                     alt="Client avatar"
                     className="w-8 h-8 rounded-full border-2 border-zinc-950 object-cover"
                   />

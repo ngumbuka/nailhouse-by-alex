@@ -183,11 +183,7 @@ export function VideoModal({ open, onClose, initial, isPending, onSubmit }: Vide
             <Button type="button" variant="ghost" onClick={onClose} className="rounded-full">
               Annuler
             </Button>
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="rounded-full bg-gold text-white hover:bg-gold/90 font-semibold"
-            >
+            <Button type="submit" disabled={isPending} className="rounded-full" variant="gold">
               {isPending ? "Enregistrement…" : isEdit ? "Mettre à jour" : "Ajouter"}
             </Button>
           </DialogFooter>

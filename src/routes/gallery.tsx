@@ -7,6 +7,7 @@ import { AmbientVideo } from "@/components/ui/ambient-video";
 import { listGalleryImages } from "@/lib/booking.functions";
 import { ASSETS } from "@/lib/assets";
 import { useI18n } from "@/hooks/use-i18n";
+import { resolveAssetUrl } from "@/lib/resolver";
 import {
   Dialog,
   DialogContent,
@@ -239,7 +240,7 @@ function GalleryPage() {
                   )}`}
                 >
                   <img
-                    src={img.url}
+                    src={resolveAssetUrl(img.url)}
                     alt={title}
                     className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 filter saturate-[0.85] contrast-[1.02] group-hover:saturate-100"
                   />
@@ -296,7 +297,7 @@ function GalleryPage() {
                       {/* Left column: Image */}
                       <div className="md:col-span-7 relative bg-muted/20 flex items-center justify-center min-h-[300px] md:min-h-[500px]">
                         <img
-                          src={activeImage.url}
+                          src={resolveAssetUrl(activeImage.url)}
                           alt={title}
                           className="w-full h-full object-cover max-h-[500px] md:max-h-none"
                         />

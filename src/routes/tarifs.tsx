@@ -179,20 +179,48 @@ function TarifsPage() {
                         <div className="flex items-center gap-4 py-4 hover:bg-muted/10 rounded-2xl px-2 transition duration-300">
                           {/* Left: Service Thumbnail */}
                           <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 rounded-xl overflow-hidden shadow-sm">
-                            <SoftImage
-                              src={serviceImage}
-                              alt={s.name}
-                              aspect="aspect-square"
-                              className="w-full h-full object-cover"
-                              size="sm"
-                            />
+                            {catSlug ? (
+                              <Link
+                                to="/services/$slug/$service"
+                                params={{ slug: catSlug, service: slugifyService(s.name) }}
+                                className="block w-full h-full"
+                              >
+                                <SoftImage
+                                  src={serviceImage}
+                                  alt={s.name}
+                                  aspect="aspect-square"
+                                  className="w-full h-full object-cover"
+                                  size="sm"
+                                />
+                              </Link>
+                            ) : (
+                              <SoftImage
+                                src={serviceImage}
+                                alt={s.name}
+                                aspect="aspect-square"
+                                className="w-full h-full object-cover"
+                                size="sm"
+                              />
+                            )}
                           </div>
 
                           {/* Center: Name, Description & Duration */}
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-serif text-sm md:text-base text-primary font-semibold group-hover:text-gold transition-colors truncate">
-                              {s.name}
-                            </h3>
+                            {catSlug ? (
+                              <Link
+                                to="/services/$slug/$service"
+                                params={{ slug: catSlug, service: slugifyService(s.name) }}
+                                className="block"
+                              >
+                                <h3 className="font-serif text-sm md:text-base text-primary font-semibold hover:text-gold transition-colors truncate">
+                                  {s.name}
+                                </h3>
+                              </Link>
+                            ) : (
+                              <h3 className="font-serif text-sm md:text-base text-primary font-semibold transition-colors truncate">
+                                {s.name}
+                              </h3>
+                            )}
                             <span
                               className="mt-0.5 text-xs text-muted-foreground line-clamp-1 leading-relaxed max-w-xl hidden sm:block"
                               dangerouslySetInnerHTML={{ __html: s.description || cat.intro || "" }}
@@ -223,18 +251,7 @@ function TarifsPage() {
                         </div>
                       );
 
-                      return catSlug ? (
-                        <Link
-                          key={s.id}
-                          to="/services/$slug/$service"
-                          params={{ slug: catSlug, service: slugifyService(s.name) }}
-                          className="group block"
-                        >
-                          {rowContent}
-                        </Link>
-                      ) : (
-                        <div key={s.id}>{rowContent}</div>
-                      );
+                      return <div key={s.id}>{rowContent}</div>;
                     })}
                   </div>
                 </div>

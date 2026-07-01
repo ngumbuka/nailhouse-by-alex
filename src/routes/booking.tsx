@@ -160,6 +160,12 @@ function BookingPage() {
     });
   }, [getProfileFn]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [step]);
+
   const selectedServices = services.filter((s) => selectedIds.includes(s.id));
   const totalPrice = selectedServices.reduce((sum, s) => sum + getActiveServicePrice(s), 0);
   const totalDurationMins = selectedServices.reduce((sum, s) => sum + (s.duration_mins || 60), 0);
@@ -203,8 +209,7 @@ function BookingPage() {
 
   const validatePromoFn = useServerFn(validatePromo);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleFormSubmit() {
     if (!canProceed[3]) return;
 
     const validation = validateWhatsAppNumber(phone, language === "en");
@@ -283,12 +288,17 @@ function BookingPage() {
       console.error(err);
       toast.error(
         language === "en"
-          ? "An error occurred. Please try again or call us."
-          : "Une erreur est survenue. Veuillez réessayer ou nous appeler.",
+          ? "Failed to send request. Please try again."
+          : "Échec de l'envoi. Veuillez réessayer.",
       );
     } finally {
       setLoading(false);
     }
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await handleFormSubmit();
   }
 
   function reset() {
@@ -415,7 +425,7 @@ function BookingPage() {
   // ─── Main form ─────────────────────────────────────────────────────────────
   return (
     <SiteLayout>
-      <section className="mx-auto max-w-6xl px-5 py-12 md:py-16">
+      <section className="mx-auto max-w-6xl px-5 pt-12 pb-24 md:py-16 lg:pb-16">
         {/* Header */}
         <div className="mb-12 text-center">
           <p className="label-luxe">{t("booking_hero_tag")}</p>
@@ -726,7 +736,7 @@ function BookingPage() {
 
                 <div className="mt-6 space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 scroll-mt-28">
                       <Label
                         htmlFor="name"
                         className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold"
@@ -743,7 +753,7 @@ function BookingPage() {
                         className="rounded-xl border-border focus-visible:ring-gold"
                       />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 scroll-mt-28">
                       <Label
                         htmlFor="phone"
                         className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold"
@@ -780,7 +790,7 @@ function BookingPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 scroll-mt-28">
                     <Label
                       htmlFor="email"
                       className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold"
@@ -925,7 +935,7 @@ function BookingPage() {
                     </div>
                   )}
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 scroll-mt-28">
                     <Label
                       htmlFor="notes"
                       className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold"
@@ -943,7 +953,7 @@ function BookingPage() {
                   </div>
 
                   {/* Code Promo */}
-                  <div className="space-y-1.5 pt-4 border-t border-border/50">
+                  <div className="space-y-1.5 pt-4 border-t border-border/50 scroll-mt-28">
                     <Label
                       htmlFor="promo"
                       className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold"
@@ -1062,7 +1072,7 @@ function BookingPage() {
           </div>
 
           {/* Right: sticky summary */}
-          <aside className="space-y-4">
+          <aside className="space-y-4 lg:sticky lg:top-32">
             {/* Order summary */}
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <p className="mb-3 text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
@@ -1169,6 +1179,85 @@ function BookingPage() {
             </div>
           </aside>
         </div>
+
+        {/* Mobile sticky bottom bar */}
+        {selectedIds.length > 0 && (
+          <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gold/15 bg-background/95 backdrop-blur-md px-5 py-3.5 shadow-2xl flex items-center justify-between lg:hidden animate-in slide-in-from-bottom duration-300">
+            <div className="flex flex-col min-w-0 mr-3">
+              <span className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground">
+                {selectedServices.length === 1
+                  ? language === "en"
+                    ? "1 service selected"
+                    : "1 soin sélectionné"
+                  : `${selectedServices.length} ` +
+                    (language === "en" ? "services selected" : "soins sélectionnés")}
+              </span>
+              <span className="font-serif text-base font-bold text-gold truncate">
+                {finalPrice.toLocaleString("fr-FR")} F
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {step === 1 && (
+                <Button
+                  onClick={() => setStep(2)}
+                  disabled={!canProceed[1]}
+                  className="rounded-full bg-gold px-6 text-xs text-white dark:text-ink hover:bg-gold/90 font-semibold shadow-lg shadow-gold/10 h-9"
+                >
+                  {language === "en" ? "Next" : "Suivant"}{" "}
+                  <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                </Button>
+              )}
+              {step === 2 && (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setStep(1)}
+                    className="rounded-full text-muted-foreground h-9 px-3 text-xs"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    onClick={() => setStep(3)}
+                    disabled={!canProceed[2]}
+                    className="rounded-full bg-gold px-6 text-xs text-white dark:text-ink hover:bg-gold/90 font-semibold shadow-lg shadow-gold/10 h-9"
+                  >
+                    {language === "en" ? "Next" : "Suivant"}{" "}
+                    <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                  </Button>
+                </>
+              )}
+              {step === 3 && (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setStep(2)}
+                    className="rounded-full text-muted-foreground h-9 px-3 text-xs"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    onClick={handleFormSubmit}
+                    disabled={loading || !canProceed[3]}
+                    className="rounded-full bg-gold px-6 text-xs text-white dark:text-ink hover:bg-gold/90 font-semibold shadow-lg shadow-gold/10 h-9"
+                  >
+                    {loading ? (
+                      language === "en" ? (
+                        "Sending..."
+                      ) : (
+                        "Envoi..."
+                      )
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        {language === "en" ? "Confirm" : "Confirmer"}{" "}
+                        <Check className="h-3.5 w-3.5" />
+                      </span>
+                    )}
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </section>
     </SiteLayout>
   );

@@ -872,7 +872,7 @@ function ClientPortalPage() {
                         {language === "en" ? "Contact Details" : "Coordonnées"}
                       </h3>
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-1.5 scroll-mt-28">
                         <Label
                           htmlFor="prof-name"
                           className="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
@@ -885,11 +885,11 @@ function ClientPortalPage() {
                           onChange={(e) => setProfileName(e.target.value)}
                           required
                           placeholder="Amina Bello"
-                          className="rounded-xl border-border/80 focus-visible:ring-gold/30 bg-background/50 h-10.5"
+                          className="scroll-mt-32 rounded-xl border-border/80 focus-visible:ring-gold/30 bg-background/50 h-10.5"
                         />
                       </div>
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-1.5 scroll-mt-28">
                         <Label
                           htmlFor="prof-phone"
                           className="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
@@ -902,7 +902,7 @@ function ClientPortalPage() {
                           onChange={(e) => setProfilePhone(e.target.value)}
                           required
                           placeholder="6XX XXX XXX"
-                          className={`rounded-xl border-border/80 focus-visible:ring-gold/30 bg-background/50 h-10.5 ${
+                          className={`scroll-mt-32 rounded-xl border-border/80 focus-visible:ring-gold/30 bg-background/50 h-10.5 ${
                             profilePhone.trim() !== "" &&
                             !validateWhatsAppNumber(profilePhone, language === "en").isValid
                               ? "border-amber-500/60 focus-visible:ring-amber-500/30"
@@ -924,7 +924,7 @@ function ClientPortalPage() {
                           )}
                       </div>
 
-                      <div className="space-y-1.5 opacity-70">
+                      <div className="space-y-1.5 opacity-70 scroll-mt-28">
                         <Label
                           htmlFor="prof-email"
                           className="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
@@ -939,7 +939,7 @@ function ClientPortalPage() {
                         />
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-2 scroll-mt-28">
                         <Label className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                           {language === "en"
                             ? "Preferred Follow-up Method"

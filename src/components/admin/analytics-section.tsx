@@ -161,10 +161,7 @@ export function AnalyticsSection({
         <h2 className="font-sans tracking-tight text-2xl text-primary font-bold">
           Analytique &amp; Finance
         </h2>
-        <Button
-          onClick={exportCSV}
-          className="rounded-full bg-gold text-white hover:bg-gold/90 text-sm font-semibold"
-        >
+        <Button onClick={exportCSV} className="rounded-full text-sm" variant="gold">
           Exporter CSV
         </Button>
       </div>
@@ -201,7 +198,10 @@ export function AnalyticsSection({
             bg: "bg-blue-500/10",
           },
         ].map((card) => (
-          <div key={card.label} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div
+            key={card.label}
+            className="rounded-2xl border border-border bg-card p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
+          >
             <div className={`inline-flex rounded-xl p-2.5 ${card.bg} mb-3`}>
               <card.icon className={`h-5 w-5 ${card.color}`} />
             </div>

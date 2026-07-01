@@ -28,6 +28,7 @@ export const updateUserProfile = createServerFn({ method: "POST" })
           .enum(["natural", "classic", "french", "nail_art", "biab", "none"])
           .optional(),
         allergies_contraindications: z.string().max(1000).optional().nullable(),
+        followup_preference: z.enum(["call", "messages", "email"]).optional(),
       })
       .parse(input),
   )
@@ -43,6 +44,7 @@ export const updateUserProfile = createServerFn({ method: "POST" })
       preferred_shape: data.preferred_shape || "none",
       preferred_style: data.preferred_style || "none",
       allergies_contraindications: data.allergies_contraindications || "",
+      followup_preference: data.followup_preference || "messages",
     });
   });
 

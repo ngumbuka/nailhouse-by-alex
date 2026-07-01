@@ -82,7 +82,7 @@ export function SiteHeader() {
   const isAdmin = role === "admin" || user?.email === "admin@nailhouse.com";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-border/40 bg-background/80 backdrop-blur-xl transition-all duration-300">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
         <Link to="/" className="flex items-center gap-3 shrink-0" onClick={() => setOpen(false)}>
           <img

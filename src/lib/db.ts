@@ -15,7 +15,7 @@ import {
   MockSettings,
   MockVideo,
 } from "./mock-db";
-import { supabase } from "@/integrations/supabase/client";
+import { supabaseAdmin as supabase } from "@/integrations/supabase/client.server";
 import { CategoryInfo } from "./service-categories";
 
 // Set to false to mutate entirely to real Supabase
@@ -295,7 +295,8 @@ export async function createBooking(
     writeMockDB(db);
     return newBooking;
   } else {
-    const { data, error } = await supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
       .from("bookings")
       .insert({
         ...booking,

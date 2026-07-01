@@ -373,11 +373,7 @@ export function ServiceModal({ open, onClose, initial, isPending, onSubmit }: Se
             <Button type="button" variant="ghost" onClick={onClose} className="rounded-full">
               Annuler
             </Button>
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="rounded-full bg-gold text-white hover:bg-gold/90 font-semibold"
-            >
+            <Button type="submit" disabled={isPending} variant="gold" className="rounded-full">
               {isPending ? "Enregistrement…" : isEdit ? "Modifier" : "Ajouter"}
             </Button>
           </DialogFooter>

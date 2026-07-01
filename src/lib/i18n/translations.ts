@@ -18,6 +18,11 @@ export type TranslationDictionary = {
   footer_subscribe: string;
   footer_email_placeholder: string;
   footer_success_newsletter: string;
+  footer_quote: string;
+  footer_desc: string;
+  footer_explore: string;
+  footer_find_us: string;
+  footer_detailed_address: string;
 
   // Homepage
   hero_title_1: string;
@@ -186,6 +191,12 @@ export const TRANSLATIONS_FR: TranslationDictionary = {
   footer_subscribe: "S'abonner",
   footer_email_placeholder: "Votre adresse email",
   footer_success_newsletter: "Inscription réussie !",
+  footer_quote: "Pour la beauté des ongles…",
+  footer_desc:
+    "Un atelier confidentiel à Ekoumdoum dédié au soin des mains et des pieds — manucures couture, pédicures soin, prothésie ongulaire.",
+  footer_explore: "Visiter",
+  footer_find_us: "Nous trouver",
+  footer_detailed_address: "Ekoumdoum, à côté du Bilbao Lounge — Yaoundé",
 
   hero_title_1: "L'atelier de l'ongle",
   hero_title_2: "Haute Couture",
@@ -361,6 +372,12 @@ export const TRANSLATIONS_EN: TranslationDictionary = {
   footer_subscribe: "Subscribe",
   footer_email_placeholder: "Your email address",
   footer_success_newsletter: "Successfully subscribed!",
+  footer_quote: "For the beauty of nails…",
+  footer_desc:
+    "A confidential atelier in Ekoumdoum dedicated to hand and foot care — couture manicures, spa pedicures, nail enhancements.",
+  footer_explore: "Explore",
+  footer_find_us: "Find Us",
+  footer_detailed_address: "Ekoumdoum, next to Bilbao Lounge — Yaoundé",
 
   hero_title_1: "The Haute Couture",
   hero_title_2: "Nail Atelier",

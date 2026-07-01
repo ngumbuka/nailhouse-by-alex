@@ -28,22 +28,25 @@ export function ServiceCard({ service, variant = "hero", className = "" }: Props
     <Link
       to="/services/$slug/$service"
       params={{ slug, service: serviceSlug }}
-      className={`group flex h-full flex-col overflow-hidden rounded-2xl bg-card shadow-sm transition hover:shadow-md ${className}`}
+      className={`group flex h-full flex-col overflow-hidden rounded-2xl bg-card border border-border/40 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${className}`}
     >
       <SoftImage
         src={img}
         alt={service.name}
         aspect="aspect-[4/5]"
         className="rounded-none"
-        imgClassName="transition duration-500 group-hover:scale-[1.03]"
+        imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.05]"
       >
-        <span className="absolute left-3 top-3 rounded-full bg-ink/60 px-2.5 py-1 text-xs uppercase tracking-[0.25em] text-gold backdrop-blur-sm">
+        {/* Category badge */}
+        <span className="absolute left-3 top-3 rounded-full bg-ink/60 px-2.5 py-1 text-[10px] uppercase tracking-[0.25em] text-gold backdrop-blur-md border border-white/10 font-semibold">
           {info.title}
         </span>
+        {/* Bottom gradient overlay */}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/30 to-transparent pointer-events-none opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       </SoftImage>
       <div className="flex flex-1 flex-col justify-between gap-4 p-5">
         <div>
-          <h3 className="font-serif text-lg leading-tight text-primary md:text-xl">
+          <h3 className="font-serif text-lg leading-tight text-primary md:text-xl transition-colors group-hover:text-gold">
             {service.name}
           </h3>
           <p className="mt-2 inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.22em] text-muted-foreground">
@@ -57,7 +60,7 @@ export function ServiceCard({ service, variant = "hero", className = "" }: Props
               F
             </span>
           </p>
-          <span className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.25em] text-gold opacity-0 transition group-hover:opacity-100">
+          <span className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.25em] text-gold opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0.5">
             Détail <ChevronRight className="h-3 w-3" />
           </span>
         </div>

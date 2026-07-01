@@ -23,7 +23,9 @@ export function AdminFloatingAction() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setHasSession(!!data.session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setHasSession(!!s));
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_e, s) => setHasSession(!!s));
     return () => subscription.unsubscribe();
   }, []);
 

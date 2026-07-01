@@ -147,11 +147,7 @@ export function BookingModal({ open, onClose, services, isPending, onSubmit }: B
             <Button type="button" variant="ghost" onClick={onClose} className="rounded-full">
               Annuler
             </Button>
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="rounded-full bg-gold text-white hover:bg-gold/90 font-semibold"
-            >
+            <Button type="submit" disabled={isPending} variant="gold" className="rounded-full">
               {isPending ? "Création…" : "Créer le rendez-vous"}
             </Button>
           </DialogFooter>

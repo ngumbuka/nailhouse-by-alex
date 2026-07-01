@@ -176,7 +176,8 @@ export function ServicePreviewModal({
               Supprimer
             </Button>
             <Button
-              className="rounded-full bg-gold text-white hover:bg-gold/90"
+              variant="gold"
+              className="rounded-full"
               onClick={() => {
                 onClose();
                 onEdit(service);

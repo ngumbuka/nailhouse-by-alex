@@ -363,7 +363,7 @@ export function CategoryModal({ open, onClose, initial, isPending, onSubmit }: C
                       placeholder="Ajouter un point fort..."
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addHighlight())}
                     />
-                    <Button type="button" onClick={addHighlight} className="bg-gold text-white">
+                    <Button type="button" onClick={addHighlight} variant="gold">
                       Ajouter
                     </Button>
                   </div>
@@ -403,7 +403,7 @@ export function CategoryModal({ open, onClose, initial, isPending, onSubmit }: C
                       placeholder="Ajouter un conseil d'entretien..."
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCare())}
                     />
-                    <Button type="button" onClick={addCare} className="bg-gold text-white">
+                    <Button type="button" onClick={addCare} variant="gold">
                       Ajouter
                     </Button>
                   </div>
@@ -445,7 +445,7 @@ export function CategoryModal({ open, onClose, initial, isPending, onSubmit }: C
                       placeholder="Ajouter un argument..."
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addWhyUs())}
                     />
-                    <Button type="button" onClick={addWhyUs} className="bg-gold text-white">
+                    <Button type="button" onClick={addWhyUs} variant="gold">
                       Ajouter
                     </Button>
                   </div>
@@ -596,11 +596,7 @@ export function CategoryModal({ open, onClose, initial, isPending, onSubmit }: C
               <Button type="button" variant="ghost" onClick={onClose} className="rounded-full">
                 Annuler
               </Button>
-              <Button
-                type="submit"
-                disabled={isPending}
-                className="rounded-full bg-gold text-white hover:bg-gold/90 font-semibold"
-              >
+              <Button type="submit" disabled={isPending} variant="gold" className="rounded-full">
                 {isPending ? "Enregistrement…" : isEdit ? "Modifier" : "Ajouter"}
               </Button>
             </DialogFooter>

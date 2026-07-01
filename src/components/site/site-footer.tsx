@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ASSETS } from "@/lib/assets";
 import { Instagram, MapPin, Phone } from "lucide-react";
+import { useI18n } from "@/hooks/use-i18n";
 
 export function SiteFooter() {
   const subscribe = useServerFn(subscribeNewsletter);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const { language, t } = useI18n();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -19,10 +21,14 @@ export function SiteFooter() {
     setLoading(true);
     try {
       await subscribe({ data: { email } });
-      toast.success("Merci ! Vous êtes inscrite à notre lettre.");
+      toast.success(t("footer_success_newsletter"));
       setEmail("");
     } catch {
-      toast.error("Impossible d'enregistrer cet email.");
+      toast.error(
+        language === "en"
+          ? "Failed to register this email."
+          : "Impossible d'enregistrer cet email.",
+      );
     } finally {
       setLoading(false);
     }
@@ -41,17 +47,14 @@ export function SiteFooter() {
             <span className="font-serif text-2xl">NailHouse</span>
           </div>
           <p className="mt-4 max-w-sm font-serif text-2xl italic leading-snug text-primary-foreground/85">
-            Pour la beauté des ongles…
+            {t("footer_quote")}
           </p>
-          <p className="mt-6 max-w-md text-sm text-primary-foreground/70">
-            Un atelier confidentiel à Ekoumdoum dédié au soin des mains et des pieds — manucures
-            couture, pédicures soin, prothésie ongulaire.
-          </p>
+          <p className="mt-6 max-w-md text-sm text-primary-foreground/70">{t("footer_desc")}</p>
           <form onSubmit={onSubmit} className="mt-8 flex max-w-md gap-2">
             <Input
               type="email"
               required
-              placeholder="Votre email"
+              placeholder={t("footer_email_placeholder")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="bg-primary-foreground/10 border-primary-foreground/30 placeholder:text-primary-foreground/50 text-primary-foreground"
@@ -60,41 +63,41 @@ export function SiteFooter() {
               type="submit"
               disabled={loading}
               variant="secondary"
-              className="rounded-full px-5"
+              className="rounded-full px-5 cursor-pointer"
             >
-              S'inscrire
+              {t("footer_subscribe")}
             </Button>
           </form>
         </div>
 
         <div>
           <h4 className="text-xs uppercase tracking-[0.25em] text-primary-foreground/60">
-            Visiter
+            {t("footer_explore")}
           </h4>
           <ul className="mt-4 space-y-2 text-sm">
             <li>
               <Link to="/services" className="hover:underline">
-                Prestations
+                {t("nav_services")}
               </Link>
             </li>
             <li>
               <Link to="/gallery" className="hover:underline">
-                Galerie
+                {t("nav_gallery")}
               </Link>
             </li>
             <li>
               <Link to="/about" className="hover:underline">
-                L'atelier
+                {t("nav_about")}
               </Link>
             </li>
             <li>
               <Link to="/booking" className="hover:underline">
-                Réserver
+                {t("btn_book")}
               </Link>
             </li>
             <li>
               <Link to="/contact" className="hover:underline">
-                Contact
+                {t("nav_contact")}
               </Link>
             </li>
           </ul>
@@ -102,12 +105,12 @@ export function SiteFooter() {
 
         <div>
           <h4 className="text-xs uppercase tracking-[0.25em] text-primary-foreground/60">
-            Nous trouver
+            {t("footer_find_us")}
           </h4>
           <ul className="mt-4 space-y-3 text-sm">
             <li className="flex items-start gap-2">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>Ekoumdoum, à côté du Bilbao Lounge — Yaoundé</span>
+              <span>{t("footer_detailed_address")}</span>
             </li>
             <li className="flex items-center gap-2">
               <Phone className="h-4 w-4" />{" "}
@@ -129,7 +132,9 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-primary-foreground/15">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-5 text-xs text-primary-foreground/60 md:flex-row">
-          <p>© {new Date().getFullYear()} NailHouse. Tous droits réservés.</p>
+          <p>
+            © {new Date().getFullYear()} NailHouse. {t("footer_rights")}
+          </p>
         </div>
       </div>
     </footer>
