@@ -52,8 +52,12 @@
       "email": "client@example.com",
       "service_id": "7c9a4192-b430-4e33-8a39-ebde89bb12e7",
       "service_name": "Manucure Classique",
-      "service_ids": ["7c9a4192-b430-4e33-8a39-ebde89bb12e7"],
-      "service_names": ["Manucure Classique"],
+      "service_ids": [
+        "7c9a4192-b430-4e33-8a39-ebde89bb12e7"
+      ],
+      "service_names": [
+        "Manucure Classique"
+      ],
       "scheduled_at": "2026-06-24T15:47:52.320Z",
       "notes": "Soin des cuticules de préférence.",
       "status": "confirmed",
@@ -408,16 +412,6 @@
       "active": true,
       "sort": 3,
       "created_at": "2026-06-28T10:08:08.245Z"
-    },
-    {
-      "url": "https://www.youtube.com/watch?v=wqBkGHH6oAg",
-      "title": "Test",
-      "description": "test",
-      "category": "mains",
-      "active": true,
-      "sort": 0,
-      "id": "vid-x96poykp6",
-      "created_at": "2026-06-28T12:42:58.100Z"
     }
   ],
   "categories": [
@@ -465,7 +459,10 @@
         "Produits professionnels haut de gamme.",
         "Conseil sur-mesure selon la forme de vos ongles."
       ],
-      "gallery": ["/src/assets/services/mains-hero.jpg", "/src/assets/services/mains-flat.jpg"],
+      "gallery": [
+        "/src/assets/services/mains-hero.jpg",
+        "/src/assets/services/mains-flat.jpg"
+      ],
       "faq": [
         {
           "q": "Combien de temps tient la pose ?",
@@ -521,7 +518,10 @@
         "Instruments stérilisés pour chaque rendez-vous.",
         "Conseils personnalisés pour l'entretien à domicile."
       ],
-      "gallery": ["/src/assets/services/pieds-hero.jpg", "/src/assets/services/pieds-flat.jpg"],
+      "gallery": [
+        "/src/assets/services/pieds-hero.jpg",
+        "/src/assets/services/pieds-flat.jpg"
+      ],
       "faq": [
         {
           "q": "C'est douloureux ?",
@@ -636,7 +636,10 @@
         "Pose réalisée par une experte certifiée BIAB.",
         "Remplissage à tarif préférentiel sous 4 semaines."
       ],
-      "gallery": ["/src/assets/services/biab-hero.jpg", "/src/assets/services/biab-flat.jpg"],
+      "gallery": [
+        "/src/assets/services/biab-hero.jpg",
+        "/src/assets/services/biab-flat.jpg"
+      ],
       "faq": [
         {
           "q": "Quelle différence avec un gel classique ?",
@@ -810,7 +813,10 @@
         "Soin réparateur inclus systématiquement.",
         "Tarif dégressif si vous enchaînez avec une nouvelle pose."
       ],
-      "gallery": ["/src/assets/services/depose-hero.jpg", "/src/assets/services/depose-flat.jpg"],
+      "gallery": [
+        "/src/assets/services/depose-hero.jpg",
+        "/src/assets/services/depose-flat.jpg"
+      ],
       "faq": [
         {
           "q": "Combien de temps prévoir ?",
