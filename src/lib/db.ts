@@ -844,9 +844,13 @@ export async function listReviewsForService(serviceId: string) {
       .from("service_reviews")
       .select("*")
       .eq("service_id", serviceId);
-    if (error) throw error;
+    if (error) {
+      console.warn("[listReviewsForService] table unavailable, returning []", error.message);
+      return [];
+    }
     return data || [];
   }
+
 }
 
 export async function createReview(
