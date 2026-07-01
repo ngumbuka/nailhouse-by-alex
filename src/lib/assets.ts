@@ -1,36 +1,40 @@
 // CDN URLs for salon imagery (uploaded via lovable-assets).
+import logo from "@/assets/logo.jpg.asset.json";
+import burgundyManicure from "@/assets/burgundy-manicure.jpg.asset.json";
+import polkaDotNails from "@/assets/polka-dot-nails.jpg.asset.json";
+import salonPedicure from "@/assets/salon-pedicure.jpg.asset.json";
+import mindfulCandle from "@/assets/mindful-candle.jpg.asset.json";
+import workstation from "@/assets/workstation.jpg.asset.json";
+import ledLamp from "@/assets/led-lamp.jpg.asset.json";
+import polishShelves from "@/assets/polish-shelves.jpg.asset.json";
+import basketsCorner from "@/assets/baskets-corner.jpg.asset.json";
+import barShelf from "@/assets/bar-shelf.jpg.asset.json";
+import coffeeEasel from "@/assets/coffee-easel.jpg.asset.json";
+import heroManicure from "@/assets/hero-manicure.jpg.asset.json";
+import heroServicesV2 from "@/assets/hero-services-v2.jpg.asset.json";
+import heroAboutV2 from "@/assets/hero-about-v2.jpg.asset.json";
+import heroContactImg from "@/assets/hero-contact.jpg.asset.json";
+import heroTarifsImg from "@/assets/hero-tarifs.jpg.asset.json";
+import heroLoop from "@/assets/hero-loop.mp4.asset.json";
+import gestureLoop from "@/assets/gesture-loop.mp4.asset.json";
+
 export const ASSETS = {
-  logo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150&h=150",
-  burgundyManicure:
-    "https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&q=80&w=800",
-  polkaDotNails:
-    "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=80&w=800",
-  salonPedicure:
-    "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=800",
-  mindfulCandle:
-    "https://images.unsplash.com/photo-1602928321679-560bb453f190?auto=format&fit=crop&q=80&w=800",
-  workstation:
-    "https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&q=80&w=800",
-  ledLamp:
-    "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?auto=format&fit=crop&q=80&w=800",
-  polishShelves:
-    "https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&q=80&w=800",
-  basketsCorner:
-    "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?auto=format&fit=crop&q=80&w=800",
-  barShelf:
-    "https://images.unsplash.com/photo-1512418490979-92798cec1380?auto=format&fit=crop&q=80&w=800",
-  coffeeEasel:
-    "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=800",
-  heroServices:
-    "/__l5e/assets-v1/a2331655-4115-43c0-aa91-bbd183cd515a/hero-services-v2.jpg",
-  heroTarifs:
-    "/__l5e/assets-v1/a2331655-4115-43c0-aa91-bbd183cd515a/hero-services-v2.jpg",
-  heroAbout:
-    "/__l5e/assets-v1/2d02b9be-784f-4795-baa1-7d1a6d8829c1/hero-about-v2.jpg",
-  heroContact:
-    "/__l5e/assets-v1/2d02b9be-784f-4795-baa1-7d1a6d8829c1/hero-about-v2.jpg",
-  heroLoopVideo:
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-  gestureLoopVideo:
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+  logo: logo.url,
+  burgundyManicure: burgundyManicure.url,
+  polkaDotNails: polkaDotNails.url,
+  salonPedicure: salonPedicure.url,
+  mindfulCandle: mindfulCandle.url,
+  workstation: workstation.url,
+  ledLamp: ledLamp.url,
+  polishShelves: polishShelves.url,
+  basketsCorner: basketsCorner.url,
+  barShelf: barShelf.url,
+  coffeeEasel: coffeeEasel.url,
+  heroManicure: heroManicure.url,
+  heroServices: heroServicesV2.url,
+  heroTarifs: heroTarifsImg.url,
+  heroAbout: heroAboutV2.url,
+  heroContact: heroContactImg.url,
+  heroLoopVideo: heroLoop.url,
+  gestureLoopVideo: gestureLoop.url,
 } as const;
