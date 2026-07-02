@@ -139,27 +139,23 @@ function AuthPage() {
 
   async function signInWithGoogle() {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/auth/callback`,
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (result.error) return toast.error(result.error.message ?? "Connexion Google impossible.");
+    // If tokens were returned directly, the auth state listener will redirect.
   }
 
   async function signInWithApple() {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+    const result = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: `${window.location.origin}/auth/callback`,
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (result.error) return toast.error(result.error.message ?? "Connexion Apple impossible.");
   }
+
 
   return (
     <SiteLayout>
