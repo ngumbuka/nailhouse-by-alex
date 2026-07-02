@@ -1,8 +1,4 @@
-import {
-  formatPhoneNumber,
-  getTemplateParams,
-  sendWhatsAppNotification,
-} from "../src/lib/whatsapp.ts";
+import { formatPhoneNumber, getTemplateParams, sendWhatsAppNotification } from "../src/lib/whatsapp.ts";
 import { validateWhatsAppNumber } from "../src/lib/phone-validation.ts";
 import path from "path";
 import fs from "fs";
@@ -16,10 +12,7 @@ if (fs.existsSync(envPath)) {
     if (match) {
       const key = match[1].trim();
       let val = match[2].trim();
-      if (
-        (val.startsWith('"') && val.endsWith('"')) ||
-        (val.startsWith("'") && val.endsWith("'"))
-      ) {
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
         val = val.slice(1, -1);
       }
       process.env[key] = val;
@@ -87,9 +80,7 @@ for (const t of validationTestCases) {
       `✓ validateWhatsAppNumber("${t.phone}"): isValid = ${result.isValid}${result.warning ? ` (Warning: "${result.warning}")` : ""}`,
     );
   } else {
-    console.error(
-      `✗ validateWhatsAppNumber("${t.phone}"): isValid = ${result.isValid} (expected ${t.expectedValid})`,
-    );
+    console.error(`✗ validateWhatsAppNumber("${t.phone}"): isValid = ${result.isValid} (expected ${t.expectedValid})`);
     process.exit(1);
   }
 }
@@ -107,7 +98,7 @@ async function runSendTest() {
     scheduledAt: new Date().toISOString(),
     type: "pending",
   };
-
+  // fix
   try {
     const res = await sendWhatsAppNotification(payload);
     console.log("✓ WhatsApp send request completed successfully:", res);
