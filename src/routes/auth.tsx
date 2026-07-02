@@ -10,8 +10,16 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useServerFn } from "@tanstack/react-start";
 import { isCurrentUserAdmin } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { ASSETS } from "@/lib/assets";
 import { validateWhatsAppNumber } from "@/lib/phone-validation";
+
+const REDIRECT_KEY = "nailhouse:post-auth-redirect";
+function sanitizeRedirect(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  if (!raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Connexion — NailHouse" }] }),
@@ -37,6 +45,15 @@ function AuthPage() {
       session: import("@supabase/supabase-js").Session | null,
     ) {
       if (session) {
+        // Honor a stored post-auth redirect (from social sign-in flows)
+        const stored =
+          typeof window !== "undefined" ? sessionStorage.getItem(REDIRECT_KEY) : null;
+        const dest = sanitizeRedirect(stored);
+        if (dest) {
+          sessionStorage.removeItem(REDIRECT_KEY);
+          window.location.assign(dest);
+          return;
+        }
         try {
           const res = await checkAdmin();
           if (res?.isAdmin) {
@@ -48,6 +65,13 @@ function AuthPage() {
           navigate({ to: "/portal" });
         }
       }
+    }
+
+    // Capture ?redirect=... on first render so social OAuth returns here
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const dest = sanitizeRedirect(params.get("redirect"));
+      if (dest) sessionStorage.setItem(REDIRECT_KEY, dest);
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -115,27 +139,23 @@ function AuthPage() {
 
   async function signInWithGoogle() {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/auth/callback`,
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (result.error) return toast.error(result.error.message ?? "Connexion Google impossible.");
+    // If tokens were returned directly, the auth state listener will redirect.
   }
 
   async function signInWithApple() {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+    const result = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: `${window.location.origin}/auth/callback`,
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (result.error) return toast.error(result.error.message ?? "Connexion Apple impossible.");
   }
+
 
   return (
     <SiteLayout>

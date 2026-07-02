@@ -18,14 +18,24 @@ function AuthCallbackPage() {
   useEffect(() => {
     async function handleCallback() {
       try {
-        const { error } = await supabase.auth.getSession();
-        if (error) throw error;
-
         const {
           data: { session },
+          error,
         } = await supabase.auth.getSession();
+        if (error) throw error;
         if (!session) {
           throw new Error("Aucune session trouvée. Veuillez vous reconnecter.");
+        }
+
+        // Honor a stored post-auth redirect (e.g. back to a service page)
+        const stored =
+          typeof window !== "undefined"
+            ? sessionStorage.getItem("nailhouse:post-auth-redirect")
+            : null;
+        if (stored && stored.startsWith("/") && !stored.startsWith("//")) {
+          sessionStorage.removeItem("nailhouse:post-auth-redirect");
+          window.location.assign(stored);
+          return;
         }
 
         const res = await checkAdmin();
