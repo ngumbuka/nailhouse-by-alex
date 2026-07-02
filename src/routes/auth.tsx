@@ -45,6 +45,15 @@ function AuthPage() {
       session: import("@supabase/supabase-js").Session | null,
     ) {
       if (session) {
+        // Honor a stored post-auth redirect (from social sign-in flows)
+        const stored =
+          typeof window !== "undefined" ? sessionStorage.getItem(REDIRECT_KEY) : null;
+        const dest = sanitizeRedirect(stored);
+        if (dest) {
+          sessionStorage.removeItem(REDIRECT_KEY);
+          window.location.assign(dest);
+          return;
+        }
         try {
           const res = await checkAdmin();
           if (res?.isAdmin) {
@@ -56,6 +65,13 @@ function AuthPage() {
           navigate({ to: "/portal" });
         }
       }
+    }
+
+    // Capture ?redirect=... on first render so social OAuth returns here
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const dest = sanitizeRedirect(params.get("redirect"));
+      if (dest) sessionStorage.setItem(REDIRECT_KEY, dest);
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
