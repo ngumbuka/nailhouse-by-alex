@@ -10,8 +10,16 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useServerFn } from "@tanstack/react-start";
 import { isCurrentUserAdmin } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { ASSETS } from "@/lib/assets";
 import { validateWhatsAppNumber } from "@/lib/phone-validation";
+
+const REDIRECT_KEY = "nailhouse:post-auth-redirect";
+function sanitizeRedirect(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  if (!raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Connexion — NailHouse" }] }),
