@@ -6,7 +6,7 @@
  * Usage:
  *   node scripts/apply-migration.js
  *
- * Requires: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env
+ * Requires: DB_SUPABASE_URL and DB_SUPABASE_SERVICE_ROLE_KEY in .env
  */
 
 import { readFileSync } from "fs";
@@ -34,12 +34,12 @@ const env = Object.fromEntries(
     }),
 );
 
-const SUPABASE_URL = env.SUPABASE_URL;
-const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
-const PROJECT_ID = env.SUPABASE_PROJECT_ID;
+const SUPABASE_URL = env.DB_SUPABASE_URL;
+const SERVICE_KEY = env.DB_SUPABASE_SERVICE_ROLE_KEY;
+const PROJECT_ID = env.DB_SUPABASE_PROJECT_ID;
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
-  console.error("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env");
+  console.error("❌ Missing DB_SUPABASE_URL or DB_SUPABASE_SERVICE_ROLE_KEY in .env");
   process.exit(1);
 }
 
